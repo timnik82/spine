@@ -7,13 +7,13 @@
       "enabled": true
     },
     "ref_tools": {
-      "enabled": false
+      "enabled": true
     },
     "exa": {
       "enabled": true
     },
     "magic_patterns": {
-      "enabled": false
+      "enabled": true
     }
   }
 }
