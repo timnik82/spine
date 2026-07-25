@@ -1,4 +1,4 @@
-export const REST_SECONDS = 15;
+export const REST_SECONDS = 10;
 export const PLANK_SECONDS = 20;
 
 export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';

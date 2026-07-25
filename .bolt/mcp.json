@@ -13,7 +13,7 @@
       "enabled": true
     },
     "magic_patterns": {
-      "enabled": false
+      "enabled": true
     }
   }
 }
