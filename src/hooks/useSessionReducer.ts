@@ -14,7 +14,6 @@ export interface SessionState {
 
 type Action =
   | { type: 'START' }
-  | { type: 'TICK' }
   | { type: 'REST_TICK' }
   | { type: 'SKIP_REST' }
   | { type: 'ADVANCE_SET' }
@@ -47,23 +46,6 @@ function reducer(state: SessionState, action: Action): SessionState {
         currentSet: 1,
         secondsRemaining: exercise.durationSec ?? 0,
       };
-
-    case 'TICK': {
-      if (state.instructionsOpen) return state;
-      const next = state.secondsRemaining - 1;
-      if (next > 0) {
-        return { ...state, secondsRemaining: next };
-      }
-      if (state.currentSet >= exercise.sets) {
-        return { ...state, secondsRemaining: 0, screen: 'done' };
-      }
-      return {
-        ...state,
-        secondsRemaining: 0,
-        screen: 'rest',
-        restSecondsRemaining: REST_SECONDS,
-      };
-    }
 
     case 'REST_TICK': {
       const next = state.restSecondsRemaining - 1;
