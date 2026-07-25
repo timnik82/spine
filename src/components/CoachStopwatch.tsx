@@ -18,6 +18,7 @@ export function CoachStopwatch({
 }: CoachStopwatchProps) {
   const stopwatchRef = useRef<HTMLDivElement>(null);
   const secondsHandsRef = useRef<SVGGraphicsElement[]>([]);
+  const dialCenterRef = useRef<{ cx: number; cy: number }>({ cx: 0, cy: 0 });
   const [svgMarkup, setSvgMarkup] = useState<string | null>(null);
   const [hasLoadError, setHasLoadError] = useState(false);
 
@@ -64,12 +65,11 @@ export function CoachStopwatch({
     }
 
     svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('overflow', 'hidden');
     svg.style.display = 'block';
     svg.style.width = '100%';
     svg.style.height = '100%';
     svg.style.background = 'transparent';
-
-    hideBackgroundRects(svg);
 
     const hands = findSecondsHands(svg);
     if (hands.length === 0) {
@@ -77,13 +77,18 @@ export function CoachStopwatch({
       return;
     }
 
-    const dialCenter = getDialCenter(svg);
+    const { cx, cy } = getDialCenterCoords(svg);
+
+    // Wrap each hand in a <g> that we can rotate via SVG transform attribute
+    const wrappers: SVGGElement[] = [];
     hands.forEach((hand) => {
-      hand.style.transformBox = 'view-box';
-      hand.style.transformOrigin = dialCenter;
-      hand.style.transition = 'none';
+      const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      hand.parentNode?.insertBefore(wrapper, hand);
+      wrapper.appendChild(hand);
+      wrappers.push(wrapper);
     });
-    secondsHandsRef.current = hands;
+    secondsHandsRef.current = wrappers as unknown as SVGGraphicsElement[];
+    dialCenterRef.current = { cx, cy };
   }, [svgMarkup, reduceMotion]);
 
   useEffect(() => {
@@ -152,8 +157,9 @@ export function CoachStopwatch({
   }, [svgMarkup]);
 
   useEffect(() => {
-    secondsHandsRef.current.forEach((hand) => {
-      hand.style.transform = `rotate(${handAngle}deg)`;
+    const { cx, cy } = dialCenterRef.current;
+    secondsHandsRef.current.forEach((wrapper) => {
+      wrapper.setAttribute('transform', `rotate(${handAngle} ${cx} ${cy})`);
     });
   }, [handAngle]);
 
@@ -167,6 +173,7 @@ export function CoachStopwatch({
         <div
           ref={stopwatchRef}
           className="h-full w-full drop-shadow-[0_10px_12px_rgb(34_29_24_/_0.16)]"
+          style={{ overflow: 'hidden' }}
           dangerouslySetInnerHTML={{ __html: svgMarkup }}
         />
       ) : hasLoadError ? (
@@ -220,49 +227,9 @@ function findSecondsHands(svg: SVGSVGElement): SVGGraphicsElement[] {
     .map((item) => item.element);
 }
 
-function getDialCenter(svg: SVGSVGElement): string {
+function getDialCenterCoords(svg: SVGSVGElement): { cx: number; cy: number } {
   const { x, y, width, height } = svg.viewBox.baseVal;
-  return `${x + width / 2}px ${y + height * 0.59}px`;
-}
-
-function hideBackgroundRects(svg: SVGSVGElement) {
-  try {
-    const { width, height } = svg.viewBox.baseVal;
-    const elements = svg.querySelectorAll('rect, path');
-    for (let i = 0; i < elements.length; i++) {
-      const el = elements[i] as SVGGraphicsElement;
-      const fill = (el.getAttribute('fill') || '').toLowerCase().trim();
-      const isWhitish =
-        fill === '#ffffff' ||
-        fill === '#fff' ||
-        fill === 'white' ||
-        fill === '#f5f5f5' ||
-        fill === '#fafafa' ||
-        fill === '#f0f0f0' ||
-        fill === '#eeeeee' ||
-        fill === '#eee' ||
-        fill.startsWith('rgb(255') ||
-        fill.startsWith('rgb(250') ||
-        fill.startsWith('rgb(245');
-
-      if (isWhitish) {
-        const bbox = el.getBBox();
-        if (bbox.width >= width * 0.9 && bbox.height >= height * 0.9) {
-          (el as unknown as HTMLElement).style.display = 'none';
-        }
-      } else if (el.tagName.toLowerCase() === 'rect') {
-        const rect = el as unknown as SVGRectElement;
-        if (
-          rect.width.baseVal.value >= width * 0.9 &&
-          rect.height.baseVal.value >= height * 0.9
-        ) {
-          (el as unknown as HTMLElement).style.display = 'none';
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
+  return { cx: x + width / 2, cy: y + height * 0.59 };
 }
 
 function sanitizeSvgMarkup(markup: string): string {
@@ -270,6 +237,41 @@ function sanitizeSvgMarkup(markup: string): string {
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '')
     .replace(/\son\w+=(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+
+  // Remove explicit width/height from the root <svg> tag so it respects its container
+  sanitized = sanitized.replace(
+    /^([\s\S]*?<svg\b)([\s\S]*?)(>)/,
+    (_match, before, attrs, close) => {
+      const cleanAttrs = (attrs as string)
+        .replace(/\s+width=["'][^"']*["']/gi, '')
+        .replace(/\s+height=["'][^"']*["']/gi, '');
+      return before + cleanAttrs + close;
+    }
+  );
+
+  // Extract viewBox dimensions to find background rects
+  const vbMatch = sanitized.match(/viewBox=["']([^"']+)["']/);
+  if (vbMatch) {
+    const parts = vbMatch[1].split(/[\s,]+/).map(Number);
+    const vbW = parts[2];
+    const vbH = parts[3];
+    // Remove any rect whose width/height >= 90% of viewBox (background fill)
+    sanitized = sanitized.replace(
+      /<rect([^>]*)\/?>(\s*<\/rect>)?/gi,
+      (match, attrs: string) => {
+        const wMatch = attrs.match(/\bwidth=["']([^"']+)["']/);
+        const hMatch = attrs.match(/\bheight=["']([^"']+)["']/);
+        if (wMatch && hMatch) {
+          const w = parseFloat(wMatch[1]);
+          const h = parseFloat(hMatch[1]);
+          if (w >= vbW * 0.9 && h >= vbH * 0.9) {
+            return '';
+          }
+        }
+        return match;
+      }
+    );
+  }
 
   const newRing = `<!-- top suspension ring -->
 <g transform="translate(0, 32)">
