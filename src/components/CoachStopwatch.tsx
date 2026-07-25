@@ -63,6 +63,9 @@ export function CoachStopwatch({
     const topBtn = container.querySelector<SVGGElement>('#top-button');
     const sideBtn = container.querySelector<SVGGElement>('#side-button');
 
+    if (topBtn) topBtn.style.transition = 'transform 0.1s';
+    if (sideBtn) sideBtn.style.transition = 'transform 0.1s';
+
     let topPressed = false;
     const handleTopDown = () => {
       topPressed = true;
@@ -132,7 +135,7 @@ export function CoachStopwatch({
     }
   }, [handAngle]);
 
-  const timerLabel = `Cronometro: ${Math.ceil(elapsed)} de ${totalSeconds} segundos`;
+  const timerLabel = `Cronometro: ${Math.floor(elapsed)} de ${totalSeconds} segundos`;
 
   return (
     <div
