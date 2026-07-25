@@ -19,7 +19,6 @@
   /* ─── Warm accent (battery fills, "Seguinte" border) ─── */
   --ex-warm: oklch(0.65 0.16 55);
   --ex-rest-soft: oklch(0.92 0.02 200);
-  --ex-fg-muted: oklch(0.45 0.02 50);
 
   /* ─── Circular timer (legacy, still used on rest screen) ─── */
   --ex-ring-size: clamp(16rem, 45vh, 28rem);

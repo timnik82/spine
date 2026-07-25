@@ -14,6 +14,7 @@ interface ActiveScreenProps {
   onReset: () => void;
   onInstructions: () => void;
   onNext: () => void;
+  onRestart: () => void;
   onHome: () => void;
 }
 
@@ -28,6 +29,7 @@ export function ActiveScreen({
   onReset,
   onInstructions,
   onNext,
+  onRestart,
   onHome,
 }: ActiveScreenProps) {
   const completed = currentSet >= totalSets && secondsRemaining <= 0;
@@ -118,7 +120,7 @@ export function ActiveScreen({
 
         <Button
           variant="outline"
-          onClick={onNext}
+          onClick={completed ? onRestart : onNext}
           className="h-14 min-w-40 cursor-pointer rounded-2xl px-6 text-base font-semibold"
           style={{
             borderColor: 'var(--ex-warm)',

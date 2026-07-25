@@ -1,16 +1,26 @@
+import { useEffect, useState } from 'react';
+
 interface BatteryRepsProps {
   repsComplete: number;
   totalReps: number;
 }
 
 export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
-  const reduceMotion = useReducedMotionSimple();
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div className="flex flex-col items-center" aria-label="Bateria de repetições">
+    <div
+      role="progressbar"
+      aria-valuenow={repsComplete}
+      aria-valuemin={0}
+      aria-valuemax={totalReps}
+      aria-label={`${repsComplete} de ${totalReps} repetições concluídas`}
+      className="flex flex-col items-center"
+    >
       {/* Battery Terminal */}
       <div
         className="h-2.5 w-8 rounded-t-md border-4 border-b-0 sm:h-3 sm:w-10"
+        aria-hidden="true"
         style={{
           backgroundColor: 'oklch(0.95 0.02 80)',
           borderColor: '#2f343a',
@@ -19,6 +29,7 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
       {/* Battery Body */}
       <div
         className="flex h-[min(55vw,18rem)] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:h-72 sm:gap-2 sm:p-3.5"
+        aria-hidden="true"
         style={{
           backgroundColor: 'oklch(0.95 0.02 80)',
           borderColor: '#2f343a',
@@ -29,7 +40,6 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
           return (
             <div
               key={index}
-              aria-hidden="true"
               className="min-h-0 flex-1 rounded-md border"
               style={{
                 backgroundColor: filled
@@ -54,7 +64,18 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
   );
 }
 
-function useReducedMotionSimple(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function useReducedMotion(): boolean {
+  const [reduce, setReduce] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = (e: MediaQueryListEvent) => setReduce(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return reduce;
 }

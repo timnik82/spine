@@ -1,18 +1,30 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ExerciseTimer {
   secondsRemaining: number;
   isRunning: boolean;
   reset: () => void;
   toggle: () => void;
+  setPaused: (paused: boolean) => void;
 }
 
 export function useExerciseTimer(totalSeconds: number): ExerciseTimer {
   const [secondsRemaining, setSecondsRemaining] = useState(totalSeconds);
   const [isRunning, setIsRunning] = useState(false);
+  const [paused, setPausedState] = useState(false);
+
+  // Reset when totalSeconds changes (exercise switch)
+  const prevTotal = useRef(totalSeconds);
+  useEffect(() => {
+    if (prevTotal.current !== totalSeconds) {
+      prevTotal.current = totalSeconds;
+      setSecondsRemaining(totalSeconds);
+      setIsRunning(false);
+    }
+  }, [totalSeconds]);
 
   useEffect(() => {
-    if (!isRunning || secondsRemaining <= 0) return;
+    if (!isRunning || paused || secondsRemaining <= 0) return;
 
     const startedAt = performance.now();
     const startingSeconds = secondsRemaining;
@@ -33,7 +45,7 @@ export function useExerciseTimer(totalSeconds: number): ExerciseTimer {
 
     frameId = requestAnimationFrame(updateTimer);
     return () => cancelAnimationFrame(frameId);
-  }, [isRunning]);
+  }, [isRunning, paused]);
 
   const reset = useCallback(() => {
     setSecondsRemaining(totalSeconds);
@@ -48,5 +60,9 @@ export function useExerciseTimer(totalSeconds: number): ExerciseTimer {
     setIsRunning((running) => !running);
   }, [totalSeconds]);
 
-  return { secondsRemaining, isRunning, reset, toggle };
+  const setPaused = useCallback((p: boolean) => {
+    setPausedState(p);
+  }, []);
+
+  return { secondsRemaining, isRunning, reset, toggle, setPaused };
 }

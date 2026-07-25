@@ -17,25 +17,40 @@ export function App() {
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
 
-  const prevTimerDone = useRef(false);
+  // Pause exercise timer when instructions overlay is open (#10)
   useEffect(() => {
-    if (state.screen !== 'active') {
-      prevTimerDone.current = false;
-      return;
-    }
+    timer.setPaused(state.instructionsOpen);
+  }, [state.instructionsOpen, timer.setPaused]);
+
+  // Track whether the user has started this set's timer at least once
+  const hasStarted = useRef(false);
+
+  // Auto-advance when timer completes (only if user actually started it)
+  useEffect(() => {
+    if (state.screen !== 'active') return;
+    if (!hasStarted.current) return;
+
     const done = timer.secondsRemaining <= 0 && !timer.isRunning;
-    if (done && !prevTimerDone.current) {
-      prevTimerDone.current = true;
+    if (done) {
+      hasStarted.current = false;
       dispatch({ type: 'ADVANCE_SET' });
     }
   }, [timer.secondsRemaining, timer.isRunning, state.screen, dispatch]);
 
+  // Track when user starts
+  useEffect(() => {
+    if (timer.isRunning) {
+      hasStarted.current = true;
+    }
+  }, [timer.isRunning]);
+
+  // Reset timer when entering active screen or changing set/exercise (#4, #8)
   useEffect(() => {
     if (state.screen === 'active') {
+      hasStarted.current = false;
       timer.reset();
-      prevTimerDone.current = false;
     }
-  }, [state.screen, state.currentSet]);
+  }, [state.screen, state.currentSet, state.exerciseIndex]);
 
   switch (state.screen) {
     case 'intro':
@@ -60,6 +75,7 @@ export function App() {
             onReset={timer.reset}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
             onNext={() => dispatch({ type: 'ADVANCE_SET' })}
+            onRestart={() => dispatch({ type: 'START' })}
             onHome={() => dispatch({ type: 'RESET' })}
           />
           <InstructionsOverlay
