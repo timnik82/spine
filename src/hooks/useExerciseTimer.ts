@@ -8,20 +8,24 @@ interface ExerciseTimer {
   setPaused: (paused: boolean) => void;
 }
 
-export function useExerciseTimer(totalSeconds: number): ExerciseTimer {
+/**
+ * @param resetKey identifies the run the timer currently belongs to (set,
+ *   exercise, screen). When it changes the timer restarts *during render*, so
+ *   consumers never observe the previous run's leftover zero alongside the new
+ *   run's counters.
+ */
+export function useExerciseTimer(totalSeconds: number, resetKey: string): ExerciseTimer {
   const [secondsRemaining, setSecondsRemaining] = useState(totalSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [paused, setPausedState] = useState(false);
 
-  // Reset when totalSeconds changes (exercise switch)
-  const prevTotal = useRef(totalSeconds);
-  useEffect(() => {
-    if (prevTotal.current !== totalSeconds) {
-      prevTotal.current = totalSeconds;
-      setSecondsRemaining(totalSeconds);
-      setIsRunning(false);
-    }
-  }, [totalSeconds]);
+  // Restart on a new run or an exercise switch, before anything renders.
+  const currentRun = useRef({ key: resetKey, total: totalSeconds });
+  if (currentRun.current.key !== resetKey || currentRun.current.total !== totalSeconds) {
+    currentRun.current = { key: resetKey, total: totalSeconds };
+    setSecondsRemaining(totalSeconds);
+    setIsRunning(false);
+  }
 
   useEffect(() => {
     if (!isRunning || paused || secondsRemaining <= 0) return;

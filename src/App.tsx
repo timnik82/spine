@@ -13,7 +13,12 @@ export function App() {
   const [state, dispatch] = useSessionReducer();
   const exercise = programme[state.exerciseIndex];
 
-  const timer = useExerciseTimer(exercise.durationSec ?? 10);
+  // The timer belongs to one run of one set; when that changes it restarts
+  // during render, so the set counter and the countdown are never out of step.
+  const timer = useExerciseTimer(
+    exercise.durationSec ?? 10,
+    `${state.screen}:${state.exerciseIndex}:${state.currentSet}`
+  );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
 
@@ -44,11 +49,10 @@ export function App() {
     }
   }, [timer.isRunning]);
 
-  // Reset timer when entering active screen or changing set/exercise (#4, #8)
+  // A new set starts unstarted; the countdown itself is reset by its run key (#4, #8)
   useEffect(() => {
     if (state.screen === 'active') {
       hasStarted.current = false;
-      timer.reset();
     }
   }, [state.screen, state.currentSet, state.exerciseIndex]);
 
