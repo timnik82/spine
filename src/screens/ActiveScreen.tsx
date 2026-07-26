@@ -111,7 +111,7 @@ export function ActiveScreen({
         <Button
           onClick={onInstructions}
           variant="outline"
-          className="h-14 min-w-40 cursor-pointer rounded-2xl px-6 text-base font-semibold"
+          className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
           style={{
             borderColor: 'var(--ex-border)',
             color: 'var(--ex-fg)',
@@ -122,7 +122,7 @@ export function ActiveScreen({
 
         <Button
           onClick={onToggle}
-          className="h-14 min-w-40 cursor-pointer rounded-2xl px-6 text-base font-semibold"
+          className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
           style={{
             backgroundColor: 'var(--ex-accent)',
             color: 'var(--ex-accent-fg)',
@@ -139,7 +139,7 @@ export function ActiveScreen({
         <Button
           variant="outline"
           onClick={completed ? onRestart : onNext}
-          className="h-14 min-w-40 cursor-pointer rounded-2xl px-6 text-base font-semibold"
+          className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
           style={{
             borderColor: 'var(--ex-warm)',
             color: 'var(--ex-warm)',
