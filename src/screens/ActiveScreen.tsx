@@ -42,9 +42,13 @@ export function ActiveScreen({
         padding: 'var(--ex-page-padding)',
       }}
     >
-      <header className="grid grid-cols-[auto_1fr_auto] items-center gap-4">
-        <HomeButton onHome={onHome} color="var(--ex-fg)" />
-        <div className="flex items-center justify-center">
+      {/* Outer columns are fixed to the button size so the title stays centred
+          on the page and still gets all the space left in between. */}
+      <header className="grid grid-cols-[3rem_1fr_3rem] items-center gap-3 sm:gap-4">
+        <div className="justify-self-start">
+          <HomeButton onHome={onHome} color="var(--ex-fg)" inFlow />
+        </div>
+        <div className="flex min-w-0 items-center justify-center">
           <div
             className="inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:px-8 sm:py-3"
             style={{
@@ -72,7 +76,7 @@ export function ActiveScreen({
           size="icon"
           aria-label="Reiniciar exercício"
           onClick={onReset}
-          className="h-12 w-12 cursor-pointer rounded-full"
+          className="h-12 w-12 cursor-pointer justify-self-end rounded-full"
           style={{ color: 'var(--ex-fg)' }}
         >
           <RotateCcw className="h-5 w-5" aria-hidden="true" />
