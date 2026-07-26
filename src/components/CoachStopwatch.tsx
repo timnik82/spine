@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import stopwatchMarkup from '@/assets/stopwatch.svg?raw';
+import { playStopwatchPress, playStopwatchRelease } from '@/lib/sounds';
 
 interface CoachStopwatchProps {
   secondsRemaining: number;
@@ -93,28 +94,38 @@ export function CoachStopwatch({
       }
     };
 
-    let topPressed = false;
+    // Holds the pointer that owns the press, so a second finger on the crown
+    // cannot release the first one's press or leave its own unmatched.
+    let topPointerId: number | null = null;
     const handleTopDown = (e: PointerEvent) => {
-      topPressed = true;
+      if (topPointerId !== null) return;
+      topPointerId = e.pointerId;
       try {
         (e.currentTarget as Element)?.setPointerCapture?.(e.pointerId);
       } catch {
         // ignore pointer capture errors if unsupported
       }
       if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
+      playStopwatchPress();
+    };
+    /**
+     * Lets the button back up. Cancelling springs it back just as releasing
+     * does, so both paths click; only a real release toggles the timer.
+     */
+    const releaseTopButton = (e: PointerEvent) => {
+      releaseCapture(e);
+      if (topPointerId === null || e.pointerId !== topPointerId) return false;
+      topPointerId = null;
+      if (topBtn) topBtn.style.transform = '';
+      playStopwatchRelease();
+      return true;
     };
     const handleTopUp = (e: PointerEvent) => {
-      releaseCapture(e);
-      if (!topPressed) return;
-      topPressed = false;
-      if (topBtn) topBtn.style.transform = '';
+      if (!releaseTopButton(e)) return;
       onToggleRef.current?.();
     };
     const handleTopCancel = (e: PointerEvent) => {
-      releaseCapture(e);
-      if (!topPressed) return;
-      topPressed = false;
-      if (topBtn) topBtn.style.transform = '';
+      releaseTopButton(e);
     };
 
     const setSidePressed = (pressed: boolean) => {
