@@ -42,9 +42,9 @@ export function ActiveScreen({
         padding: 'var(--ex-page-padding)',
       }}
     >
-      <header className="flex items-center justify-between gap-4">
+      <header className="grid grid-cols-[auto_1fr_auto] items-center gap-4">
         <HomeButton onHome={onHome} color="var(--ex-fg)" />
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex items-center justify-center">
           <div
             className="inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:px-8 sm:py-3"
             style={{

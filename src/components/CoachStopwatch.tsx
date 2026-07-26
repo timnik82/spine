@@ -68,11 +68,30 @@ export function CoachStopwatch({
 
     const topBtn = container.querySelector<SVGGElement>('#top-button');
     const sideBtn = container.querySelector<SVGGElement>('#side-button');
-    // Inner group already has the 23° rotate — press along its local +Y
+    // Inner group already has the 33.5° rotate — press along its local +Y
     const sideStem = sideBtn?.querySelector<SVGGElement>('g') ?? null;
+    const sideBaseTransform = sideStem?.getAttribute('transform') || SIDE_BUTTON_ROTATE;
 
-    if (topBtn) topBtn.style.transition = 'transform 0.1s ease';
-    if (sideStem) sideStem.style.transition = 'transform 0.1s ease';
+    if (topBtn) {
+      topBtn.style.transition = 'transform 0.1s ease';
+      topBtn.style.touchAction = 'none';
+    }
+    if (sideBtn) {
+      sideBtn.style.touchAction = 'none';
+    }
+    if (sideStem) {
+      sideStem.style.transition = 'transform 0.1s ease';
+    }
+
+    const releaseCapture = (e: PointerEvent) => {
+      try {
+        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
+          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
+        }
+      } catch {
+        // ignore pointer capture release errors
+      }
+    };
 
     let topPressed = false;
     const handleTopDown = (e: PointerEvent) => {
@@ -85,26 +104,14 @@ export function CoachStopwatch({
       if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
     };
     const handleTopUp = (e: PointerEvent) => {
-      try {
-        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
-          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
-        }
-      } catch {
-        // ignore
-      }
+      releaseCapture(e);
       if (!topPressed) return;
       topPressed = false;
       if (topBtn) topBtn.style.transform = '';
       onToggleRef.current?.();
     };
     const handleTopCancel = (e: PointerEvent) => {
-      try {
-        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
-          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
-        }
-      } catch {
-        // ignore
-      }
+      releaseCapture(e);
       if (!topPressed) return;
       topPressed = false;
       if (topBtn) topBtn.style.transform = '';
@@ -115,8 +122,8 @@ export function CoachStopwatch({
       sideStem.setAttribute(
         'transform',
         pressed
-          ? `${SIDE_BUTTON_ROTATE} translate(0 ${SIDE_PRESS_DISTANCE})`
-          : SIDE_BUTTON_ROTATE
+          ? `${sideBaseTransform} translate(0 ${SIDE_PRESS_DISTANCE})`
+          : sideBaseTransform
       );
     };
 
@@ -131,26 +138,14 @@ export function CoachStopwatch({
       setSidePressed(true);
     };
     const handleSideUp = (e: PointerEvent) => {
-      try {
-        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
-          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
-        }
-      } catch {
-        // ignore
-      }
+      releaseCapture(e);
       if (!sidePressed) return;
       sidePressed = false;
       setSidePressed(false);
       onResetRef.current?.();
     };
     const handleSideCancel = (e: PointerEvent) => {
-      try {
-        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
-          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
-        }
-      } catch {
-        // ignore
-      }
+      releaseCapture(e);
       if (!sidePressed) return;
       sidePressed = false;
       setSidePressed(false);
