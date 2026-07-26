@@ -20,10 +20,10 @@ export function ExerciseProgressPair({
 }: ExerciseProgressPairProps) {
   return (
     <section
-      className="flex w-full flex-row items-center justify-center gap-7 sm:gap-20"
+      className="flex w-full flex-row items-center justify-center gap-4 sm:gap-20"
       aria-label={`Exercício: ${Math.floor(secondsRemaining)} segundos restantes, ${repsComplete} de ${totalReps} repetições concluídas`}
     >
-      <div className="flex flex-col items-center" aria-label="Temporizador">
+      <div className="flex min-w-0 flex-1 flex-col items-center" aria-label="Temporizador">
         <CoachStopwatch
           secondsRemaining={secondsRemaining}
           totalSeconds={totalSeconds}
@@ -32,7 +32,9 @@ export function ExerciseProgressPair({
         />
       </div>
 
-      <BatteryReps repsComplete={repsComplete} totalReps={totalReps} />
+      <div className="shrink-0">
+        <BatteryReps repsComplete={repsComplete} totalReps={totalReps} />
+      </div>
     </section>
   );
 }
