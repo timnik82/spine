@@ -105,7 +105,7 @@ export function ActiveScreen({
       </main>
 
       <footer
-        className="mx-auto flex w-full max-w-3xl flex-shrink-0 flex-wrap items-center justify-center gap-3 sm:justify-between landscape:col-start-1 landscape:row-start-2 landscape:mx-0 landscape:w-auto landscape:max-w-none landscape:flex-col landscape:flex-nowrap landscape:justify-center!"
+        className="mx-auto flex w-full max-w-3xl flex-shrink-0 flex-wrap items-center justify-center gap-3 sm:justify-between landscape:col-start-1 landscape:row-start-2 landscape:mx-0 landscape:min-h-0 landscape:w-auto landscape:max-w-none landscape:flex-col landscape:flex-nowrap landscape:justify-center! landscape:overflow-y-auto"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <Button
