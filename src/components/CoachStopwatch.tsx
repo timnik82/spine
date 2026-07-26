@@ -71,7 +71,8 @@ export function CoachStopwatch({
     // Inner group already has the 23° rotate — press along its local +Y
     const sideStem = sideBtn?.querySelector<SVGGElement>('g') ?? null;
 
-    if (topBtn) topBtn.style.transition = 'transform 0.1s';
+    if (topBtn) topBtn.style.transition = 'transform 0.1s ease';
+    if (sideStem) sideStem.style.transition = 'transform 0.1s ease';
 
     let topPressed = false;
     const handleTopDown = (e: PointerEvent) => {
