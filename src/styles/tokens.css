@@ -30,11 +30,12 @@
   --ex-set-size: clamp(1.4rem, 3.5vh, 2.2rem);
 
   /* ─── Typography ─── */
+  --font-kids: 'Fredoka', 'Quicksand', system-ui, -apple-system, sans-serif;
   --ex-timer-size: clamp(8rem, 25vh, 16rem);
   --ex-timer-weight: 700;
-  --ex-name-size: clamp(1.5rem, 3.5vh, 2.5rem);
-  --ex-name-weight: 600;
-  --ex-heading-size: clamp(2rem, 5vh, 3.5rem);
+  --ex-name-size: clamp(2rem, 4.5vh, 3.4rem);
+  --ex-name-weight: 500;
+  --ex-heading-size: clamp(2.2rem, 5.5vh, 3.8rem);
   --ex-body-size: clamp(1.1rem, 2.2vh, 1.5rem);
   --ex-bullet-size: clamp(1rem, 2vh, 1.35rem);
 

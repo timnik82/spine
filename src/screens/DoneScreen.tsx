@@ -16,8 +16,9 @@ export function DoneScreen({ exerciseName, onHome }: DoneScreenProps) {
     >
       <HomeButton onHome={onHome} color="var(--ex-done-fg)" />
       <h1
-        className="font-semibold tracking-tight"
+        className="font-medium tracking-wide"
         style={{
+          fontFamily: 'var(--font-kids)',
           fontSize: 'var(--ex-name-size)',
           color: 'var(--ex-done-fg)',
         }}
@@ -25,8 +26,9 @@ export function DoneScreen({ exerciseName, onHome }: DoneScreenProps) {
         {exerciseName}
       </h1>
       <p
-        className="mt-6 font-bold"
+        className="mt-6 font-medium tracking-wide"
         style={{
+          fontFamily: 'var(--font-kids)',
           fontSize: 'var(--ex-heading-size)',
           color: 'var(--ex-done-fg)',
         }}

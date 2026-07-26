@@ -23,8 +23,9 @@ export function IntroScreen({ exerciseName, onStart }: IntroScreenProps) {
 
       <div className="relative z-10 flex flex-col items-center gap-8 pb-16">
         <h1
-          className="text-center font-semibold tracking-tight"
+          className="text-center font-medium tracking-wide"
           style={{
+            fontFamily: 'var(--font-kids)',
             fontSize: 'var(--ex-heading-size)',
             color: 'var(--ex-fg)',
           }}

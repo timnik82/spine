@@ -11,6 +11,12 @@ interface CoachStopwatchProps {
 const DIAL_CENTER_X = 500;
 const DIAL_CENTER_Y = 590;
 
+/** Matches side pusher transform in stopwatch.svg (radial toward dial center) */
+const SIDE_BUTTON_ROTATE = 'translate(55 48) rotate(33.5 620 278)';
+/** Local +Y press depth in SVG user units — hat just kisses the case */
+const SIDE_PRESS_DISTANCE = 26;
+const TOP_PRESS_DISTANCE_PX = 28.5;
+
 export function CoachStopwatch({
   secondsRemaining,
   totalSeconds,
@@ -62,65 +68,115 @@ export function CoachStopwatch({
 
     const topBtn = container.querySelector<SVGGElement>('#top-button');
     const sideBtn = container.querySelector<SVGGElement>('#side-button');
+    // Inner group already has the 23° rotate — press along its local +Y
+    const sideStem = sideBtn?.querySelector<SVGGElement>('g') ?? null;
 
     if (topBtn) topBtn.style.transition = 'transform 0.1s';
-    if (sideBtn) sideBtn.style.transition = 'transform 0.1s';
 
     let topPressed = false;
-    const handleTopDown = () => {
+    const handleTopDown = (e: PointerEvent) => {
       topPressed = true;
-      if (topBtn) topBtn.style.transform = 'translateY(30px)';
+      try {
+        (e.currentTarget as Element)?.setPointerCapture?.(e.pointerId);
+      } catch {
+        // ignore pointer capture errors if unsupported
+      }
+      if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
     };
-    const handleTopUp = () => {
+    const handleTopUp = (e: PointerEvent) => {
+      try {
+        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
+          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
+        }
+      } catch {
+        // ignore
+      }
       if (!topPressed) return;
       topPressed = false;
       if (topBtn) topBtn.style.transform = '';
       onToggleRef.current?.();
     };
-    const handleTopLeave = () => {
+    const handleTopCancel = (e: PointerEvent) => {
+      try {
+        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
+          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
+        }
+      } catch {
+        // ignore
+      }
       if (!topPressed) return;
       topPressed = false;
       if (topBtn) topBtn.style.transform = '';
     };
 
-    let sidePressed = false;
-    const handleSideDown = () => {
-      sidePressed = true;
-      if (sideBtn) sideBtn.style.transform = 'translate(8px, 12px)';
+    const setSidePressed = (pressed: boolean) => {
+      if (!sideStem) return;
+      sideStem.setAttribute(
+        'transform',
+        pressed
+          ? `${SIDE_BUTTON_ROTATE} translate(0 ${SIDE_PRESS_DISTANCE})`
+          : SIDE_BUTTON_ROTATE
+      );
     };
-    const handleSideUp = () => {
+
+    let sidePressed = false;
+    const handleSideDown = (e: PointerEvent) => {
+      sidePressed = true;
+      try {
+        (e.currentTarget as Element)?.setPointerCapture?.(e.pointerId);
+      } catch {
+        // ignore pointer capture errors if unsupported
+      }
+      setSidePressed(true);
+    };
+    const handleSideUp = (e: PointerEvent) => {
+      try {
+        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
+          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
+        }
+      } catch {
+        // ignore
+      }
       if (!sidePressed) return;
       sidePressed = false;
-      if (sideBtn) sideBtn.style.transform = '';
+      setSidePressed(false);
       onResetRef.current?.();
     };
-    const handleSideLeave = () => {
+    const handleSideCancel = (e: PointerEvent) => {
+      try {
+        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
+          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
+        }
+      } catch {
+        // ignore
+      }
       if (!sidePressed) return;
       sidePressed = false;
-      if (sideBtn) sideBtn.style.transform = '';
+      setSidePressed(false);
     };
 
     if (topBtn) {
-      topBtn.addEventListener('pointerdown', handleTopDown);
-      topBtn.addEventListener('pointerup', handleTopUp);
-      topBtn.addEventListener('pointerleave', handleTopLeave);
+      topBtn.addEventListener('pointerdown', handleTopDown as EventListener);
+      topBtn.addEventListener('pointerup', handleTopUp as EventListener);
+      topBtn.addEventListener('pointercancel', handleTopCancel as EventListener);
     }
     if (sideBtn) {
-      sideBtn.addEventListener('pointerdown', handleSideDown);
-      sideBtn.addEventListener('pointerup', handleSideUp);
-      sideBtn.addEventListener('pointerleave', handleSideLeave);
+      sideBtn.style.cursor = 'pointer';
+      sideBtn.addEventListener('pointerdown', handleSideDown as EventListener);
+      sideBtn.addEventListener('pointerup', handleSideUp as EventListener);
+      sideBtn.addEventListener('pointercancel', handleSideCancel as EventListener);
     }
 
     return () => {
       if (topBtn) {
-        topBtn.removeEventListener('pointerdown', handleTopDown);
-        topBtn.removeEventListener('pointerup', handleTopUp);
-        topBtn.removeEventListener('pointerleave', handleTopLeave);
+        topBtn.removeEventListener('pointerdown', handleTopDown as EventListener);
+        topBtn.removeEventListener('pointerup', handleTopUp as EventListener);
+        topBtn.removeEventListener('pointercancel', handleTopCancel as EventListener);
       }
       if (sideBtn) {
-        sideBtn.removeEventListener('pointerdown', handleSideDown);
-        sideBtn.removeEventListener('pointerup', handleSideUp);
-        sideBtn.removeEventListener('pointerleave', handleSideLeave);
+        sideBtn.removeEventListener('pointerdown', handleSideDown as EventListener);
+        sideBtn.removeEventListener('pointerup', handleSideUp as EventListener);
+        sideBtn.removeEventListener('pointercancel', handleSideCancel as EventListener);
       }
     };
   }, [mounted]);
@@ -139,7 +195,7 @@ export function CoachStopwatch({
 
   return (
     <div
-      className="relative h-[min(55vw,20rem)] w-[min(55vw,20rem)] overflow-hidden sm:h-[24rem] sm:w-[24rem]"
+      className="relative h-[clamp(32rem,74vh,54rem)] w-[clamp(26rem,60vh,44rem)] overflow-hidden"
       role="img"
       aria-label={timerLabel}
     >
