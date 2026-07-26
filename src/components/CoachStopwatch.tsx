@@ -193,7 +193,7 @@ export function CoachStopwatch({
     <div
       // Fills the width its container leaves, capped so the dial never grows
       // taller than the viewport; the ratio matches the SVG's viewBox.
-      className="relative aspect-[640/760] w-[min(100%,calc((100vh-12rem)*0.842),44rem)] overflow-hidden landscape:w-[min(100%,calc((100vh-6rem)*0.842),44rem)]"
+      className="relative aspect-[640/760] w-[min(100%,calc((100vh_-_12rem)*0.842),44rem)] overflow-hidden landscape:w-[min(100%,calc((100vh_-_7rem)*0.842),44rem)]"
       role="img"
       aria-label={timerLabel}
     >
