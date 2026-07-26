@@ -28,7 +28,7 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
       />
       {/* Battery Body */}
       <div
-        className="flex h-[min(55vw,18rem)] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:h-72 sm:gap-2 sm:p-3.5"
+        className="flex h-[min(18rem,55vw,calc(100vh-13rem))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5"
         aria-hidden="true"
         style={{
           backgroundColor: 'oklch(0.95 0.02 80)',

@@ -33,7 +33,9 @@
   --font-kids: 'Fredoka', 'Quicksand', system-ui, -apple-system, sans-serif;
   --ex-timer-size: clamp(8rem, 25vh, 16rem);
   --ex-timer-weight: 700;
-  --ex-name-size: clamp(2rem, 4.5vh, 3.4rem);
+  /* Sized by the smaller axis: viewport height alone blows the title up on
+     narrow, tall phones, which is exactly where the room runs out. */
+  --ex-name-size: clamp(1.5rem, min(4.5vh, 6.5vw), 3.4rem);
   --ex-name-weight: 500;
   --ex-heading-size: clamp(2.2rem, 5.5vh, 3.8rem);
   --ex-body-size: clamp(1.1rem, 2.2vh, 1.5rem);
@@ -45,6 +47,6 @@
   --ex-btn-gap: 1.5rem;
   --ex-btn-radius: 1rem;
   --ex-btn-font-size: clamp(1.1rem, 2.2vh, 1.4rem);
-  --ex-page-padding: 2rem;
+  --ex-page-padding: clamp(0.75rem, 4vw, 2rem);
   --ex-section-gap: 2rem;
 }
