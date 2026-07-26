@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import stopwatchMarkup from '@/assets/stopwatch.svg?raw';
+import { playStopwatchPress, playStopwatchRelease } from '@/lib/sounds';
 
 interface CoachStopwatchProps {
   secondsRemaining: number;
@@ -102,12 +103,14 @@ export function CoachStopwatch({
         // ignore pointer capture errors if unsupported
       }
       if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
+      playStopwatchPress();
     };
     const handleTopUp = (e: PointerEvent) => {
       releaseCapture(e);
       if (!topPressed) return;
       topPressed = false;
       if (topBtn) topBtn.style.transform = '';
+      playStopwatchRelease();
       onToggleRef.current?.();
     };
     const handleTopCancel = (e: PointerEvent) => {
@@ -115,6 +118,8 @@ export function CoachStopwatch({
       if (!topPressed) return;
       topPressed = false;
       if (topBtn) topBtn.style.transform = '';
+      // The button springs back visually, so it should click back too.
+      playStopwatchRelease();
     };
 
     const setSidePressed = (pressed: boolean) => {
