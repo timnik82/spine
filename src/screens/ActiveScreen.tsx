@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw } from 'lucide-react';
+import { Pause, Play, RotateCcw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseProgressPair } from '@/components/ExerciseProgressPair';
 import { HomeButton } from '@/components/HomeButton';
@@ -42,18 +42,30 @@ export function ActiveScreen({
         padding: 'var(--ex-page-padding)',
       }}
     >
-      <header className="flex items-start justify-between gap-4">
+      <header className="grid grid-cols-[auto_1fr_auto] items-center gap-4">
         <HomeButton onHome={onHome} color="var(--ex-fg)" />
-        <div className="flex-1 text-center">
-          <h1
-            className="mt-1 font-bold tracking-tight"
+        <div className="flex items-center justify-center">
+          <div
+            className="inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:px-8 sm:py-3"
             style={{
-              fontSize: 'var(--ex-name-size)',
-              color: 'var(--ex-fg)',
+              backgroundColor: 'oklch(0.96 0.025 85)',
+              border: '2.5px solid var(--ex-border)',
+              boxShadow: '0 4px 16px rgb(34 29 24 / 0.06)',
             }}
           >
-            {exerciseName}
-          </h1>
+            <Sparkles className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7" style={{ color: 'var(--ex-warm)' }} />
+            <h1
+              className="text-center font-medium tracking-wide"
+              style={{
+                fontFamily: 'var(--font-kids)',
+                fontSize: 'var(--ex-name-size)',
+                color: 'var(--ex-fg)',
+                lineHeight: 1.25,
+              }}
+            >
+              {exerciseName}
+            </h1>
+          </div>
         </div>
         <Button
           variant="ghost"
@@ -67,7 +79,7 @@ export function ActiveScreen({
         </Button>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center py-8">
+      <main className="flex flex-1 flex-col items-center justify-center py-2 sm:py-4">
         <ExerciseProgressPair
           secondsRemaining={secondsRemaining}
           totalSeconds={totalSeconds}

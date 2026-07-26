@@ -21,8 +21,9 @@ export function RestScreen({ secondsRemaining, totalSeconds, onSkip, onHome }: R
       <HomeButton onHome={onHome} color="var(--ex-rest-fg)" />
       <div className="flex flex-1 flex-col items-center justify-center gap-6">
         <h1
-          className="font-semibold tracking-tight"
+          className="font-medium tracking-wide"
           style={{
+            fontFamily: 'var(--font-kids)',
             fontSize: 'var(--ex-heading-size)',
             color: 'var(--ex-rest-fg)',
           }}
