@@ -1,6 +1,7 @@
 /**
  * Short interface sounds played through small pools of preloaded audio
- * elements, so a rapid second press never cuts off the first playback.
+ * elements: one element cannot play twice at once, so a pool keeps a rapid
+ * second press from cutting the first one off.
  */
 
 const POOL_SIZE = 3;
@@ -24,7 +25,10 @@ function createPool(fileName: string, volume: number) {
     if (typeof Audio === 'undefined') return;
     pool ??= build();
 
-    const audio = pool[next];
+    // Prefer an element that finished playing; only reuse a busy one when every
+    // element is still mid-click, which needs presses ~50ms apart.
+    const idle = pool.find((audio) => audio.paused || audio.ended);
+    const audio = idle ?? pool[next];
     next = (next + 1) % pool.length;
 
     audio.currentTime = 0;
