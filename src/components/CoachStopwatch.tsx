@@ -94,9 +94,12 @@ export function CoachStopwatch({
       }
     };
 
-    let topPressed = false;
+    // Holds the pointer that owns the press, so a second finger on the crown
+    // cannot release the first one's press or leave its own unmatched.
+    let topPointerId: number | null = null;
     const handleTopDown = (e: PointerEvent) => {
-      topPressed = true;
+      if (topPointerId !== null) return;
+      topPointerId = e.pointerId;
       try {
         (e.currentTarget as Element)?.setPointerCapture?.(e.pointerId);
       } catch {
@@ -111,8 +114,8 @@ export function CoachStopwatch({
      */
     const releaseTopButton = (e: PointerEvent) => {
       releaseCapture(e);
-      if (!topPressed) return false;
-      topPressed = false;
+      if (topPointerId === null || e.pointerId !== topPointerId) return false;
+      topPointerId = null;
       if (topBtn) topBtn.style.transform = '';
       playStopwatchRelease();
       return true;
