@@ -161,6 +161,11 @@ function createPressController({
     onPressStart?.();
     listenForRelease();
     clearWatchdogTimer();
+    // Deliberately springs the button back *without* retiring the gesture: the
+    // watchdog only promises the crown never looks stuck. A pointerup can only
+    // ever be delivered for a finger that was genuinely still down, so a long
+    // hold must still toggle on lift rather than be silently swallowed. The
+    // takeover above is what covers a release that truly never arrives.
     watchdogTimer = setTimeout(() => {
       watchdogTimer = null;
       spring();
