@@ -84,10 +84,10 @@ export function CoachStopwatch({
       sideStem.style.transition = 'transform 0.1s ease';
     }
 
-    const releaseCapture = (e: PointerEvent) => {
+    const releaseCaptureFrom = (el: Element | null | undefined, pointerId: number) => {
       try {
-        if ((e.currentTarget as Element)?.hasPointerCapture?.(e.pointerId)) {
-          (e.currentTarget as Element)?.releasePointerCapture?.(e.pointerId);
+        if (el?.hasPointerCapture?.(pointerId)) {
+          el.releasePointerCapture(pointerId);
         }
       } catch {
         // ignore pointer capture release errors
@@ -97,34 +97,67 @@ export function CoachStopwatch({
     // Holds the pointer that owns the press, so a second finger on the crown
     // cannot release the first one's press or leave its own unmatched.
     let topPointerId: number | null = null;
+    let disarmTopReleaseListeners: () => void = () => {};
+
+    /**
+     * Lets the button back up. Cancelling springs it back just as releasing
+     * does, so both paths click; only a real release toggles the timer.
+     */
+    const releaseTopButton = (e: PointerEvent, { toggle = false } = {}) => {
+      releaseCaptureFrom(topBtn, e.pointerId);
+      if (topPointerId === null || e.pointerId !== topPointerId) return false;
+      topPointerId = null;
+      disarmTopReleaseListeners();
+      if (topBtn) topBtn.style.transform = '';
+      playStopwatchRelease();
+      if (toggle) onToggleRef.current?.();
+      return true;
+    };
+
+    const handleWindowTopUp = (e: PointerEvent) => {
+      releaseTopButton(e, { toggle: true });
+    };
+    const handleWindowTopCancel = (e: PointerEvent) => {
+      releaseTopButton(e);
+    };
+
+    disarmTopReleaseListeners = () => {
+      window.removeEventListener('pointerup', handleWindowTopUp as EventListener);
+      window.removeEventListener('pointercancel', handleWindowTopCancel as EventListener);
+    };
+
+    const armTopReleaseListeners = () => {
+      window.addEventListener('pointerup', handleWindowTopUp as EventListener);
+      window.addEventListener('pointercancel', handleWindowTopCancel as EventListener);
+    };
+
+    const forceResetTopButton = () => {
+      if (topPointerId === null) return;
+      topPointerId = null;
+      disarmTopReleaseListeners();
+      if (topBtn) topBtn.style.transform = '';
+    };
+
     const handleTopDown = (e: PointerEvent) => {
       if (topPointerId !== null) return;
+      e.preventDefault();
       topPointerId = e.pointerId;
       try {
-        (e.currentTarget as Element)?.setPointerCapture?.(e.pointerId);
+        topBtn?.setPointerCapture?.(e.pointerId);
       } catch {
         // ignore pointer capture errors if unsupported
       }
       if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
       playStopwatchPress();
-    };
-    /**
-     * Lets the button back up. Cancelling springs it back just as releasing
-     * does, so both paths click; only a real release toggles the timer.
-     */
-    const releaseTopButton = (e: PointerEvent) => {
-      releaseCapture(e);
-      if (topPointerId === null || e.pointerId !== topPointerId) return false;
-      topPointerId = null;
-      if (topBtn) topBtn.style.transform = '';
-      playStopwatchRelease();
-      return true;
+      armTopReleaseListeners();
     };
     const handleTopUp = (e: PointerEvent) => {
-      if (!releaseTopButton(e)) return;
-      onToggleRef.current?.();
+      releaseTopButton(e, { toggle: true });
     };
     const handleTopCancel = (e: PointerEvent) => {
+      releaseTopButton(e);
+    };
+    const handleTopLostCapture = (e: PointerEvent) => {
       releaseTopButton(e);
     };
 
@@ -138,52 +171,102 @@ export function CoachStopwatch({
       );
     };
 
-    let sidePressed = false;
+    let sidePointerId: number | null = null;
+    let disarmSideReleaseListeners: () => void = () => {};
+
+    const releaseSideButton = (e: PointerEvent, { invokeReset = false } = {}) => {
+      releaseCaptureFrom(sideBtn, e.pointerId);
+      if (sidePointerId === null || e.pointerId !== sidePointerId) return false;
+      sidePointerId = null;
+      disarmSideReleaseListeners();
+      setSidePressed(false);
+      if (invokeReset) onResetRef.current?.();
+      return true;
+    };
+
+    const handleWindowSideUp = (e: PointerEvent) => {
+      releaseSideButton(e, { invokeReset: true });
+    };
+    const handleWindowSideCancel = (e: PointerEvent) => {
+      releaseSideButton(e);
+    };
+
+    disarmSideReleaseListeners = () => {
+      window.removeEventListener('pointerup', handleWindowSideUp as EventListener);
+      window.removeEventListener('pointercancel', handleWindowSideCancel as EventListener);
+    };
+
+    const armSideReleaseListeners = () => {
+      window.addEventListener('pointerup', handleWindowSideUp as EventListener);
+      window.addEventListener('pointercancel', handleWindowSideCancel as EventListener);
+    };
+
+    const forceResetSideButton = () => {
+      if (sidePointerId === null) return;
+      sidePointerId = null;
+      disarmSideReleaseListeners();
+      setSidePressed(false);
+    };
+
     const handleSideDown = (e: PointerEvent) => {
-      sidePressed = true;
+      if (sidePointerId !== null) return;
+      e.preventDefault();
+      sidePointerId = e.pointerId;
       try {
-        (e.currentTarget as Element)?.setPointerCapture?.(e.pointerId);
+        sideBtn?.setPointerCapture?.(e.pointerId);
       } catch {
         // ignore pointer capture errors if unsupported
       }
       setSidePressed(true);
+      armSideReleaseListeners();
     };
     const handleSideUp = (e: PointerEvent) => {
-      releaseCapture(e);
-      if (!sidePressed) return;
-      sidePressed = false;
-      setSidePressed(false);
-      onResetRef.current?.();
+      releaseSideButton(e, { invokeReset: true });
     };
     const handleSideCancel = (e: PointerEvent) => {
-      releaseCapture(e);
-      if (!sidePressed) return;
-      sidePressed = false;
-      setSidePressed(false);
+      releaseSideButton(e);
+    };
+    const handleSideLostCapture = (e: PointerEvent) => {
+      releaseSideButton(e);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        forceResetTopButton();
+        forceResetSideButton();
+      }
     };
 
     if (topBtn) {
       topBtn.addEventListener('pointerdown', handleTopDown as EventListener);
       topBtn.addEventListener('pointerup', handleTopUp as EventListener);
       topBtn.addEventListener('pointercancel', handleTopCancel as EventListener);
+      topBtn.addEventListener('lostpointercapture', handleTopLostCapture as EventListener);
     }
     if (sideBtn) {
       sideBtn.style.cursor = 'pointer';
       sideBtn.addEventListener('pointerdown', handleSideDown as EventListener);
       sideBtn.addEventListener('pointerup', handleSideUp as EventListener);
       sideBtn.addEventListener('pointercancel', handleSideCancel as EventListener);
+      sideBtn.addEventListener('lostpointercapture', handleSideLostCapture as EventListener);
     }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      forceResetTopButton();
+      forceResetSideButton();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (topBtn) {
         topBtn.removeEventListener('pointerdown', handleTopDown as EventListener);
         topBtn.removeEventListener('pointerup', handleTopUp as EventListener);
         topBtn.removeEventListener('pointercancel', handleTopCancel as EventListener);
+        topBtn.removeEventListener('lostpointercapture', handleTopLostCapture as EventListener);
       }
       if (sideBtn) {
         sideBtn.removeEventListener('pointerdown', handleSideDown as EventListener);
         sideBtn.removeEventListener('pointerup', handleSideUp as EventListener);
         sideBtn.removeEventListener('pointercancel', handleSideCancel as EventListener);
+        sideBtn.removeEventListener('lostpointercapture', handleSideLostCapture as EventListener);
       }
     };
   }, [mounted]);
