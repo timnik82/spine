@@ -1,7 +1,7 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { playStopwatchPress, playStopwatchRelease } from '@/lib/sounds';
-import { CoachStopwatch, MIN_PRESS_HOLD_MS } from './CoachStopwatch';
+import { CoachStopwatch, MIN_PRESS_HOLD_MS, PRESS_WATCHDOG_MS } from './CoachStopwatch';
 
 vi.mock('@/lib/sounds', () => ({
   playStopwatchPress: vi.fn(),
@@ -254,6 +254,73 @@ describe('CoachStopwatch crown button', () => {
 
     expect(onToggle).toHaveBeenCalledTimes(2);
     expect(playStopwatchRelease).toHaveBeenCalledTimes(2);
+  });
+
+  it('springs back on its own when the release event never arrives', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      vi.advanceTimersByTime(PRESS_WATCHDOG_MS);
+    });
+
+    expect(topBtn.style.transform).toBe('');
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the next tap take over after a release event was lost', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      vi.advanceTimersByTime(PRESS_WATCHDOG_MS);
+    });
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 2));
+    });
+    expect(topBtn.style.transform).toContain('translateY');
+    expect(playStopwatchPress).toHaveBeenCalledTimes(2);
+
+    act(() => {
+      window.dispatchEvent(pointerEvent('pointerup', 2));
+    });
+    flushPressHold();
+
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(topBtn.style.transform).toBe('');
+  });
+
+  it('drops the press when the window loses focus mid-hold', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      window.dispatchEvent(new Event('blur'));
+    });
+
+    expect(topBtn.style.transform).toBe('');
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(playStopwatchRelease).not.toHaveBeenCalled();
+
+    // The stale finger-up must not toggle after the gesture was dropped.
+    act(() => {
+      window.dispatchEvent(pointerEvent('pointerup', 1));
+    });
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it('ignores non-primary mouse button presses', async () => {

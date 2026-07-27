@@ -26,6 +26,157 @@ const TOP_PRESS_DISTANCE_PX = 28.5;
 const PRESS_TRANSITION_MS = 100;
 /** Hold long enough for the down stroke to finish and a fully-pressed frame to show. */
 export const MIN_PRESS_HOLD_MS = PRESS_TRANSITION_MS + 20;
+/**
+ * No real tap lasts this long. Past it we assume the release event was lost
+ * (mobile browsers drop them) and let the button back up on its own.
+ */
+export const PRESS_WATCHDOG_MS = 2000;
+
+interface PressControllerOptions {
+  element: SVGGElement | null;
+  setPressed: (pressed: boolean) => void;
+  /** Runs on finger-up — never on cancel, watchdog or backgrounding. */
+  onActivate: () => void;
+  onPressStart?: () => void;
+  onPressEnd?: () => void;
+}
+
+/**
+ * Press lifecycle for one SVG button.
+ *
+ * Release is tracked on `window` rather than on the button itself: on mobile
+ * the finger regularly ends up somewhere else by the time it lifts, and the
+ * button element then never sees `pointerup`. Everything else here exists so
+ * that a release event which never arrives at all can only ever cost one tap —
+ * the watchdog puts the button back up, and the next press takes ownership.
+ */
+function createPressController({
+  element,
+  setPressed,
+  onActivate,
+  onPressStart,
+  onPressEnd,
+}: PressControllerOptions) {
+  let pointerId: number | null = null;
+  let pressedAt = 0;
+  let pressedVisually = false;
+  let springTimer: ReturnType<typeof setTimeout> | null = null;
+  let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const clearSpringTimer = () => {
+    if (springTimer !== null) {
+      clearTimeout(springTimer);
+      springTimer = null;
+    }
+  };
+
+  const clearWatchdogTimer = () => {
+    if (watchdogTimer !== null) {
+      clearTimeout(watchdogTimer);
+      watchdogTimer = null;
+    }
+  };
+
+  const spring = () => {
+    springTimer = null;
+    if (!pressedVisually) return;
+    pressedVisually = false;
+    setPressed(false);
+    onPressEnd?.();
+  };
+
+  /** Finish a pending spring now, so rapid taps keep press/release pairs intact. */
+  const flushSpring = () => {
+    if (springTimer === null) return;
+    clearSpringTimer();
+    spring();
+  };
+
+  /**
+   * Finger is up: the caller has already toggled, but hold the button visually
+   * down until the min hold so fast taps still complete the down stroke.
+   */
+  const scheduleSpring = () => {
+    clearSpringTimer();
+    const remaining = Math.max(0, MIN_PRESS_HOLD_MS - (performance.now() - pressedAt));
+    if (remaining === 0) {
+      spring();
+    } else {
+      springTimer = setTimeout(spring, remaining);
+    }
+  };
+
+  const handleWindowUp = (e: PointerEvent) => {
+    endPress(e, { activate: true });
+  };
+  const handleWindowCancel = (e: PointerEvent) => {
+    endPress(e, { activate: false });
+  };
+
+  const listenForRelease = () => {
+    window.addEventListener('pointerup', handleWindowUp as EventListener);
+    window.addEventListener('pointercancel', handleWindowCancel as EventListener);
+  };
+
+  const stopListeningForRelease = () => {
+    window.removeEventListener('pointerup', handleWindowUp as EventListener);
+    window.removeEventListener('pointercancel', handleWindowCancel as EventListener);
+  };
+
+  function endPress(e: PointerEvent, { activate }: { activate: boolean }) {
+    if (pointerId === null || e.pointerId !== pointerId) return;
+    pointerId = null;
+    stopListeningForRelease();
+    clearWatchdogTimer();
+    if (activate) onActivate();
+    scheduleSpring();
+  }
+
+  /** Drop the gesture entirely: no activation, no click, button back up. */
+  const abort = () => {
+    clearSpringTimer();
+    clearWatchdogTimer();
+    pointerId = null;
+    stopListeningForRelease();
+    if (pressedVisually) {
+      pressedVisually = false;
+      setPressed(false);
+    }
+  };
+
+  const handleDown = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (pointerId !== null) {
+      // A live press owns the button — a second finger must not steal it.
+      // Once the watchdog has given up on it, though, its release is never
+      // coming, so this press takes over instead of being swallowed.
+      if (pressedVisually) return;
+      abort();
+    }
+    flushSpring();
+    pointerId = e.pointerId;
+    pressedAt = performance.now();
+    pressedVisually = true;
+    setPressed(true);
+    onPressStart?.();
+    listenForRelease();
+    clearWatchdogTimer();
+    watchdogTimer = setTimeout(() => {
+      watchdogTimer = null;
+      spring();
+    }, PRESS_WATCHDOG_MS);
+  };
+
+  element?.addEventListener('pointerdown', handleDown as EventListener);
+
+  return {
+    abort,
+    destroy: () => {
+      abort();
+      element?.removeEventListener('pointerdown', handleDown as EventListener);
+    },
+  };
+}
 
 export function CoachStopwatch({
   secondsRemaining,
@@ -70,6 +221,11 @@ export function CoachStopwatch({
     };
   }, []);
 
+  // Decode the click buffers up front so the very first tap already has sound.
+  useEffect(() => {
+    unlockStopwatchSounds();
+  }, []);
+
   // Attach button interactions
   useEffect(() => {
     if (!mounted) return;
@@ -87,259 +243,60 @@ export function CoachStopwatch({
       topBtn.style.touchAction = 'none';
     }
     if (sideBtn) {
+      sideBtn.style.cursor = 'pointer';
       sideBtn.style.touchAction = 'none';
     }
     if (sideStem) {
       sideStem.style.transition = `transform ${PRESS_TRANSITION_MS}ms ease`;
     }
 
-    const releaseCaptureFrom = (el: Element | null | undefined, pointerId: number) => {
-      try {
-        if (el?.hasPointerCapture?.(pointerId)) {
-          el.releasePointerCapture(pointerId);
-        }
-      } catch {
-        // ignore pointer capture release errors
-      }
-    };
+    const topController = createPressController({
+      element: topBtn,
+      setPressed: (pressed) => {
+        if (topBtn) topBtn.style.transform = pressed ? `translateY(${TOP_PRESS_DISTANCE_PX}px)` : '';
+      },
+      onActivate: () => onToggleRef.current?.(),
+      onPressStart: () => {
+        unlockStopwatchSounds();
+        playStopwatchPress();
+      },
+      onPressEnd: () => playStopwatchRelease(),
+    });
 
-    // Holds the pointer that owns the press, so a second finger on the crown
-    // cannot release the first one's press or leave its own unmatched.
-    let topPointerId: number | null = null;
-    let topPressStartedAt = 0;
-    let topReleaseTimer: ReturnType<typeof setTimeout> | null = null;
-    let disarmTopReleaseListeners: () => void = () => {};
+    const sideController = createPressController({
+      element: sideBtn,
+      setPressed: (pressed) => {
+        if (!sideStem) return;
+        sideStem.setAttribute(
+          'transform',
+          pressed
+            ? `${sideBaseTransform} translate(0 ${SIDE_PRESS_DISTANCE})`
+            : sideBaseTransform
+        );
+      },
+      onActivate: () => onResetRef.current?.(),
+    });
 
-    const clearTopReleaseTimer = () => {
-      if (topReleaseTimer !== null) {
-        clearTimeout(topReleaseTimer);
-        topReleaseTimer = null;
-      }
-    };
-
-    const springTopButton = () => {
-      topReleaseTimer = null;
-      if (topBtn) topBtn.style.transform = '';
-      playStopwatchRelease();
-    };
-
-    /** Finish a pending spring immediately so rapid taps keep press/release pairs intact. */
-    const flushPendingTopSpring = () => {
-      if (topReleaseTimer === null) return;
-      clearTimeout(topReleaseTimer);
-      springTopButton();
-    };
-
-    const scheduleTopSpring = () => {
-      const remaining = Math.max(0, MIN_PRESS_HOLD_MS - (performance.now() - topPressStartedAt));
-      clearTopReleaseTimer();
-      if (remaining === 0) {
-        springTopButton();
-      } else {
-        topReleaseTimer = setTimeout(springTopButton, remaining);
-      }
-    };
-
-    /**
-     * Finger-up path: toggle immediately for timer responsiveness, but keep the
-     * crown visually down until the min hold so fast taps still reach the case.
-     */
-    const releaseTopButton = (e: PointerEvent, { toggle = false } = {}) => {
-      if (topPointerId === null || e.pointerId !== topPointerId) return false;
-      const pointerId = e.pointerId;
-      topPointerId = null;
-      disarmTopReleaseListeners();
-      releaseCaptureFrom(topBtn, pointerId);
-      if (toggle) onToggleRef.current?.();
-      scheduleTopSpring();
-      return true;
-    };
-
-    const handleWindowTopUp = (e: PointerEvent) => {
-      releaseTopButton(e, { toggle: true });
-    };
-    const handleWindowTopCancel = (e: PointerEvent) => {
-      releaseTopButton(e);
-    };
-
-    disarmTopReleaseListeners = () => {
-      window.removeEventListener('pointerup', handleWindowTopUp as EventListener);
-      window.removeEventListener('pointercancel', handleWindowTopCancel as EventListener);
-    };
-
-    const armTopReleaseListeners = () => {
-      window.addEventListener('pointerup', handleWindowTopUp as EventListener);
-      window.addEventListener('pointercancel', handleWindowTopCancel as EventListener);
-    };
-
-    const forceResetTopButton = () => {
-      clearTopReleaseTimer();
-      topPointerId = null;
-      disarmTopReleaseListeners();
-      if (topBtn) topBtn.style.transform = '';
-    };
-
-    const handleTopDown = (e: PointerEvent) => {
-      if (topPointerId !== null) return;
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      // Complete any pending spring (and its release click) before a new press.
-      flushPendingTopSpring();
-      unlockStopwatchSounds();
-      topPointerId = e.pointerId;
-      topPressStartedAt = performance.now();
-      if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
-      playStopwatchPress();
-      try {
-        topBtn?.setPointerCapture?.(e.pointerId);
-      } catch {
-        // ignore pointer capture errors if unsupported
-      }
-      if (!topBtn?.hasPointerCapture?.(e.pointerId)) {
-        armTopReleaseListeners();
-      }
-    };
-    const handleTopUp = (e: PointerEvent) => {
-      releaseTopButton(e, { toggle: true });
-    };
-    const handleTopCancel = (e: PointerEvent) => {
-      releaseTopButton(e);
-    };
-
-    const setSidePressed = (pressed: boolean) => {
-      if (!sideStem) return;
-      sideStem.setAttribute(
-        'transform',
-        pressed
-          ? `${sideBaseTransform} translate(0 ${SIDE_PRESS_DISTANCE})`
-          : sideBaseTransform
-      );
-    };
-
-    let sidePointerId: number | null = null;
-    let sidePressStartedAt = 0;
-    let sideReleaseTimer: ReturnType<typeof setTimeout> | null = null;
-    let disarmSideReleaseListeners: () => void = () => {};
-
-    const clearSideReleaseTimer = () => {
-      if (sideReleaseTimer !== null) {
-        clearTimeout(sideReleaseTimer);
-        sideReleaseTimer = null;
-      }
-    };
-
-    const springSideButton = () => {
-      sideReleaseTimer = null;
-      setSidePressed(false);
-    };
-
-    const flushPendingSideSpring = () => {
-      if (sideReleaseTimer === null) return;
-      clearTimeout(sideReleaseTimer);
-      springSideButton();
-    };
-
-    const scheduleSideSpring = () => {
-      const remaining = Math.max(0, MIN_PRESS_HOLD_MS - (performance.now() - sidePressStartedAt));
-      clearSideReleaseTimer();
-      if (remaining === 0) {
-        springSideButton();
-      } else {
-        sideReleaseTimer = setTimeout(springSideButton, remaining);
-      }
-    };
-
-    const releaseSideButton = (e: PointerEvent, { invokeReset = false } = {}) => {
-      if (sidePointerId === null || e.pointerId !== sidePointerId) return false;
-      const pointerId = e.pointerId;
-      sidePointerId = null;
-      disarmSideReleaseListeners();
-      releaseCaptureFrom(sideBtn, pointerId);
-      if (invokeReset) onResetRef.current?.();
-      scheduleSideSpring();
-      return true;
-    };
-
-    const handleWindowSideUp = (e: PointerEvent) => {
-      releaseSideButton(e, { invokeReset: true });
-    };
-    const handleWindowSideCancel = (e: PointerEvent) => {
-      releaseSideButton(e);
-    };
-
-    disarmSideReleaseListeners = () => {
-      window.removeEventListener('pointerup', handleWindowSideUp as EventListener);
-      window.removeEventListener('pointercancel', handleWindowSideCancel as EventListener);
-    };
-
-    const armSideReleaseListeners = () => {
-      window.addEventListener('pointerup', handleWindowSideUp as EventListener);
-      window.addEventListener('pointercancel', handleWindowSideCancel as EventListener);
-    };
-
-    const forceResetSideButton = () => {
-      clearSideReleaseTimer();
-      sidePointerId = null;
-      disarmSideReleaseListeners();
-      setSidePressed(false);
-    };
-
-    const handleSideDown = (e: PointerEvent) => {
-      if (sidePointerId !== null) return;
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      flushPendingSideSpring();
-      sidePointerId = e.pointerId;
-      sidePressStartedAt = performance.now();
-      setSidePressed(true);
-      try {
-        sideBtn?.setPointerCapture?.(e.pointerId);
-      } catch {
-        // ignore pointer capture errors if unsupported
-      }
-      if (!sideBtn?.hasPointerCapture?.(e.pointerId)) {
-        armSideReleaseListeners();
-      }
-    };
-    const handleSideUp = (e: PointerEvent) => {
-      releaseSideButton(e, { invokeReset: true });
-    };
-    const handleSideCancel = (e: PointerEvent) => {
-      releaseSideButton(e);
-    };
-
+    // Backgrounding or a system overlay swallows the release — drop the gesture.
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        forceResetTopButton();
-        forceResetSideButton();
+        topController.abort();
+        sideController.abort();
       }
     };
+    const handleWindowBlur = () => {
+      topController.abort();
+      sideController.abort();
+    };
 
-    if (topBtn) {
-      topBtn.addEventListener('pointerdown', handleTopDown as EventListener);
-      topBtn.addEventListener('pointerup', handleTopUp as EventListener);
-      topBtn.addEventListener('pointercancel', handleTopCancel as EventListener);
-    }
-    if (sideBtn) {
-      sideBtn.style.cursor = 'pointer';
-      sideBtn.addEventListener('pointerdown', handleSideDown as EventListener);
-      sideBtn.addEventListener('pointerup', handleSideUp as EventListener);
-      sideBtn.addEventListener('pointercancel', handleSideCancel as EventListener);
-    }
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
 
     return () => {
-      forceResetTopButton();
-      forceResetSideButton();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (topBtn) {
-        topBtn.removeEventListener('pointerdown', handleTopDown as EventListener);
-        topBtn.removeEventListener('pointerup', handleTopUp as EventListener);
-        topBtn.removeEventListener('pointercancel', handleTopCancel as EventListener);
-      }
-      if (sideBtn) {
-        sideBtn.removeEventListener('pointerdown', handleSideDown as EventListener);
-        sideBtn.removeEventListener('pointerup', handleSideUp as EventListener);
-        sideBtn.removeEventListener('pointercancel', handleSideCancel as EventListener);
-      }
+      window.removeEventListener('blur', handleWindowBlur);
+      topController.destroy();
+      sideController.destroy();
     };
   }, [mounted]);
 
