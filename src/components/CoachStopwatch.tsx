@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import stopwatchMarkup from '@/assets/stopwatch.svg?raw';
-import { playStopwatchPress, playStopwatchRelease } from '@/lib/sounds';
+import {
+  playStopwatchPress,
+  playStopwatchRelease,
+  unlockStopwatchSounds,
+} from '@/lib/sounds';
 
 interface CoachStopwatchProps {
   secondsRemaining: number;
@@ -17,6 +21,11 @@ const SIDE_BUTTON_ROTATE = 'translate(55 48) rotate(33.5 620 278)';
 /** Local +Y press depth in SVG user units — hat just kisses the case */
 const SIDE_PRESS_DISTANCE = 26;
 const TOP_PRESS_DISTANCE_PX = 28.5;
+
+/** Matches the CSS transform transition on the crown / side stem. */
+const PRESS_TRANSITION_MS = 100;
+/** Hold long enough for the down stroke to finish and a fully-pressed frame to show. */
+export const MIN_PRESS_HOLD_MS = PRESS_TRANSITION_MS + 20;
 
 export function CoachStopwatch({
   secondsRemaining,
@@ -74,14 +83,14 @@ export function CoachStopwatch({
     const sideBaseTransform = sideStem?.getAttribute('transform') || SIDE_BUTTON_ROTATE;
 
     if (topBtn) {
-      topBtn.style.transition = 'transform 0.1s ease';
+      topBtn.style.transition = `transform ${PRESS_TRANSITION_MS}ms ease`;
       topBtn.style.touchAction = 'none';
     }
     if (sideBtn) {
       sideBtn.style.touchAction = 'none';
     }
     if (sideStem) {
-      sideStem.style.transition = 'transform 0.1s ease';
+      sideStem.style.transition = `transform ${PRESS_TRANSITION_MS}ms ease`;
     }
 
     const releaseCaptureFrom = (el: Element | null | undefined, pointerId: number) => {
@@ -97,21 +106,45 @@ export function CoachStopwatch({
     // Holds the pointer that owns the press, so a second finger on the crown
     // cannot release the first one's press or leave its own unmatched.
     let topPointerId: number | null = null;
+    let topPressStartedAt = 0;
+    let topReleaseTimer: ReturnType<typeof setTimeout> | null = null;
     let disarmTopReleaseListeners: () => void = () => {};
 
+    const clearTopReleaseTimer = () => {
+      if (topReleaseTimer !== null) {
+        clearTimeout(topReleaseTimer);
+        topReleaseTimer = null;
+      }
+    };
+
+    const springTopButton = () => {
+      topReleaseTimer = null;
+      if (topBtn) topBtn.style.transform = '';
+      playStopwatchRelease();
+    };
+
+    const scheduleTopSpring = () => {
+      const remaining = Math.max(0, MIN_PRESS_HOLD_MS - (performance.now() - topPressStartedAt));
+      clearTopReleaseTimer();
+      if (remaining === 0) {
+        springTopButton();
+      } else {
+        topReleaseTimer = setTimeout(springTopButton, remaining);
+      }
+    };
+
     /**
-     * Lets the button back up. Cancelling springs it back just as releasing
-     * does, so both paths click; only a real release toggles the timer.
+     * Finger-up path: toggle immediately for timer responsiveness, but keep the
+     * crown visually down until the min hold so fast taps still reach the case.
      */
     const releaseTopButton = (e: PointerEvent, { toggle = false } = {}) => {
       if (topPointerId === null || e.pointerId !== topPointerId) return false;
       const pointerId = e.pointerId;
       topPointerId = null;
       disarmTopReleaseListeners();
-      if (topBtn) topBtn.style.transform = '';
-      playStopwatchRelease();
-      if (toggle) onToggleRef.current?.();
       releaseCaptureFrom(topBtn, pointerId);
+      if (toggle) onToggleRef.current?.();
+      scheduleTopSpring();
       return true;
     };
 
@@ -133,7 +166,7 @@ export function CoachStopwatch({
     };
 
     const forceResetTopButton = () => {
-      if (topPointerId === null) return;
+      clearTopReleaseTimer();
       topPointerId = null;
       disarmTopReleaseListeners();
       if (topBtn) topBtn.style.transform = '';
@@ -141,7 +174,11 @@ export function CoachStopwatch({
 
     const handleTopDown = (e: PointerEvent) => {
       if (topPointerId !== null) return;
+      // A pending spring from a prior fast tap would fight this new press.
+      clearTopReleaseTimer();
+      unlockStopwatchSounds();
       topPointerId = e.pointerId;
+      topPressStartedAt = performance.now();
       if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
       playStopwatchPress();
       try {
@@ -171,16 +208,40 @@ export function CoachStopwatch({
     };
 
     let sidePointerId: number | null = null;
+    let sidePressStartedAt = 0;
+    let sideReleaseTimer: ReturnType<typeof setTimeout> | null = null;
     let disarmSideReleaseListeners: () => void = () => {};
+
+    const clearSideReleaseTimer = () => {
+      if (sideReleaseTimer !== null) {
+        clearTimeout(sideReleaseTimer);
+        sideReleaseTimer = null;
+      }
+    };
+
+    const springSideButton = () => {
+      sideReleaseTimer = null;
+      setSidePressed(false);
+    };
+
+    const scheduleSideSpring = () => {
+      const remaining = Math.max(0, MIN_PRESS_HOLD_MS - (performance.now() - sidePressStartedAt));
+      clearSideReleaseTimer();
+      if (remaining === 0) {
+        springSideButton();
+      } else {
+        sideReleaseTimer = setTimeout(springSideButton, remaining);
+      }
+    };
 
     const releaseSideButton = (e: PointerEvent, { invokeReset = false } = {}) => {
       if (sidePointerId === null || e.pointerId !== sidePointerId) return false;
       const pointerId = e.pointerId;
       sidePointerId = null;
       disarmSideReleaseListeners();
-      setSidePressed(false);
-      if (invokeReset) onResetRef.current?.();
       releaseCaptureFrom(sideBtn, pointerId);
+      if (invokeReset) onResetRef.current?.();
+      scheduleSideSpring();
       return true;
     };
 
@@ -202,7 +263,7 @@ export function CoachStopwatch({
     };
 
     const forceResetSideButton = () => {
-      if (sidePointerId === null) return;
+      clearSideReleaseTimer();
       sidePointerId = null;
       disarmSideReleaseListeners();
       setSidePressed(false);
@@ -210,7 +271,9 @@ export function CoachStopwatch({
 
     const handleSideDown = (e: PointerEvent) => {
       if (sidePointerId !== null) return;
+      clearSideReleaseTimer();
       sidePointerId = e.pointerId;
+      sidePressStartedAt = performance.now();
       setSidePressed(true);
       try {
         sideBtn?.setPointerCapture?.(e.pointerId);

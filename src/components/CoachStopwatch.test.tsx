@@ -1,11 +1,12 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { playStopwatchPress, playStopwatchRelease } from '@/lib/sounds';
-import { CoachStopwatch } from './CoachStopwatch';
+import { CoachStopwatch, MIN_PRESS_HOLD_MS } from './CoachStopwatch';
 
 vi.mock('@/lib/sounds', () => ({
   playStopwatchPress: vi.fn(),
   playStopwatchRelease: vi.fn(),
+  unlockStopwatchSounds: vi.fn(),
 }));
 
 function pointerEvent(type: string, pointerId: number) {
@@ -26,17 +27,39 @@ function getTopButton(container: HTMLElement) {
   return container.querySelector<SVGGElement>('svg [id="top-button"]');
 }
 
+/** Finish the min-hold spring that fast taps schedule after finger-up. */
+function flushPressHold() {
+  act(() => {
+    vi.advanceTimersByTime(MIN_PRESS_HOLD_MS);
+  });
+}
+
 describe('CoachStopwatch crown button', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: [
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+        'performance',
+        'Date',
+      ],
+    });
+  });
+
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.useRealTimers();
     Object.defineProperty(document, 'visibilityState', {
       configurable: true,
       value: 'visible',
     });
   });
 
-  it('toggles and clears the pressed transform on pointerup', async () => {
+  it('toggles immediately and springs back after a slow press', async () => {
     const onToggle = vi.fn();
     const { container } = await renderStopwatch(onToggle);
     const topBtn = getTopButton(container)!;
@@ -45,6 +68,10 @@ describe('CoachStopwatch crown button', () => {
       topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
     });
     expect(topBtn.style.transform).toContain('translateY');
+
+    act(() => {
+      vi.advanceTimersByTime(MIN_PRESS_HOLD_MS);
+    });
 
     act(() => {
       topBtn.dispatchEvent(pointerEvent('pointerup', 1));
@@ -56,7 +83,31 @@ describe('CoachStopwatch crown button', () => {
     expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
-  it('resets the pressed transform on pointercancel without toggling', async () => {
+  it('keeps the crown fully pressed through a fast tap, then springs back', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerup', 1));
+    });
+
+    // Finger already up: timer toggled, but visual still completing the down stroke.
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(topBtn.style.transform).toContain('translateY');
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).not.toHaveBeenCalled();
+
+    flushPressHold();
+
+    expect(topBtn.style.transform).toBe('');
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets after pointercancel without toggling, once the min hold elapses', async () => {
     const onToggle = vi.fn();
     const { container } = await renderStopwatch(onToggle);
     const topBtn = getTopButton(container)!;
@@ -68,8 +119,12 @@ describe('CoachStopwatch crown button', () => {
       topBtn.dispatchEvent(pointerEvent('pointercancel', 1));
     });
 
-    expect(topBtn.style.transform).toBe('');
     expect(onToggle).not.toHaveBeenCalled();
+    expect(topBtn.style.transform).toContain('translateY');
+
+    flushPressHold();
+
+    expect(topBtn.style.transform).toBe('');
     expect(playStopwatchPress).toHaveBeenCalledTimes(1);
     expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
@@ -81,8 +136,8 @@ describe('CoachStopwatch crown button', () => {
 
     act(() => {
       topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+      vi.advanceTimersByTime(MIN_PRESS_HOLD_MS);
     });
-    expect(topBtn.style.transform).toContain('translateY');
 
     act(() => {
       window.dispatchEvent(pointerEvent('pointerup', 1));
@@ -94,7 +149,7 @@ describe('CoachStopwatch crown button', () => {
     expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
-  it('resets the pressed transform on visibilitychange without toggling or release sound', async () => {
+  it('resets on visibilitychange mid-hold without toggling or release sound', async () => {
     const onToggle = vi.fn();
     const { container } = await renderStopwatch(onToggle);
     const topBtn = getTopButton(container)!;
@@ -102,7 +157,11 @@ describe('CoachStopwatch crown button', () => {
     act(() => {
       topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
     });
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerup', 1));
+    });
     expect(topBtn.style.transform).toContain('translateY');
+    expect(onToggle).toHaveBeenCalledTimes(1);
 
     act(() => {
       Object.defineProperty(document, 'visibilityState', {
@@ -113,8 +172,11 @@ describe('CoachStopwatch crown button', () => {
     });
 
     expect(topBtn.style.transform).toBe('');
-    expect(onToggle).not.toHaveBeenCalled();
     expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).not.toHaveBeenCalled();
+
+    // A cancelled hold must not fire a delayed release later.
+    flushPressHold();
     expect(playStopwatchRelease).not.toHaveBeenCalled();
   });
 
@@ -135,8 +197,11 @@ describe('CoachStopwatch crown button', () => {
     });
 
     expect(onToggle).toHaveBeenCalledTimes(1);
-    expect(topBtn.style.transform).toBe('');
     expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+
+    flushPressHold();
+
+    expect(topBtn.style.transform).toBe('');
     expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
@@ -147,6 +212,7 @@ describe('CoachStopwatch crown button', () => {
 
     act(() => {
       topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+      vi.advanceTimersByTime(MIN_PRESS_HOLD_MS);
     });
     act(() => {
       topBtn.dispatchEvent(pointerEvent('pointerup', 1));
