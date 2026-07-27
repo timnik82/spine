@@ -273,6 +273,51 @@ describe('CoachStopwatch crown button', () => {
     expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
+  it('still toggles if the finger lifts after the watchdog gave up', async () => {
+    // The watchdog only guarantees the crown never *looks* stuck. A pointerup
+    // can only be delivered for a finger that was genuinely still down, so a
+    // long hold must not be silently swallowed.
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      vi.advanceTimersByTime(PRESS_WATCHDOG_MS);
+    });
+    expect(topBtn.style.transform).toBe('');
+
+    act(() => {
+      window.dispatchEvent(pointerEvent('pointerup', 1));
+    });
+
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(topBtn.style.transform).toBe('');
+    // The pair already closed when the watchdog sprang it — no second click.
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not toggle on a cancel that arrives after the watchdog', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      vi.advanceTimersByTime(PRESS_WATCHDOG_MS);
+    });
+    act(() => {
+      window.dispatchEvent(pointerEvent('pointercancel', 1));
+    });
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(topBtn.style.transform).toBe('');
+  });
+
   it('lets the next tap take over after a release event was lost', async () => {
     const onToggle = vi.fn();
     const { container } = await renderStopwatch(onToggle);
