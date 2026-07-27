@@ -7,11 +7,19 @@ import { ActiveScreen } from '@/screens/ActiveScreen';
 import { RestScreen } from '@/screens/RestScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
+import { unlockStopwatchSounds } from '@/lib/sounds';
 import { useEffect, useRef } from 'react';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
   const exercise = programme[state.exerciseIndex];
+
+  // Decode the stopwatch clicks at startup. The crown only appears after the
+  // intro screen, so this buys the fetch and decode seconds rather than the
+  // milliseconds a mount-time preload would have left them.
+  useEffect(() => {
+    unlockStopwatchSounds();
+  }, []);
 
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.

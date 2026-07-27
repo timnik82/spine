@@ -226,11 +226,6 @@ export function CoachStopwatch({
     };
   }, []);
 
-  // Decode the click buffers up front so the very first tap already has sound.
-  useEffect(() => {
-    unlockStopwatchSounds();
-  }, []);
-
   // Attach button interactions
   useEffect(() => {
     if (!mounted) return;
