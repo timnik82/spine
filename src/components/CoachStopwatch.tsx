@@ -104,13 +104,14 @@ export function CoachStopwatch({
      * does, so both paths click; only a real release toggles the timer.
      */
     const releaseTopButton = (e: PointerEvent, { toggle = false } = {}) => {
-      releaseCaptureFrom(topBtn, e.pointerId);
       if (topPointerId === null || e.pointerId !== topPointerId) return false;
+      const pointerId = e.pointerId;
       topPointerId = null;
       disarmTopReleaseListeners();
       if (topBtn) topBtn.style.transform = '';
       playStopwatchRelease();
       if (toggle) onToggleRef.current?.();
+      releaseCaptureFrom(topBtn, pointerId);
       return true;
     };
 
@@ -140,24 +141,22 @@ export function CoachStopwatch({
 
     const handleTopDown = (e: PointerEvent) => {
       if (topPointerId !== null) return;
-      e.preventDefault();
       topPointerId = e.pointerId;
+      if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
+      playStopwatchPress();
       try {
         topBtn?.setPointerCapture?.(e.pointerId);
       } catch {
         // ignore pointer capture errors if unsupported
       }
-      if (topBtn) topBtn.style.transform = `translateY(${TOP_PRESS_DISTANCE_PX}px)`;
-      playStopwatchPress();
-      armTopReleaseListeners();
+      if (!topBtn?.hasPointerCapture?.(e.pointerId)) {
+        armTopReleaseListeners();
+      }
     };
     const handleTopUp = (e: PointerEvent) => {
       releaseTopButton(e, { toggle: true });
     };
     const handleTopCancel = (e: PointerEvent) => {
-      releaseTopButton(e);
-    };
-    const handleTopLostCapture = (e: PointerEvent) => {
       releaseTopButton(e);
     };
 
@@ -175,12 +174,13 @@ export function CoachStopwatch({
     let disarmSideReleaseListeners: () => void = () => {};
 
     const releaseSideButton = (e: PointerEvent, { invokeReset = false } = {}) => {
-      releaseCaptureFrom(sideBtn, e.pointerId);
       if (sidePointerId === null || e.pointerId !== sidePointerId) return false;
+      const pointerId = e.pointerId;
       sidePointerId = null;
       disarmSideReleaseListeners();
       setSidePressed(false);
       if (invokeReset) onResetRef.current?.();
+      releaseCaptureFrom(sideBtn, pointerId);
       return true;
     };
 
@@ -210,23 +210,21 @@ export function CoachStopwatch({
 
     const handleSideDown = (e: PointerEvent) => {
       if (sidePointerId !== null) return;
-      e.preventDefault();
       sidePointerId = e.pointerId;
+      setSidePressed(true);
       try {
         sideBtn?.setPointerCapture?.(e.pointerId);
       } catch {
         // ignore pointer capture errors if unsupported
       }
-      setSidePressed(true);
-      armSideReleaseListeners();
+      if (!sideBtn?.hasPointerCapture?.(e.pointerId)) {
+        armSideReleaseListeners();
+      }
     };
     const handleSideUp = (e: PointerEvent) => {
       releaseSideButton(e, { invokeReset: true });
     };
     const handleSideCancel = (e: PointerEvent) => {
-      releaseSideButton(e);
-    };
-    const handleSideLostCapture = (e: PointerEvent) => {
       releaseSideButton(e);
     };
 
@@ -241,14 +239,12 @@ export function CoachStopwatch({
       topBtn.addEventListener('pointerdown', handleTopDown as EventListener);
       topBtn.addEventListener('pointerup', handleTopUp as EventListener);
       topBtn.addEventListener('pointercancel', handleTopCancel as EventListener);
-      topBtn.addEventListener('lostpointercapture', handleTopLostCapture as EventListener);
     }
     if (sideBtn) {
       sideBtn.style.cursor = 'pointer';
       sideBtn.addEventListener('pointerdown', handleSideDown as EventListener);
       sideBtn.addEventListener('pointerup', handleSideUp as EventListener);
       sideBtn.addEventListener('pointercancel', handleSideCancel as EventListener);
-      sideBtn.addEventListener('lostpointercapture', handleSideLostCapture as EventListener);
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -260,13 +256,11 @@ export function CoachStopwatch({
         topBtn.removeEventListener('pointerdown', handleTopDown as EventListener);
         topBtn.removeEventListener('pointerup', handleTopUp as EventListener);
         topBtn.removeEventListener('pointercancel', handleTopCancel as EventListener);
-        topBtn.removeEventListener('lostpointercapture', handleTopLostCapture as EventListener);
       }
       if (sideBtn) {
         sideBtn.removeEventListener('pointerdown', handleSideDown as EventListener);
         sideBtn.removeEventListener('pointerup', handleSideUp as EventListener);
         sideBtn.removeEventListener('pointercancel', handleSideCancel as EventListener);
-        sideBtn.removeEventListener('lostpointercapture', handleSideLostCapture as EventListener);
       }
     };
   }, [mounted]);

@@ -1,5 +1,6 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { playStopwatchPress, playStopwatchRelease } from '@/lib/sounds';
 import { CoachStopwatch } from './CoachStopwatch';
 
 vi.mock('@/lib/sounds', () => ({
@@ -51,6 +52,8 @@ describe('CoachStopwatch crown button', () => {
 
     expect(topBtn.style.transform).toBe('');
     expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
   it('resets the pressed transform on pointercancel without toggling', async () => {
@@ -67,6 +70,8 @@ describe('CoachStopwatch crown button', () => {
 
     expect(topBtn.style.transform).toBe('');
     expect(onToggle).not.toHaveBeenCalled();
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
   it('releases and toggles when pointerup arrives on window', async () => {
@@ -85,9 +90,11 @@ describe('CoachStopwatch crown button', () => {
 
     expect(topBtn.style.transform).toBe('');
     expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 
-  it('resets the pressed transform on visibilitychange without toggling', async () => {
+  it('resets the pressed transform on visibilitychange without toggling or release sound', async () => {
     const onToggle = vi.fn();
     const { container } = await renderStopwatch(onToggle);
     const topBtn = getTopButton(container)!;
@@ -107,6 +114,8 @@ describe('CoachStopwatch crown button', () => {
 
     expect(topBtn.style.transform).toBe('');
     expect(onToggle).not.toHaveBeenCalled();
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).not.toHaveBeenCalled();
   });
 
   it('ignores a second pointerdown while the first press is active', async () => {
@@ -127,5 +136,25 @@ describe('CoachStopwatch crown button', () => {
 
     expect(onToggle).toHaveBeenCalledTimes(1);
     expect(topBtn.style.transform).toBe('');
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it('plays release sound once when pointerup fires on both element and window', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+    });
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerup', 1));
+      window.dispatchEvent(pointerEvent('pointerup', 1));
+    });
+
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(playStopwatchPress).toHaveBeenCalledTimes(1);
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
   });
 });
