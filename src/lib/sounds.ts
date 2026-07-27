@@ -25,7 +25,24 @@ function getAudioContextConstructor(): AudioContextConstructor | null {
 function getContext(): AudioContext | null {
   const Ctor = getAudioContextConstructor();
   if (!Ctor) return null;
-  audioContext ??= new Ctor();
+
+  // A closed context can never play again, and its buffers go with it.
+  if (audioContext?.state === 'closed') {
+    audioContext = null;
+    pressBuffer = null;
+    releaseBuffer = null;
+    loadPromise = null;
+  }
+
+  if (!audioContext) {
+    try {
+      audioContext = new Ctor();
+    } catch {
+      // Browsers cap how many contexts may exist. A missing click is not
+      // worth throwing out of the mount effect that preloads the buffers.
+      return null;
+    }
+  }
   return audioContext;
 }
 
