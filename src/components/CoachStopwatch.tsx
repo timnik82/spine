@@ -123,6 +123,13 @@ export function CoachStopwatch({
       playStopwatchRelease();
     };
 
+    /** Finish a pending spring immediately so rapid taps keep press/release pairs intact. */
+    const flushPendingTopSpring = () => {
+      if (topReleaseTimer === null) return;
+      clearTimeout(topReleaseTimer);
+      springTopButton();
+    };
+
     const scheduleTopSpring = () => {
       const remaining = Math.max(0, MIN_PRESS_HOLD_MS - (performance.now() - topPressStartedAt));
       clearTopReleaseTimer();
@@ -174,8 +181,9 @@ export function CoachStopwatch({
 
     const handleTopDown = (e: PointerEvent) => {
       if (topPointerId !== null) return;
-      // A pending spring from a prior fast tap would fight this new press.
-      clearTopReleaseTimer();
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      // Complete any pending spring (and its release click) before a new press.
+      flushPendingTopSpring();
       unlockStopwatchSounds();
       topPointerId = e.pointerId;
       topPressStartedAt = performance.now();
@@ -222,6 +230,12 @@ export function CoachStopwatch({
     const springSideButton = () => {
       sideReleaseTimer = null;
       setSidePressed(false);
+    };
+
+    const flushPendingSideSpring = () => {
+      if (sideReleaseTimer === null) return;
+      clearTimeout(sideReleaseTimer);
+      springSideButton();
     };
 
     const scheduleSideSpring = () => {
@@ -271,7 +285,8 @@ export function CoachStopwatch({
 
     const handleSideDown = (e: PointerEvent) => {
       if (sidePointerId !== null) return;
-      clearSideReleaseTimer();
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      flushPendingSideSpring();
       sidePointerId = e.pointerId;
       sidePressStartedAt = performance.now();
       setSidePressed(true);

@@ -50,6 +50,11 @@ function ensureLoaded(ctx: AudioContext) {
       decodeSound(ctx, 'stopwatch-press.mp3'),
       decodeSound(ctx, 'stopwatch-release.mp3'),
     ]);
+    if (!press || !release) {
+      // Transient fetch/decode failure — allow a later gesture to retry.
+      loadPromise = null;
+      return;
+    }
     pressBuffer = press;
     releaseBuffer = release;
   })().catch(() => {
@@ -93,16 +98,9 @@ function play(kind: 'press' | 'release') {
 
   if (buffer) {
     playBuffer(buffer, volume);
-    return;
   }
-
-  // First gesture may race decode — play as soon as the buffer is ready.
-  const ctx = getContext();
-  if (!ctx) return;
-  void ensureLoaded(ctx)?.then(() => {
-    const ready = kind === 'press' ? pressBuffer : releaseBuffer;
-    playBuffer(ready, volume);
-  });
+  // Buffer not ready yet — preload has started via unlock. Do not queue a
+  // deferred play: a fast press+release would both fire late and together.
 }
 
 /** Crown button travelling down — the deeper of the two clicks. */

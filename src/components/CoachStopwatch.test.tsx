@@ -9,8 +9,12 @@ vi.mock('@/lib/sounds', () => ({
   unlockStopwatchSounds: vi.fn(),
 }));
 
-function pointerEvent(type: string, pointerId: number) {
-  return new PointerEvent(type, { bubbles: true, pointerId, pointerType: 'touch' });
+function pointerEvent(
+  type: string,
+  pointerId: number,
+  { pointerType = 'touch', button = 0 }: { pointerType?: string; button?: number } = {}
+) {
+  return new PointerEvent(type, { bubbles: true, pointerId, pointerType, button });
 }
 
 async function renderStopwatch(onToggle = vi.fn()) {
@@ -222,5 +226,47 @@ describe('CoachStopwatch crown button', () => {
     expect(onToggle).toHaveBeenCalledTimes(1);
     expect(playStopwatchPress).toHaveBeenCalledTimes(1);
     expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it('completes the pending release sound before a second rapid tap', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1));
+      topBtn.dispatchEvent(pointerEvent('pointerup', 1));
+    });
+    expect(playStopwatchRelease).not.toHaveBeenCalled();
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 2));
+    });
+
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(1);
+    expect(playStopwatchPress).toHaveBeenCalledTimes(2);
+    expect(topBtn.style.transform).toContain('translateY');
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerup', 2));
+    });
+    flushPressHold();
+
+    expect(onToggle).toHaveBeenCalledTimes(2);
+    expect(playStopwatchRelease).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores non-primary mouse button presses', async () => {
+    const onToggle = vi.fn();
+    const { container } = await renderStopwatch(onToggle);
+    const topBtn = getTopButton(container)!;
+
+    act(() => {
+      topBtn.dispatchEvent(pointerEvent('pointerdown', 1, { pointerType: 'mouse', button: 2 }));
+    });
+
+    expect(topBtn.style.transform).toBe('');
+    expect(playStopwatchPress).not.toHaveBeenCalled();
+    expect(onToggle).not.toHaveBeenCalled();
   });
 });
