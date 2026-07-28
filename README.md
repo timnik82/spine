@@ -21,11 +21,19 @@ profissional de saúde. A aplicação funciona como um guia visual que
 acompanha a criança durante a prática, evitando a necessidade de
 memorizar a sequência ou consultar folhas de papel.
 
-## Funcionalidades
+## Estado atual
 
-- Programa completo com 10 exercícios em 3 fases
+- Dados completos para 10 exercícios em 3 fases
+- Sequência jogável dos primeiros 5 exercícios:
+  Marcha no lugar, Crescer até ao teto, Respiração profunda,
+  Gato assanhado / Gato e camelo e Ponte
+- Contagem de preparação antes dos exercícios cronometrados
 - Temporizador circular com contagem decrescente visual
-- Controlo de séries, repetições e lados (esquerdo/direito)
+- Continuação automática entre séries cronometradas e descansos
+- Conclusão em bloco para exercícios de repetições
 - Instruções detalhadas para cada exercício
-- Pausas de descanso cronometradas entre exercícios
+- Pausas de descanso cronometradas entre séries
 - Botão de regresso imediato ao início a partir de qualquer ecrã
+
+Os exercícios com lados esquerdo/direito, as definições ajustáveis e os
+conteúdos multimédia serão adicionados em incrementos posteriores.

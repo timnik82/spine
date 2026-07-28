@@ -1,8 +1,10 @@
 export const REST_SECONDS = 10;
-export const PLANK_SECONDS = 20;
+export const PREPARE_SECONDS = 3;
+export const PLANK_SECONDS = 15;
+export const PLAYABLE_EXERCISE_COUNT = 5;
 
 export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';
-export type Mode = 'timer' | 'counter';
+export type Mode = 'timer' | 'repetitions';
 
 export interface Exercise {
   id: string;
@@ -15,6 +17,7 @@ export interface Exercise {
   mode: Mode;
   durationSec?: number;
   reps?: number;
+  repetitionLabel?: string;
   sets: number;
   perSide?: boolean;
   media: { image?: string; video?: string };
@@ -54,7 +57,9 @@ export const programme: Exercise[] = [
     mode: 'timer',
     durationSec: 10,
     sets: 10,
-    media: {},
+    media: {
+      image: '/intro-crescer.webp',
+    },
   },
   {
     id: 'respiracao-profunda',
@@ -68,8 +73,9 @@ export const programme: Exercise[] = [
       'Expira pela boca devagar.',
     ],
     summary: 'Faz 10 respirações lentas.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 10,
+    repetitionLabel: 'respirações',
     sets: 1,
     media: {},
   },
@@ -85,8 +91,9 @@ export const programme: Exercise[] = [
       'Faz os movimentos devagar.',
     ],
     summary: '10 repetições.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 10,
+    repetitionLabel: 'repetições',
     sets: 1,
     media: {},
   },
@@ -103,8 +110,9 @@ export const programme: Exercise[] = [
       'Desce lentamente.',
     ],
     summary: '10 repetições.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 10,
+    repetitionLabel: 'repetições',
     sets: 1,
     media: {},
   },
@@ -122,8 +130,9 @@ export const programme: Exercise[] = [
       'Troca de lado.',
     ],
     summary: '8 repetições para cada lado.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 8,
+    repetitionLabel: 'repetições',
     sets: 1,
     perSide: true,
     media: {},

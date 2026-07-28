@@ -4,6 +4,7 @@ interface ExerciseTimer {
   secondsRemaining: number;
   isRunning: boolean;
   reset: () => void;
+  start: () => void;
   toggle: () => void;
   setPaused: (paused: boolean) => void;
 }
@@ -56,6 +57,11 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
     setIsRunning(false);
   }, [totalSeconds]);
 
+  const start = useCallback(() => {
+    setSecondsRemaining((prev) => (prev <= 0 ? totalSeconds : prev));
+    setIsRunning(true);
+  }, [totalSeconds]);
+
   const toggle = useCallback(() => {
     setSecondsRemaining((prev) => {
       if (prev <= 0) return totalSeconds;
@@ -68,5 +74,5 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
     setPausedState(p);
   }, []);
 
-  return { secondsRemaining, isRunning, reset, toggle, setPaused };
+  return { secondsRemaining, isRunning, reset, start, toggle, setPaused };
 }

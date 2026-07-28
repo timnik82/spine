@@ -13,8 +13,6 @@ interface ActiveScreenProps {
   onToggle: () => void;
   onReset: () => void;
   onInstructions: () => void;
-  onNext: () => void;
-  onRestart: () => void;
   onHome: () => void;
 }
 
@@ -28,12 +26,8 @@ export function ActiveScreen({
   onToggle,
   onReset,
   onInstructions,
-  onNext,
-  onRestart,
   onHome,
 }: ActiveScreenProps) {
-  const completed = currentSet >= totalSets && secondsRemaining <= 0;
-
   return (
     <div
       // Landscape puts the action buttons in a left-hand column so the dial and
@@ -94,14 +88,6 @@ export function ActiveScreen({
           onToggle={onToggle}
           onReset={onReset}
         />
-        {completed && (
-          <p
-            className="mt-8 max-w-md text-center text-base font-medium"
-            style={{ color: 'var(--ex-fg-muted)' }}
-          >
-            Muito bem! Completaste as {totalSets} repetições.
-          </p>
-        )}
       </main>
 
       <footer
@@ -134,18 +120,6 @@ export function ActiveScreen({
             <Play className="mr-2 h-5 w-5" aria-hidden="true" />
           )}
           {isRunning ? 'Pausar' : secondsRemaining <= 0 ? 'Recomeçar' : 'Iniciar'}
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={completed ? onRestart : onNext}
-          className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
-          style={{
-            borderColor: 'var(--ex-warm)',
-            color: 'var(--ex-warm)',
-          }}
-        >
-          {completed ? 'Nova série' : 'Seguinte'}
         </Button>
       </footer>
     </div>

@@ -1,35 +1,43 @@
 import { useReducer } from 'react';
-import { programme, REST_SECONDS } from '@/data/programme';
+import {
+  PLAYABLE_EXERCISE_COUNT,
+  PREPARE_SECONDS,
+  programme,
+  REST_SECONDS,
+} from '@/data/programme';
 
-export type Screen = 'intro' | 'active' | 'rest' | 'done';
+export type Screen = 'intro' | 'prepare' | 'active' | 'rest' | 'done';
 
 export interface SessionState {
   screen: Screen;
   exerciseIndex: number;
   currentSet: number;
   secondsRemaining: number;
+  prepareSecondsRemaining: number;
   restSecondsRemaining: number;
   instructionsOpen: boolean;
 }
 
 type Action =
   | { type: 'START' }
+  | { type: 'PREPARE_TICK' }
   | { type: 'REST_TICK' }
   | { type: 'SKIP_REST' }
   | { type: 'ADVANCE_SET' }
+  | { type: 'COMPLETE_EXERCISE' }
+  | { type: 'NEXT_EXERCISE' }
   | { type: 'RESET' }
   | { type: 'OPEN_INSTRUCTIONS' }
   | { type: 'CLOSE_INSTRUCTIONS' };
 
-const EXERCISE_INDEX = programme.findIndex(e => e.id === 'crescer-ate-ao-teto');
-
 function getInitialState(): SessionState {
-  const exercise = programme[EXERCISE_INDEX];
+  const exercise = programme[0];
   return {
     screen: 'intro',
-    exerciseIndex: EXERCISE_INDEX,
+    exerciseIndex: 0,
     currentSet: 1,
     secondsRemaining: exercise.durationSec ?? 0,
+    prepareSecondsRemaining: PREPARE_SECONDS,
     restSecondsRemaining: REST_SECONDS,
     instructionsOpen: false,
   };
@@ -42,10 +50,24 @@ function reducer(state: SessionState, action: Action): SessionState {
     case 'START':
       return {
         ...state,
-        screen: 'active',
+        screen: exercise.mode === 'timer' ? 'prepare' : 'active',
         currentSet: 1,
         secondsRemaining: exercise.durationSec ?? 0,
+        prepareSecondsRemaining: PREPARE_SECONDS,
       };
+
+    case 'PREPARE_TICK': {
+      const next = state.prepareSecondsRemaining - 1;
+      if (next > 0) {
+        return { ...state, prepareSecondsRemaining: next };
+      }
+      return {
+        ...state,
+        screen: 'active',
+        secondsRemaining: exercise.durationSec ?? 0,
+        prepareSecondsRemaining: PREPARE_SECONDS,
+      };
+    }
 
     case 'REST_TICK': {
       const next = state.restSecondsRemaining - 1;
@@ -54,9 +76,10 @@ function reducer(state: SessionState, action: Action): SessionState {
       }
       return {
         ...state,
-        screen: 'active',
+        screen: 'prepare',
         currentSet: state.currentSet + 1,
         secondsRemaining: exercise.durationSec ?? 0,
+        prepareSecondsRemaining: PREPARE_SECONDS,
         restSecondsRemaining: REST_SECONDS,
       };
     }
@@ -64,9 +87,10 @@ function reducer(state: SessionState, action: Action): SessionState {
     case 'SKIP_REST':
       return {
         ...state,
-        screen: 'active',
+        screen: 'prepare',
         currentSet: state.currentSet + 1,
         secondsRemaining: exercise.durationSec ?? 0,
+        prepareSecondsRemaining: PREPARE_SECONDS,
         restSecondsRemaining: REST_SECONDS,
       };
 
@@ -79,6 +103,26 @@ function reducer(state: SessionState, action: Action): SessionState {
         screen: 'rest',
         secondsRemaining: 0,
         restSecondsRemaining: REST_SECONDS,
+      };
+    }
+
+    case 'COMPLETE_EXERCISE':
+      return { ...state, screen: 'done' };
+
+    case 'NEXT_EXERCISE': {
+      if (state.exerciseIndex >= PLAYABLE_EXERCISE_COUNT - 1) {
+        return state;
+      }
+      const exerciseIndex = state.exerciseIndex + 1;
+      const nextExercise = programme[exerciseIndex];
+      return {
+        screen: 'intro',
+        exerciseIndex,
+        currentSet: 1,
+        secondsRemaining: nextExercise.durationSec ?? 0,
+        prepareSecondsRemaining: PREPARE_SECONDS,
+        restSecondsRemaining: REST_SECONDS,
+        instructionsOpen: false,
       };
     }
 
