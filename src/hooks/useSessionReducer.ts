@@ -70,7 +70,9 @@ function reducer(state: SessionState, action: Action): SessionState {
     }
 
     case 'SKIP_REST':
-      return enterPrepare(state, state.currentSet + 1);
+      return state.screen === 'rest'
+        ? enterPrepare(state, state.currentSet + 1)
+        : state;
 
     case 'ADVANCE_SET':
       if (state.currentSet >= exercise.sets) {

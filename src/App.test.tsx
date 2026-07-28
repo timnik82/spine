@@ -150,8 +150,8 @@ describe('five-exercise programme', () => {
     advance(1_100);
 
     expect(
-      screen.queryByRole('img', { name: 'Cronometro: 0 de 120 segundos' })
-    ).toBeNull();
+      screen.getByRole('img', { name: 'Cronometro: 1 de 120 segundos' })
+    ).toBeTruthy();
   });
 
   it('requires Seguinte after Marcha before opening Crescer', () => {

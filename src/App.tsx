@@ -44,14 +44,14 @@ export function App() {
 
   useEffect(() => {
     if (state.screen === 'active' && exercise.mode === 'timer') {
-      timer.reset();
+      timer.restart();
     }
   }, [
     exercise.mode,
     state.currentSet,
     state.exerciseIndex,
     state.screen,
-    timer.reset,
+    timer.restart,
   ]);
 
   // Auto-advance timed exercises when their countdown completes.
@@ -100,7 +100,7 @@ export function App() {
               currentSet={state.currentSet}
               totalSets={exercise.sets}
               onToggle={timer.toggle}
-              onReset={timer.reset}
+              onReset={timer.restart}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onHome={() => dispatch({ type: 'RESET' })}
             />
