@@ -54,7 +54,7 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
 
   const reset = useCallback(() => {
     setSecondsRemaining(totalSeconds);
-    setIsRunning(false);
+    setIsRunning(true);
   }, [totalSeconds]);
 
   const start = useCallback(() => {

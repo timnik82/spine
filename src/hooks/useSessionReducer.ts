@@ -54,6 +54,7 @@ function reducer(state: SessionState, action: Action): SessionState {
         currentSet: 1,
         secondsRemaining: exercise.durationSec ?? 0,
         prepareSecondsRemaining: PREPARE_SECONDS,
+        instructionsOpen: false,
       };
 
     case 'PREPARE_TICK': {

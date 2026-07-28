@@ -129,6 +129,31 @@ describe('five-exercise programme', () => {
     expect(stopwatch.getAttribute('aria-label')).not.toBe(elapsedBeforeInstructions);
   });
 
+  it('immediately restarts a timed exercise after the child resets it', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    advance(2_100);
+
+    act(() => {
+      screen.getByRole('button', { name: /reiniciar exercício/i }).click();
+    });
+
+    expect(screen.getByRole('button', { name: /pausar/i })).toBeTruthy();
+    expect(
+      screen.getByRole('img', { name: 'Cronometro: 0 de 120 segundos' })
+    ).toBeTruthy();
+
+    advance(1_100);
+
+    expect(
+      screen.queryByRole('img', { name: 'Cronometro: 0 de 120 segundos' })
+    ).toBeNull();
+  });
+
   it('requires Seguinte after Marcha before opening Crescer', () => {
     render(<App />);
 
