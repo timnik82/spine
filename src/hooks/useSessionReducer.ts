@@ -12,7 +12,6 @@ export interface SessionState {
   screen: Screen;
   exerciseIndex: number;
   currentSet: number;
-  secondsRemaining: number;
   prepareSecondsRemaining: number;
   restSecondsRemaining: number;
   instructionsOpen: boolean;
@@ -31,12 +30,10 @@ type Action =
   | { type: 'CLOSE_INSTRUCTIONS' };
 
 function getInitialState(): SessionState {
-  const exercise = programme[0];
   return {
     screen: 'intro',
     exerciseIndex: 0,
     currentSet: 1,
-    secondsRemaining: exercise.durationSec ?? 0,
     prepareSecondsRemaining: PREPARE_SECONDS,
     restSecondsRemaining: REST_SECONDS,
     instructionsOpen: false,
@@ -52,7 +49,6 @@ function reducer(state: SessionState, action: Action): SessionState {
         ...state,
         screen: exercise.mode === 'timer' ? 'prepare' : 'active',
         currentSet: 1,
-        secondsRemaining: exercise.durationSec ?? 0,
         prepareSecondsRemaining: PREPARE_SECONDS,
         instructionsOpen: false,
       };
@@ -65,7 +61,6 @@ function reducer(state: SessionState, action: Action): SessionState {
       return {
         ...state,
         screen: 'active',
-        secondsRemaining: exercise.durationSec ?? 0,
         prepareSecondsRemaining: PREPARE_SECONDS,
       };
     }
@@ -79,7 +74,6 @@ function reducer(state: SessionState, action: Action): SessionState {
         ...state,
         screen: 'prepare',
         currentSet: state.currentSet + 1,
-        secondsRemaining: exercise.durationSec ?? 0,
         prepareSecondsRemaining: PREPARE_SECONDS,
         restSecondsRemaining: REST_SECONDS,
       };
@@ -90,19 +84,17 @@ function reducer(state: SessionState, action: Action): SessionState {
         ...state,
         screen: 'prepare',
         currentSet: state.currentSet + 1,
-        secondsRemaining: exercise.durationSec ?? 0,
         prepareSecondsRemaining: PREPARE_SECONDS,
         restSecondsRemaining: REST_SECONDS,
       };
 
     case 'ADVANCE_SET': {
       if (state.currentSet >= exercise.sets) {
-        return { ...state, secondsRemaining: 0, screen: 'done' };
+        return { ...state, screen: 'done' };
       }
       return {
         ...state,
         screen: 'rest',
-        secondsRemaining: 0,
         restSecondsRemaining: REST_SECONDS,
       };
     }
@@ -115,12 +107,10 @@ function reducer(state: SessionState, action: Action): SessionState {
         return state;
       }
       const exerciseIndex = state.exerciseIndex + 1;
-      const nextExercise = programme[exerciseIndex];
       return {
         screen: 'intro',
         exerciseIndex,
         currentSet: 1,
-        secondsRemaining: nextExercise.durationSec ?? 0,
         prepareSecondsRemaining: PREPARE_SECONDS,
         restSecondsRemaining: REST_SECONDS,
         instructionsOpen: false,

@@ -14,7 +14,7 @@ import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { unlockStopwatchSounds } from '@/lib/sounds';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
@@ -53,34 +53,21 @@ export function App() {
     timer.start,
   ]);
 
-  // Track whether the user has started this set's timer at least once
-  const hasStarted = useRef(false);
-
-  // Auto-advance when timer completes (only if user actually started it)
+  // Auto-advance timed exercises when their countdown completes.
   useEffect(() => {
-    if (state.screen !== 'active') return;
-    if (!hasStarted.current) return;
+    if (state.screen !== 'active' || exercise.mode !== 'timer') return;
 
     const done = timer.secondsRemaining <= 0 && !timer.isRunning;
     if (done) {
-      hasStarted.current = false;
       dispatch({ type: 'ADVANCE_SET' });
     }
-  }, [timer.secondsRemaining, timer.isRunning, state.screen, dispatch]);
-
-  // Track when user starts
-  useEffect(() => {
-    if (timer.isRunning) {
-      hasStarted.current = true;
-    }
-  }, [timer.isRunning]);
-
-  // A new set starts unstarted; the countdown itself is reset by its run key (#4, #8)
-  useEffect(() => {
-    if (state.screen === 'active') {
-      hasStarted.current = false;
-    }
-  }, [state.screen, state.currentSet, state.exerciseIndex]);
+  }, [
+    dispatch,
+    exercise.mode,
+    state.screen,
+    timer.isRunning,
+    timer.secondsRemaining,
+  ]);
 
   switch (state.screen) {
     case 'intro':

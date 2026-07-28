@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -42,6 +43,9 @@ export function InstructionsOverlay({
           >
             {exercise.name}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {exercise.summary}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-4">
