@@ -24,9 +24,10 @@ export function ExerciseProgressPair({
     <section
       className="flex w-full flex-row items-center justify-center gap-4 sm:gap-20"
       aria-label={
-        hasRepeatedSets
-          ? `Exercício: ${Math.floor(secondsRemaining)} segundos restantes, ${repsComplete} de ${totalReps} repetições concluídas`
-          : `Exercício: ${Math.floor(secondsRemaining)} segundos restantes`
+        `Exercício: ${Math.floor(secondsRemaining)} segundos restantes` +
+        (hasRepeatedSets
+          ? `, ${repsComplete} de ${totalReps} repetições concluídas`
+          : '')
       }
     >
       <div className="flex min-w-0 flex-1 flex-col items-center" aria-label="Temporizador">

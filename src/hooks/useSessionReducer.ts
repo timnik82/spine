@@ -1,8 +1,8 @@
 import { useReducer } from 'react';
 import {
-  PLAYABLE_EXERCISE_COUNT,
+  hasNextExercise,
+  playableProgramme,
   PREPARE_SECONDS,
-  programme,
   REST_SECONDS,
 } from '@/data/programme';
 
@@ -12,15 +12,14 @@ export interface SessionState {
   screen: Screen;
   exerciseIndex: number;
   currentSet: number;
-  prepareSecondsRemaining: number;
-  restSecondsRemaining: number;
+  /** Seconds left on whichever countdown screen is showing; unused elsewhere. */
+  countdownSecondsRemaining: number;
   instructionsOpen: boolean;
 }
 
 type Action =
   | { type: 'START' }
-  | { type: 'PREPARE_TICK' }
-  | { type: 'REST_TICK' }
+  | { type: 'TICK' }
   | { type: 'SKIP_REST' }
   | { type: 'ADVANCE_SET' }
   | { type: 'COMPLETE_EXERCISE' }
@@ -34,88 +33,63 @@ function getInitialState(): SessionState {
     screen: 'intro',
     exerciseIndex: 0,
     currentSet: 1,
-    prepareSecondsRemaining: PREPARE_SECONDS,
-    restSecondsRemaining: REST_SECONDS,
+    countdownSecondsRemaining: PREPARE_SECONDS,
     instructionsOpen: false,
   };
 }
 
+/** The one place a set begins: the countdown is armed exactly here. */
+function enterPrepare(state: SessionState, currentSet: number): SessionState {
+  return {
+    ...state,
+    screen: 'prepare',
+    currentSet,
+    countdownSecondsRemaining: PREPARE_SECONDS,
+  };
+}
+
 function reducer(state: SessionState, action: Action): SessionState {
-  const exercise = programme[state.exerciseIndex];
+  const exercise = playableProgramme[state.exerciseIndex];
 
   switch (action.type) {
     case 'START':
-      return {
-        ...state,
-        screen: exercise.mode === 'timer' ? 'prepare' : 'active',
-        currentSet: 1,
-        prepareSecondsRemaining: PREPARE_SECONDS,
-        instructionsOpen: false,
-      };
+      return exercise.mode === 'timer'
+        ? enterPrepare({ ...state, instructionsOpen: false }, 1)
+        : { ...state, screen: 'active', currentSet: 1, instructionsOpen: false };
 
-    case 'PREPARE_TICK': {
-      const next = state.prepareSecondsRemaining - 1;
-      if (next > 0) {
-        return { ...state, prepareSecondsRemaining: next };
-      }
-      return {
-        ...state,
-        screen: 'active',
-        prepareSecondsRemaining: PREPARE_SECONDS,
-      };
-    }
+    case 'TICK': {
+      if (state.screen !== 'prepare' && state.screen !== 'rest') return state;
 
-    case 'REST_TICK': {
-      const next = state.restSecondsRemaining - 1;
+      const next = state.countdownSecondsRemaining - 1;
       if (next > 0) {
-        return { ...state, restSecondsRemaining: next };
+        return { ...state, countdownSecondsRemaining: next };
       }
-      return {
-        ...state,
-        screen: 'prepare',
-        currentSet: state.currentSet + 1,
-        prepareSecondsRemaining: PREPARE_SECONDS,
-        restSecondsRemaining: REST_SECONDS,
-      };
+      return state.screen === 'rest'
+        ? enterPrepare(state, state.currentSet + 1)
+        : { ...state, screen: 'active' };
     }
 
     case 'SKIP_REST':
-      return {
-        ...state,
-        screen: 'prepare',
-        currentSet: state.currentSet + 1,
-        prepareSecondsRemaining: PREPARE_SECONDS,
-        restSecondsRemaining: REST_SECONDS,
-      };
+      return enterPrepare(state, state.currentSet + 1);
 
-    case 'ADVANCE_SET': {
+    case 'ADVANCE_SET':
       if (state.currentSet >= exercise.sets) {
         return { ...state, screen: 'done' };
       }
       return {
         ...state,
         screen: 'rest',
-        restSecondsRemaining: REST_SECONDS,
+        countdownSecondsRemaining: REST_SECONDS,
       };
-    }
 
     case 'COMPLETE_EXERCISE':
       return { ...state, screen: 'done' };
 
-    case 'NEXT_EXERCISE': {
-      if (state.exerciseIndex >= PLAYABLE_EXERCISE_COUNT - 1) {
+    case 'NEXT_EXERCISE':
+      if (!hasNextExercise(state.exerciseIndex)) {
         return state;
       }
-      const exerciseIndex = state.exerciseIndex + 1;
-      return {
-        screen: 'intro',
-        exerciseIndex,
-        currentSet: 1,
-        prepareSecondsRemaining: PREPARE_SECONDS,
-        restSecondsRemaining: REST_SECONDS,
-        instructionsOpen: false,
-      };
-    }
+      return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
 
     case 'OPEN_INSTRUCTIONS':
       return { ...state, instructionsOpen: true };

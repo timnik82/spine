@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 interface ExerciseTimer {
   secondsRemaining: number;
   isRunning: boolean;
+  /** Puts the full duration back and runs — also how a set auto-starts. */
   reset: () => void;
-  start: () => void;
   toggle: () => void;
   setPaused: (paused: boolean) => void;
 }
@@ -57,11 +57,6 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
     setIsRunning(true);
   }, [totalSeconds]);
 
-  const start = useCallback(() => {
-    setSecondsRemaining((prev) => (prev <= 0 ? totalSeconds : prev));
-    setIsRunning(true);
-  }, [totalSeconds]);
-
   const toggle = useCallback(() => {
     setSecondsRemaining((prev) => {
       if (prev <= 0) return totalSeconds;
@@ -74,5 +69,5 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
     setPausedState(p);
   }, []);
 
-  return { secondsRemaining, isRunning, reset, start, toggle, setPaused };
+  return { secondsRemaining, isRunning, reset, toggle, setPaused };
 }

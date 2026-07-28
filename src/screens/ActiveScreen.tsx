@@ -1,7 +1,7 @@
-import { Pause, Play, RotateCcw, Sparkles } from 'lucide-react';
+import { Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseProgressPair } from '@/components/ExerciseProgressPair';
-import { HomeButton } from '@/components/HomeButton';
+import { ExerciseHeader } from '@/components/ExerciseHeader';
 
 interface ActiveScreenProps {
   exerciseName: string;
@@ -38,52 +38,29 @@ export function ActiveScreen({
         padding: 'var(--ex-page-padding)',
       }}
     >
-      {/* Outer columns are fixed to the button size so the title stays centred
-          on the page and still gets all the space left in between. */}
-      <header className="grid grid-cols-[3rem_1fr_3rem] items-center gap-3 sm:gap-4 landscape:col-span-2">
-        <div className="justify-self-start">
-          <HomeButton onHome={onHome} color="var(--ex-fg)" inFlow />
-        </div>
-        <div className="flex min-w-0 items-center justify-center">
-          <div
-            className="inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:px-8 sm:py-3"
-            style={{
-              backgroundColor: 'oklch(0.96 0.025 85)',
-              border: '2.5px solid var(--ex-border)',
-              boxShadow: '0 4px 16px rgb(34 29 24 / 0.06)',
-            }}
+      <ExerciseHeader
+        exerciseName={exerciseName}
+        onHome={onHome}
+        className="landscape:col-span-2"
+        action={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Reiniciar exercício"
+            onClick={onReset}
+            className="h-12 w-12 cursor-pointer rounded-full"
+            style={{ color: 'var(--ex-fg)' }}
           >
-            <Sparkles className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7" style={{ color: 'var(--ex-warm)' }} />
-            <h1
-              className="text-center font-medium tracking-wide"
-              style={{
-                fontFamily: 'var(--font-kids)',
-                fontSize: 'var(--ex-name-size)',
-                color: 'var(--ex-fg)',
-                lineHeight: 1.25,
-              }}
-            >
-              {exerciseName}
-            </h1>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Reiniciar exercício"
-          onClick={onReset}
-          className="h-12 w-12 cursor-pointer justify-self-end rounded-full"
-          style={{ color: 'var(--ex-fg)' }}
-        >
-          <RotateCcw className="h-5 w-5" aria-hidden="true" />
-        </Button>
-      </header>
+            <RotateCcw className="h-5 w-5" aria-hidden="true" />
+          </Button>
+        }
+      />
 
       <main className="flex flex-1 flex-col items-center justify-center py-2 sm:py-4 landscape:col-start-2 landscape:row-start-2 landscape:min-h-0 landscape:py-0">
         <ExerciseProgressPair
           secondsRemaining={secondsRemaining}
           totalSeconds={totalSeconds}
-          repsComplete={currentSet - 1 + (secondsRemaining <= 0 && currentSet <= totalSets ? 1 : 0)}
+          repsComplete={currentSet - 1}
           totalReps={totalSets}
           onToggle={onToggle}
           onReset={onReset}
@@ -119,7 +96,7 @@ export function ActiveScreen({
           ) : (
             <Play className="mr-2 h-5 w-5" aria-hidden="true" />
           )}
-          {isRunning ? 'Pausar' : secondsRemaining <= 0 ? 'Recomeçar' : 'Iniciar'}
+          {isRunning ? 'Pausar' : 'Iniciar'}
         </Button>
       </footer>
     </div>

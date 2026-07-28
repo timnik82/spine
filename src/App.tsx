@@ -1,6 +1,6 @@
 import {
-  PLAYABLE_EXERCISE_COUNT,
-  programme,
+  hasNextExercise,
+  playableProgramme,
   REST_SECONDS,
 } from '@/data/programme';
 import { useSessionReducer } from '@/hooks/useSessionReducer';
@@ -18,7 +18,8 @@ import { useEffect } from 'react';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
-  const exercise = programme[state.exerciseIndex];
+  const exercise = playableProgramme[state.exerciseIndex];
+  const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
   // intro screen, so this buys the fetch and decode seconds rather than the
@@ -30,7 +31,7 @@ export function App() {
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.
   const timer = useExerciseTimer(
-    exercise.durationSec ?? 10,
+    exerciseSeconds,
     `${state.screen}:${state.exerciseIndex}:${state.currentSet}`
   );
 
@@ -43,14 +44,14 @@ export function App() {
 
   useEffect(() => {
     if (state.screen === 'active' && exercise.mode === 'timer') {
-      timer.start();
+      timer.reset();
     }
   }, [
     exercise.mode,
     state.currentSet,
     state.exerciseIndex,
     state.screen,
-    timer.start,
+    timer.reset,
   ]);
 
   // Auto-advance timed exercises when their countdown completes.
@@ -94,7 +95,7 @@ export function App() {
             <ActiveScreen
               exerciseName={exercise.name}
               secondsRemaining={timer.secondsRemaining}
-              totalSeconds={exercise.durationSec ?? 10}
+              totalSeconds={exerciseSeconds}
               isRunning={timer.isRunning}
               currentSet={state.currentSet}
               totalSets={exercise.sets}
@@ -106,8 +107,8 @@ export function App() {
           ) : (
             <RepetitionScreen
               exerciseName={exercise.name}
-              target={exercise.reps ?? 1}
-              repetitionLabel={exercise.repetitionLabel ?? 'repetições'}
+              target={exercise.reps}
+              repetitionLabel={exercise.repetitionLabel}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onComplete={() => dispatch({ type: 'COMPLETE_EXERCISE' })}
               onHome={() => dispatch({ type: 'RESET' })}
@@ -124,7 +125,7 @@ export function App() {
     case 'prepare':
       return (
         <PrepareScreen
-          secondsRemaining={state.prepareSecondsRemaining}
+          secondsRemaining={state.countdownSecondsRemaining}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
@@ -132,7 +133,7 @@ export function App() {
     case 'rest':
       return (
         <RestScreen
-          secondsRemaining={state.restSecondsRemaining}
+          secondsRemaining={state.countdownSecondsRemaining}
           totalSeconds={REST_SECONDS}
           onSkip={() => dispatch({ type: 'SKIP_REST' })}
           onHome={() => dispatch({ type: 'RESET' })}
@@ -143,7 +144,7 @@ export function App() {
       return (
         <DoneScreen
           exerciseName={exercise.name}
-          hasNextExercise={state.exerciseIndex < PLAYABLE_EXERCISE_COUNT - 1}
+          hasNextExercise={hasNextExercise(state.exerciseIndex)}
           onNext={() => dispatch({ type: 'NEXT_EXERCISE' })}
           onHome={() => dispatch({ type: 'RESET' })}
         />

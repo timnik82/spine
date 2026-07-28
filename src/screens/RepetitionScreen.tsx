@@ -1,5 +1,4 @@
-import { Sparkles } from 'lucide-react';
-import { HomeButton } from '@/components/HomeButton';
+import { ExerciseHeader } from '@/components/ExerciseHeader';
 import { Button } from '@/components/ui/button';
 
 interface RepetitionScreenProps {
@@ -27,38 +26,7 @@ export function RepetitionScreen({
         padding: 'var(--ex-page-padding)',
       }}
     >
-      <header className="grid grid-cols-[3rem_1fr_3rem] items-center gap-3 sm:gap-4">
-        <div className="justify-self-start">
-          <HomeButton onHome={onHome} color="var(--ex-fg)" inFlow />
-        </div>
-        <div className="flex min-w-0 items-center justify-center">
-          <div
-            className="inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 shadow-sm sm:px-8 sm:py-3"
-            style={{
-              backgroundColor: 'oklch(0.96 0.025 85)',
-              border: '2.5px solid var(--ex-border)',
-              boxShadow: '0 4px 16px rgb(34 29 24 / 0.06)',
-            }}
-          >
-            <Sparkles
-              className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7"
-              style={{ color: 'var(--ex-warm)' }}
-            />
-            <h1
-              className="text-center font-medium tracking-wide"
-              style={{
-                fontFamily: 'var(--font-kids)',
-                fontSize: 'var(--ex-name-size)',
-                color: 'var(--ex-fg)',
-                lineHeight: 1.25,
-              }}
-            >
-              {exerciseName}
-            </h1>
-          </div>
-        </div>
-        <div />
-      </header>
+      <ExerciseHeader exerciseName={exerciseName} onHome={onHome} />
 
       <main className="flex flex-1 flex-col items-center justify-center text-center">
         <p
