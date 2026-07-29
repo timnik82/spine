@@ -18,6 +18,8 @@
 
   /* ─── Warm accent (battery fills, "Seguinte" border) ─── */
   --ex-warm: oklch(0.65 0.16 55);
+  /* Cream fill behind the pills: title bar, section label, chosen rating. */
+  --ex-badge-bg: oklch(0.96 0.025 85);
   --ex-rest-soft: oklch(0.92 0.02 200);
 
   /* ─── Circular timer (legacy, still used on rest screen) ─── */

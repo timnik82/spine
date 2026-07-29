@@ -35,7 +35,7 @@ export function ExerciseHeader({
         <div
           className="inline-flex items-center gap-2.5 rounded-full px-6 py-2.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] sm:px-8 sm:py-3"
           style={{
-            backgroundColor: 'oklch(0.96 0.025 85)',
+            backgroundColor: 'var(--ex-badge-bg)',
             border: '2.5px solid var(--ex-border)',
             boxShadow: '0 4px 16px rgb(34 29 24 / 0.06)',
           }}

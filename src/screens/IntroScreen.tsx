@@ -40,7 +40,7 @@ export function IntroScreen({
               fontSize: 'var(--ex-bullet-size)',
               color: 'var(--ex-fg-muted)',
               border: '2px solid var(--ex-border)',
-              backgroundColor: 'oklch(0.96 0.025 85)',
+              backgroundColor: 'var(--ex-badge-bg)',
             }}
           >
             {phaseLabel}

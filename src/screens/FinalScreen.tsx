@@ -12,8 +12,12 @@ interface FinalScreenProps {
 
 export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
   return (
+    // The closing block is the tallest screen in the app. `min-h-full` on a
+    // scrolling parent centres it when it fits and lets it start at the top
+    // when it does not; plain centring clips both ends on a short landscape
+    // viewport instead of scrolling to them.
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-y-auto"
+      className="fixed inset-0 overflow-y-auto"
       style={{
         background: 'var(--ex-done-bg)',
         padding: 'var(--ex-page-padding)',
@@ -21,7 +25,7 @@ export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
     >
       <HomeButton onHome={onRestart} color="var(--ex-done-fg)" />
 
-      <main className="flex w-full max-w-2xl flex-col items-center gap-8 py-4">
+      <main className="mx-auto flex min-h-full w-full max-w-2xl flex-col items-center justify-center gap-8 landscape:gap-4">
         <h1
           className="text-center font-medium tracking-wide"
           style={{
@@ -33,7 +37,7 @@ export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
           Terminaste o treino!
         </h1>
 
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3 landscape:gap-1.5">
           {finalChecklist.map((item) => (
             <li
               key={item}
@@ -49,7 +53,7 @@ export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
           ))}
         </ul>
 
-        <section className="flex w-full flex-col items-center gap-4">
+        <section className="flex w-full flex-col items-center gap-4 landscape:gap-2">
           <h2
             className="text-center font-semibold"
             style={{
@@ -77,13 +81,14 @@ export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
                     fontSize: 'var(--ex-bullet-size)',
                     borderColor: chosen ? 'var(--ex-warm)' : 'var(--ex-border)',
                     borderWidth: chosen ? '3px' : '2px',
-                    backgroundColor: chosen
-                      ? 'oklch(0.96 0.025 85)'
-                      : 'transparent',
+                    backgroundColor: chosen ? 'var(--ex-badge-bg)' : 'transparent',
                     color: 'var(--ex-done-fg)',
                   }}
                 >
-                  <span aria-hidden="true" className="text-3xl leading-none">
+                  <span
+                    aria-hidden="true"
+                    className="text-3xl leading-none landscape:text-2xl"
+                  >
                     {option.emoji}
                   </span>
                   {option.label}

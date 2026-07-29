@@ -21,21 +21,32 @@ interface ExerciseBase {
   instructions: string[];
   summary: string;
   sets: number;
-  perSide?: boolean;
-  /** What the two sides are called; the source says "perna" for the legs. */
-  sideNoun?: SideNoun;
   media: { image?: string; video?: string };
   audio?: string;
 }
+
+type TimedExercise = ExerciseBase & { mode: 'timer'; durationSec: number };
 
 /**
  * The mode decides which counters an exercise carries, so consumers can read
  * them straight off a narrowed exercise instead of inventing a default each
  * time they need one.
+ *
+ * A timed hold held one side at a time has to name its sides: the label is all
+ * the child has to tell the legs apart, so leaving `sideNoun` out is a compile
+ * error rather than a hold that runs twice without saying why.
  */
 export type Exercise =
-  | (ExerciseBase & { mode: 'timer'; durationSec: number })
-  | (ExerciseBase & { mode: 'repetitions'; reps: number; repetitionLabel: string });
+  | (TimedExercise & { perSide: true; sideNoun: SideNoun })
+  | (TimedExercise & { perSide?: false; sideNoun?: never })
+  | (ExerciseBase & {
+      mode: 'repetitions';
+      reps: number;
+      repetitionLabel: string;
+      /** One repetition covers both sides, so neither side is ever named. */
+      perSide?: boolean;
+      sideNoun?: never;
+    });
 
 export const programme: Exercise[] = [
   {
@@ -202,6 +213,7 @@ export const programme: Exercise[] = [
     durationSec: 20,
     sets: 2,
     perSide: true,
+    sideNoun: 'lado',
     media: {},
   },
   {
@@ -276,6 +288,6 @@ export function sideLabel(
   exercise: Exercise,
   sideIndex: number
 ): string | undefined {
-  if (legsPerSet(exercise) === 1) return undefined;
-  return sideLabels[exercise.sideNoun ?? 'lado'][sideIndex === 0 ? 0 : 1];
+  if (exercise.mode !== 'timer' || !exercise.perSide) return undefined;
+  return sideLabels[exercise.sideNoun][sideIndex];
 }
