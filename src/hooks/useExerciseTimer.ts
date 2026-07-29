@@ -41,14 +41,14 @@ export function useExerciseTimer(
   // The precise countdown. Frames write here; shared state only hears about
   // whole-second crossings.
   const fractionalRef = useRef(totalSeconds);
-  const lastPromotedRef = useRef(Math.ceil(totalSeconds));
+  const lastPromotedRef = useRef(Math.floor(totalSeconds));
 
   // Restart on a new run or an exercise switch, before anything renders.
   const currentRun = useRef({ key: resetKey, total: totalSeconds });
   if (currentRun.current.key !== resetKey || currentRun.current.total !== totalSeconds) {
     currentRun.current = { key: resetKey, total: totalSeconds };
     fractionalRef.current = totalSeconds;
-    lastPromotedRef.current = Math.ceil(totalSeconds);
+    lastPromotedRef.current = Math.floor(totalSeconds);
     setSecondsRemaining(totalSeconds);
     setIsRunning(false);
   }
@@ -71,8 +71,12 @@ export function useExerciseTimer(
       fractionalRef.current = next;
       frameSink?.current?.(next);
 
-      const whole = Math.ceil(next);
-      if (whole !== lastPromotedRef.current) {
+      // Promote on the floored boundary so consumers announcing the remaining
+      // whole seconds hear every value (120, 119, 118…). The final frame is
+      // written unconditionally: floor(0.99) already promoted 0, but the
+      // auto-advance check needs the exact zero.
+      const whole = Math.floor(next);
+      if (whole !== lastPromotedRef.current || next === 0) {
         lastPromotedRef.current = whole;
         setSecondsRemaining(next);
       }
@@ -98,7 +102,7 @@ export function useExerciseTimer(
 
   const restart = useCallback(() => {
     fractionalRef.current = totalSeconds;
-    lastPromotedRef.current = Math.ceil(totalSeconds);
+    lastPromotedRef.current = Math.floor(totalSeconds);
     setSecondsRemaining(totalSeconds);
     setIsRunning(true);
     setRunVersion((version) => version + 1);
@@ -107,7 +111,7 @@ export function useExerciseTimer(
   const toggle = useCallback(() => {
     if (fractionalRef.current <= 0) {
       fractionalRef.current = totalSeconds;
-      lastPromotedRef.current = Math.ceil(totalSeconds);
+      lastPromotedRef.current = Math.floor(totalSeconds);
       setSecondsRemaining(totalSeconds);
       frameSink?.current?.(totalSeconds);
     }

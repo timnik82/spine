@@ -84,7 +84,7 @@ describe('five-exercise programme', () => {
     expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
   });
 
-  it('sweeps the seconds hand every frame while re-rendering once a second (#11)', () => {
+  it('announces every second while re-rendering once per second (#11)', () => {
     render(<App />);
 
     act(() => {
@@ -92,12 +92,25 @@ describe('five-exercise programme', () => {
     });
     advance(3_100);
 
-    const probeStart = renderProbe.count;
-    advance(10_100);
+    expect(
+      screen.getByRole('region', { name: /Exercício: 120 segundos restantes/ })
+    ).toBeTruthy();
 
-    // Ten seconds at 60fps is ~600 frames; only whole-second crossings may
-    // reach shared state, so renders should land near ten, not near 600.
-    expect(renderProbe.count - probeStart).toBeLessThan(30);
+    const probeStart = renderProbe.count;
+    advance(100);
+    expect(
+      screen.getByRole('region', { name: /Exercício: 119 segundos restantes/ })
+    ).toBeTruthy();
+    advance(1_000);
+    expect(
+      screen.getByRole('region', { name: /Exercício: 118 segundos restantes/ })
+    ).toBeTruthy();
+
+    advance(9_000);
+    // ~600 animation frames elapsed over these ten seconds; only the eleven
+    // whole-second crossings (120→…→109) may reach shared state. Before #11
+    // this window produced a render per frame.
+    expect(renderProbe.count - probeStart).toBeLessThanOrEqual(15);
 
     // The hand still moves at sub-second precision, driven outside React.
     const hand = document.querySelector('#seconds-hand');
