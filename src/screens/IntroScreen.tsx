@@ -24,11 +24,11 @@ export function IntroScreen({
       }}
     >
       {image && (
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-x-0 top-16 bottom-48 flex items-center justify-center p-4">
           <img
             src={image}
             alt=""
-            className="h-full w-full object-cover opacity-60"
+            className="max-h-full max-w-full rounded-2xl object-contain shadow-sm bg-white/50 p-2 backdrop-blur-sm"
           />
         </div>
       )}
