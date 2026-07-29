@@ -15,7 +15,7 @@ import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
-import { renderProbe, renderProbeEnabled } from '@/lib/renderProbe';
+import { renderProbe } from '@/lib/renderProbe';
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
@@ -32,9 +32,13 @@ export function App() {
     unlockStopwatchSounds();
   }, []);
 
-  // Feeds the ?debug render-rate badge (issue #11); free when the flag is off.
+  // Counts every App render for the ?debug render-rate badge (issue #11).
+  // The increment is unconditional: the regression test in App.test.tsx reads
+  // renderProbe.count, and it must measure real renders — not silently read
+  // zero because ?debug isn't in the jsdom URL. PerfBadge stays responsible
+  // for hiding itself when the flag is off, so the production UI pays nothing.
   useEffect(() => {
-    if (renderProbeEnabled) renderProbe.count += 1;
+    renderProbe.count += 1;
   });
 
   // The stopwatch hand subscribes to this channel; the exercise timer writes
