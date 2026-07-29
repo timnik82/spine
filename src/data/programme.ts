@@ -225,6 +225,13 @@ export const programme: Exercise[] = [
   },
 ];
 
+/** Section headings from the source file, shown on the introduction screens. */
+export const phaseLabels: Record<Phase, string> = {
+  aquecimento: 'Aquecimento',
+  exercicios: 'Exercícios',
+  alongamentos: 'Alongamentos',
+};
+
 export function hasNextExercise(exerciseIndex: number): boolean {
   return exerciseIndex < programme.length - 1;
 }

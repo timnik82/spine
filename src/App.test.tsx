@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { legsPerSet, programme } from '@/data/programme';
+import { legsPerSet, phaseLabels, programme } from '@/data/programme';
 import { renderProbe } from '@/lib/renderProbe';
 import { App } from './App';
 
@@ -441,6 +441,7 @@ describe('exercise programme', () => {
 
     programme.forEach((exercise, index) => {
       expect(screen.getByRole('heading', { name: exercise.name })).toBeTruthy();
+      expect(screen.getByText(phaseLabels[exercise.phase])).toBeTruthy();
 
       if (exercise.mode === 'timer') {
         runTimedExercise({

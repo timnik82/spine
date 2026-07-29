@@ -1,5 +1,6 @@
 import {
   hasNextExercise,
+  phaseLabels,
   programme,
   REST_SECONDS,
   SIDE_SWAP_HINT,
@@ -100,6 +101,7 @@ export function App() {
         <>
           <IntroScreen
             exerciseName={exercise.name}
+            phaseLabel={phaseLabels[exercise.phase]}
             image={exercise.media.image}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
             onStart={() => dispatch({ type: 'START' })}

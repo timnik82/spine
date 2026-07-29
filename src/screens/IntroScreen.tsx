@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 
 interface IntroScreenProps {
   exerciseName: string;
+  phaseLabel: string;
   image?: string;
   onInstructions: () => void;
   onStart: () => void;
@@ -9,6 +10,7 @@ interface IntroScreenProps {
 
 export function IntroScreen({
   exerciseName,
+  phaseLabel,
   image,
   onInstructions,
   onStart,
@@ -31,16 +33,29 @@ export function IntroScreen({
       )}
 
       <div className="relative z-10 flex flex-col items-center gap-8 pb-16">
-        <h1
-          className="text-center font-medium tracking-wide"
-          style={{
-            fontFamily: 'var(--font-kids)',
-            fontSize: 'var(--ex-heading-size)',
-            color: 'var(--ex-fg)',
-          }}
-        >
-          {exerciseName}
-        </h1>
+        <div className="flex flex-col items-center gap-4">
+          <p
+            className="rounded-full px-5 py-1.5 font-semibold uppercase tracking-widest"
+            style={{
+              fontSize: 'var(--ex-bullet-size)',
+              color: 'var(--ex-fg-muted)',
+              border: '2px solid var(--ex-border)',
+              backgroundColor: 'oklch(0.96 0.025 85)',
+            }}
+          >
+            {phaseLabel}
+          </p>
+          <h1
+            className="text-center font-medium tracking-wide"
+            style={{
+              fontFamily: 'var(--font-kids)',
+              fontSize: 'var(--ex-heading-size)',
+              color: 'var(--ex-fg)',
+            }}
+          >
+            {exerciseName}
+          </h1>
+        </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button
             onClick={onInstructions}
