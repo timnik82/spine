@@ -1,5 +1,6 @@
 import { CoachStopwatch } from './CoachStopwatch';
 import { BatteryReps } from './BatteryReps';
+import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 interface ExerciseProgressPairProps {
   secondsRemaining: number;
@@ -8,6 +9,7 @@ interface ExerciseProgressPairProps {
   totalReps: number;
   onToggle?: () => void;
   onReset?: () => void;
+  frameSink?: FrameSinkRef;
 }
 
 export function ExerciseProgressPair({
@@ -17,6 +19,7 @@ export function ExerciseProgressPair({
   totalReps,
   onToggle,
   onReset,
+  frameSink,
 }: ExerciseProgressPairProps) {
   const hasRepeatedSets = totalReps > 1;
 
@@ -36,6 +39,7 @@ export function ExerciseProgressPair({
           totalSeconds={totalSeconds}
           onToggle={onToggle}
           onReset={onReset}
+          frameSink={frameSink}
         />
       </div>
 

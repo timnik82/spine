@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import stopwatchMarkup from '@/assets/stopwatch.svg?raw';
+import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 import {
   playStopwatchPress,
   playStopwatchRelease,
@@ -11,6 +12,11 @@ interface CoachStopwatchProps {
   totalSeconds: number;
   onToggle?: () => void;
   onReset?: () => void;
+  /**
+   * When provided, the seconds hand is driven per animation frame through
+   * this channel instead of React state (issue #11).
+   */
+  frameSink?: FrameSinkRef;
 }
 
 const DIAL_CENTER_X = 500;
@@ -188,6 +194,7 @@ export function CoachStopwatch({
   totalSeconds,
   onToggle,
   onReset,
+  frameSink,
 }: CoachStopwatchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<SVGGElement | null>(null);
@@ -300,15 +307,32 @@ export function CoachStopwatch({
     };
   }, [mounted]);
 
-  // Rotate the seconds hand using SVG-native transform attribute
+  // Rotate the seconds hand using the SVG-native transform attribute. With a
+  // frame sink the exercise timer pushes fractional seconds straight to the
+  // hand on every animation frame — no React render involved (issue #11).
+  // Without a sink (tests, standalone use) the hand follows whole-second
+  // state instead.
   useEffect(() => {
-    if (handRef.current) {
-      handRef.current.setAttribute(
+    if (!frameSink) return;
+    frameSink.current = (fractionalRemaining) => {
+      const angle = Math.max(0, totalSeconds - fractionalRemaining) * 6;
+      handRef.current?.setAttribute(
         'transform',
-        `rotate(${handAngle} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`
+        `rotate(${angle} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`
       );
-    }
-  }, [handAngle]);
+    };
+    return () => {
+      frameSink.current = null;
+    };
+  }, [frameSink, totalSeconds]);
+
+  useEffect(() => {
+    if (frameSink || !handRef.current) return;
+    handRef.current.setAttribute(
+      'transform',
+      `rotate(${handAngle} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`
+    );
+  }, [handAngle, frameSink]);
 
   const timerLabel = `Cronometro: ${Math.floor(elapsed)} de ${totalSeconds} segundos`;
 

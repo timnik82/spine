@@ -2,6 +2,7 @@ import { Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseProgressPair } from '@/components/ExerciseProgressPair';
 import { ExerciseHeader } from '@/components/ExerciseHeader';
+import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 interface ActiveScreenProps {
   exerciseName: string;
@@ -14,6 +15,7 @@ interface ActiveScreenProps {
   onReset: () => void;
   onInstructions: () => void;
   onHome: () => void;
+  frameSink?: FrameSinkRef;
 }
 
 export function ActiveScreen({
@@ -27,6 +29,7 @@ export function ActiveScreen({
   onReset,
   onInstructions,
   onHome,
+  frameSink,
 }: ActiveScreenProps) {
   return (
     <div
@@ -64,6 +67,7 @@ export function ActiveScreen({
           totalReps={totalSets}
           onToggle={onToggle}
           onReset={onReset}
+          frameSink={frameSink}
         />
       </main>
 

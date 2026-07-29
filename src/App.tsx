@@ -16,7 +16,7 @@ import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
 import { renderProbe } from '@/lib/renderProbe';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 
 export function App() {
@@ -36,11 +36,19 @@ export function App() {
     renderProbe.count += 1;
   });
 
+  // The stopwatch hand subscribes to this channel; the exercise timer writes
+  // the precise remaining time here every animation frame, so the sweep never
+  // goes through React state (issue #11).
+  const stopwatchSweepRef = useRef<
+    ((fractionalSecondsRemaining: number) => void) | null
+  >(null);
+
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.
   const timer = useExerciseTimer(
     exerciseSeconds,
-    `${state.screen}:${state.exerciseIndex}:${state.currentSet}`
+    `${state.screen}:${state.exerciseIndex}:${state.currentSet}`,
+    stopwatchSweepRef
   );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
@@ -113,6 +121,7 @@ export function App() {
               onReset={timer.restart}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onHome={() => dispatch({ type: 'RESET' })}
+              frameSink={stopwatchSweepRef}
             />
           ) : (
             <RepetitionScreen

@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderProbe } from '@/lib/renderProbe';
 import { App } from './App';
 
 vi.mock('@/components/BatteryReps', () => ({
@@ -81,6 +82,26 @@ describe('five-exercise programme', () => {
     expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /pausar/i })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
+  });
+
+  it('sweeps the seconds hand every frame while re-rendering once a second (#11)', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+
+    const probeStart = renderProbe.count;
+    advance(10_100);
+
+    // Ten seconds at 60fps is ~600 frames; only whole-second crossings may
+    // reach shared state, so renders should land near ten, not near 600.
+    expect(renderProbe.count - probeStart).toBeLessThan(30);
+
+    // The hand still moves at sub-second precision, driven outside React.
+    const hand = document.querySelector('#seconds-hand');
+    expect(hand?.getAttribute('transform')).toMatch(/rotate\(\d+\.\d+ /);
   });
 
   it('keeps instructions hidden until the child asks for them', () => {
