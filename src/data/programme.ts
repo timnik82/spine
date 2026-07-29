@@ -10,6 +10,7 @@ export const PLANK_SECONDS = 15;
 
 export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';
 export type Mode = 'timer' | 'repetitions';
+export type SideNoun = 'lado' | 'perna';
 
 interface ExerciseBase {
   id: string;
@@ -21,6 +22,8 @@ interface ExerciseBase {
   summary: string;
   sets: number;
   perSide?: boolean;
+  /** What the two sides are called; the source says "perna" for the legs. */
+  sideNoun?: SideNoun;
   media: { image?: string; video?: string };
   audio?: string;
 }
@@ -181,6 +184,7 @@ export const programme: Exercise[] = [
     durationSec: 20,
     sets: 3,
     perSide: true,
+    sideNoun: 'perna',
     media: {},
   },
   {
@@ -216,6 +220,7 @@ export const programme: Exercise[] = [
     durationSec: 20,
     sets: 2,
     perSide: true,
+    sideNoun: 'perna',
     media: {},
   },
 ];
@@ -225,8 +230,31 @@ export const programme: Exercise[] = [
  * reference data until its flow lands, so navigation asks this list how far it
  * can go rather than carrying its own copy of the boundary.
  */
-export const playableProgramme = programme.slice(0, 7);
+export const playableProgramme = programme.slice(0, 8);
 
 export function hasNextExercise(exerciseIndex: number): boolean {
   return exerciseIndex < playableProgramme.length - 1;
+}
+
+/**
+ * How many legs one set is made of. `perSide` means two only for timed holds,
+ * which are held on one side at a time; a repetition covers both sides at once,
+ * so its block still runs a single leg.
+ */
+export function legsPerSet(exercise: Exercise): 1 | 2 {
+  return exercise.mode === 'timer' && exercise.perSide ? 2 : 1;
+}
+
+const sideLabels: Record<SideNoun, readonly [string, string]> = {
+  lado: ['Lado direito', 'Lado esquerdo'],
+  perna: ['Perna direita', 'Perna esquerda'],
+};
+
+/** The label for the leg being held, or undefined when sides do not apply. */
+export function sideLabel(
+  exercise: Exercise,
+  sideIndex: number
+): string | undefined {
+  if (legsPerSet(exercise) === 1) return undefined;
+  return sideLabels[exercise.sideNoun ?? 'lado'][sideIndex === 0 ? 0 : 1];
 }

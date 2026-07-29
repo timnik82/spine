@@ -1,6 +1,7 @@
 import { useReducer } from 'react';
 import {
   hasNextExercise,
+  legsPerSet,
   playableProgramme,
   PREPARE_SECONDS,
   REST_SECONDS,
@@ -12,6 +13,8 @@ export interface SessionState {
   screen: Screen;
   exerciseIndex: number;
   currentSet: number;
+  /** Which leg of the set is running: 0 first, 1 second. Always 0 without sides. */
+  sideIndex: number;
   /** Seconds left on whichever countdown screen is showing; unused elsewhere. */
   countdownSecondsRemaining: number;
   instructionsOpen: boolean;
@@ -33,17 +36,23 @@ function getInitialState(): SessionState {
     screen: 'intro',
     exerciseIndex: 0,
     currentSet: 1,
+    sideIndex: 0,
     countdownSecondsRemaining: PREPARE_SECONDS,
     instructionsOpen: false,
   };
 }
 
-/** The one place a set begins: the countdown is armed exactly here. */
-function enterPrepare(state: SessionState, currentSet: number): SessionState {
+/** The one place a leg begins: the countdown is armed exactly here. */
+function enterPrepare(
+  state: SessionState,
+  currentSet: number,
+  sideIndex: number
+): SessionState {
   return {
     ...state,
     screen: 'prepare',
     currentSet,
+    sideIndex,
     countdownSecondsRemaining: PREPARE_SECONDS,
   };
 }
@@ -54,8 +63,14 @@ function reducer(state: SessionState, action: Action): SessionState {
   switch (action.type) {
     case 'START':
       return exercise.mode === 'timer'
-        ? enterPrepare({ ...state, instructionsOpen: false }, 1)
-        : { ...state, screen: 'active', currentSet: 1, instructionsOpen: false };
+        ? enterPrepare({ ...state, instructionsOpen: false }, 1, 0)
+        : {
+            ...state,
+            screen: 'active',
+            currentSet: 1,
+            sideIndex: 0,
+            instructionsOpen: false,
+          };
 
     case 'TICK': {
       if (state.screen !== 'prepare' && state.screen !== 'rest') return state;
@@ -65,16 +80,21 @@ function reducer(state: SessionState, action: Action): SessionState {
         return { ...state, countdownSecondsRemaining: next };
       }
       return state.screen === 'rest'
-        ? enterPrepare(state, state.currentSet + 1)
+        ? enterPrepare(state, state.currentSet + 1, 0)
         : { ...state, screen: 'active' };
     }
 
     case 'SKIP_REST':
       return state.screen === 'rest'
-        ? enterPrepare(state, state.currentSet + 1)
+        ? enterPrepare(state, state.currentSet + 1, 0)
         : state;
 
     case 'ADVANCE_SET':
+      // Swapping sides is part of the same set, so it goes straight into the
+      // preparation countdown; the rest belongs to the end of a whole set.
+      if (state.sideIndex + 1 < legsPerSet(exercise)) {
+        return enterPrepare(state, state.currentSet, state.sideIndex + 1);
+      }
       if (state.currentSet >= exercise.sets) {
         return { ...state, screen: 'done' };
       }

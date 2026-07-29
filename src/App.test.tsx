@@ -45,6 +45,15 @@ function openCaoDeCaca() {
   }
 }
 
+/** Walks everything before Equilíbrio numa perna and leaves its intro open. */
+function openEquilibrio() {
+  openCaoDeCaca();
+  finishRepetitionBlock();
+  openNextExercise();
+  runTimedExercise({ durationSec: 15, sets: 3 });
+  openNextExercise();
+}
+
 /**
  * Plays one timed exercise from its intro to its completion screen, following
  * the same rules the reducer does: a preparation countdown before every leg, a
@@ -363,5 +372,44 @@ describe('exercise programme', () => {
     advance(15_100);
 
     expect(screen.getByText('Concluído')).toBeTruthy();
+  });
+
+  it('holds both legs before an Equilíbrio set counts', () => {
+    render(<App />);
+    openEquilibrio();
+
+    expect(screen.getByRole('heading', { name: 'Equilíbrio numa perna' })).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    advance(20_100);
+
+    // Swapping legs happens inside the set: preparation only, no rest.
+    expect(screen.getByRole('heading', { name: /preparar/i })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Descansa' })).toBeNull();
+
+    advance(3_100);
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0');
+    expect(
+      screen.getByRole('img', { name: 'Cronometro: 0 de 20 segundos' })
+    ).toBeTruthy();
+
+    advance(20_100);
+    expect(screen.getByRole('heading', { name: 'Descansa' })).toBeTruthy();
+
+    advance(10_100);
+    advance(3_100);
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
+  });
+
+  it('ends Equilíbrio after the second leg of the last set', () => {
+    render(<App />);
+    openEquilibrio();
+    runTimedExercise({ durationSec: 20, sets: 3, legsPerSet: 2 });
+
+    expect(screen.getByText('Concluído')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Equilíbrio numa perna' })).toBeTruthy();
   });
 });

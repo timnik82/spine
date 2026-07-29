@@ -47,11 +47,11 @@ export function App() {
   // goes through React state (issue #11).
   const stopwatchSweepRef = useRef<FrameSinkRef['current']>(null);
 
-  // The timer belongs to one run of one set; when that changes it restarts
+  // The timer belongs to one leg of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.
   const timer = useExerciseTimer(
     exerciseSeconds,
-    `${state.screen}:${state.exerciseIndex}:${state.currentSet}`,
+    `${state.screen}:${state.exerciseIndex}:${state.currentSet}:${state.sideIndex}`,
     stopwatchSweepRef
   );
 
@@ -71,6 +71,7 @@ export function App() {
     state.currentSet,
     state.exerciseIndex,
     state.screen,
+    state.sideIndex,
     timer.restart,
   ]);
 
