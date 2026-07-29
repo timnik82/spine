@@ -6,6 +6,7 @@ interface IntroScreenProps {
   phaseLabel: string;
   currentExercise: number;
   totalExercises: number;
+  targetSummary?: string;
   image?: string;
   onInstructions: () => void;
   onStart: () => void;
@@ -16,6 +17,7 @@ export function IntroScreen({
   phaseLabel,
   currentExercise,
   totalExercises,
+  targetSummary,
   image,
   onInstructions,
   onStart,
@@ -71,6 +73,18 @@ export function IntroScreen({
           >
             {exerciseName}
           </h1>
+          {targetSummary && (
+            <p
+              className="rounded-full px-4 py-1.5 font-bold text-xs shadow-xs tracking-wide"
+              style={{
+                color: 'var(--ex-fg)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: '1.5px solid var(--ex-border)',
+              }}
+            >
+              {targetSummary}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button
