@@ -26,3 +26,7 @@ dist-ssr
 .playwright-mcp/
 
 .claude/launch.json
+
+# Design samples / generated media drafts
+exercise-samples/
+

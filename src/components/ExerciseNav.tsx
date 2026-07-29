@@ -1,0 +1,58 @@
+import { programme } from '@/data/programme';
+
+interface ExerciseNavProps {
+  currentIndex: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onSelect: (index: number) => void;
+}
+
+export function ExerciseNav({
+  currentIndex,
+  onPrev,
+  onNext,
+  onSelect,
+}: ExerciseNavProps) {
+  const isFirst = currentIndex <= 0;
+  const isLast = currentIndex >= programme.length - 1;
+
+  return (
+    <nav
+      aria-label="Navegação rápida de exercícios"
+      className="fixed top-2 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-black/10 bg-white/85 px-3 py-1.5 text-xs shadow-md backdrop-blur-md transition-all sm:gap-2"
+    >
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={isFirst}
+        className="rounded-full px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+        aria-label="Exercício anterior"
+      >
+        ‹ Anterior
+      </button>
+
+      <select
+        value={currentIndex}
+        onChange={(e) => onSelect(Number(e.target.value))}
+        className="cursor-pointer rounded-md bg-transparent px-1.5 py-0.5 font-medium text-slate-800 focus:outline-none"
+        aria-label="Selecionar exercício"
+      >
+        {programme.map((ex, idx) => (
+          <option key={ex.id} value={idx}>
+            {idx + 1}/{programme.length}: {ex.name}
+          </option>
+        ))}
+      </select>
+
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={isLast}
+        className="rounded-full px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+        aria-label="Próximo exercício"
+      >
+        Seguinte ›
+      </button>
+    </nav>
+  );
+}

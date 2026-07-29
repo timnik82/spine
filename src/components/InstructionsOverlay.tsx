@@ -49,6 +49,16 @@ export function InstructionsOverlay({
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-4">
+          {exercise.media.image && (
+            <div className="flex justify-center overflow-hidden rounded-xl bg-black/5 p-2">
+              <img
+                src={exercise.media.image}
+                alt={exercise.name}
+                className="max-h-56 w-auto object-contain rounded-lg"
+              />
+            </div>
+          )}
+
           {exercise.lead && (
             <p
               className="italic"

@@ -17,6 +17,7 @@ import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
 import { FinalScreen } from '@/screens/FinalScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
+import { ExerciseNav } from '@/components/ExerciseNav';
 import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
 import { renderProbe } from '@/lib/renderProbe';
@@ -200,6 +201,14 @@ export function App() {
 
   return (
     <>
+      {state.screen !== 'final' && (
+        <ExerciseNav
+          currentIndex={state.exerciseIndex}
+          onPrev={() => dispatch({ type: 'PREV_EXERCISE' })}
+          onNext={() => dispatch({ type: 'NEXT_EXERCISE' })}
+          onSelect={(index) => dispatch({ type: 'SELECT_EXERCISE', index })}
+        />
+      )}
       {content}
       <PerfBadge />
     </>

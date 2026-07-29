@@ -34,7 +34,9 @@ type Action =
   | { type: 'RATE'; rating: Rating }
   | { type: 'RESET' }
   | { type: 'OPEN_INSTRUCTIONS' }
-  | { type: 'CLOSE_INSTRUCTIONS' };
+  | { type: 'CLOSE_INSTRUCTIONS' }
+  | { type: 'PREV_EXERCISE' }
+  | { type: 'SELECT_EXERCISE'; index: number };
 
 function getInitialState(): SessionState {
   return {
@@ -129,6 +131,15 @@ function reducer(state: SessionState, action: Action): SessionState {
 
     case 'OPEN_INSTRUCTIONS':
       return { ...state, instructionsOpen: true };
+
+    case 'PREV_EXERCISE':
+      if (state.exerciseIndex <= 0) return state;
+      return { ...getInitialState(), exerciseIndex: state.exerciseIndex - 1 };
+
+    case 'SELECT_EXERCISE': {
+      const targetIndex = Math.max(0, Math.min(programme.length - 1, action.index));
+      return { ...getInitialState(), exerciseIndex: targetIndex };
+    }
 
     case 'CLOSE_INSTRUCTIONS':
       return { ...state, instructionsOpen: false };
