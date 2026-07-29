@@ -3,6 +3,7 @@ import { BatteryReps } from './BatteryReps';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 interface ExerciseProgressPairProps {
+  sideLabel?: string;
   secondsRemaining: number;
   totalSeconds: number;
   repsComplete: number;
@@ -13,6 +14,7 @@ interface ExerciseProgressPairProps {
 }
 
 export function ExerciseProgressPair({
+  sideLabel,
   secondsRemaining,
   totalSeconds,
   repsComplete,
@@ -28,6 +30,7 @@ export function ExerciseProgressPair({
       className="flex w-full flex-row items-center justify-center gap-4 sm:gap-20"
       aria-label={
         `Exercício: ${Math.floor(secondsRemaining)} segundos restantes` +
+        (sideLabel ? `, ${sideLabel}` : '') +
         (hasRepeatedSets
           ? `, ${repsComplete} de ${totalReps} repetições concluídas`
           : '')

@@ -6,6 +6,7 @@ import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 interface ActiveScreenProps {
   exerciseName: string;
+  sideLabel?: string;
   secondsRemaining: number;
   totalSeconds: number;
   isRunning: boolean;
@@ -20,6 +21,7 @@ interface ActiveScreenProps {
 
 export function ActiveScreen({
   exerciseName,
+  sideLabel,
   secondsRemaining,
   totalSeconds,
   isRunning,
@@ -43,6 +45,7 @@ export function ActiveScreen({
     >
       <ExerciseHeader
         exerciseName={exerciseName}
+        subtitle={sideLabel}
         onHome={onHome}
         className="landscape:col-span-2"
         action={
@@ -61,6 +64,7 @@ export function ActiveScreen({
 
       <main className="flex flex-1 flex-col items-center justify-center py-2 sm:py-4 landscape:col-start-2 landscape:row-start-2 landscape:min-h-0 landscape:py-0">
         <ExerciseProgressPair
+          sideLabel={sideLabel}
           secondsRemaining={secondsRemaining}
           totalSeconds={totalSeconds}
           repsComplete={currentSet - 1}

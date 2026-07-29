@@ -4,6 +4,8 @@ import { HomeButton } from '@/components/HomeButton';
 
 interface ExerciseHeaderProps {
   exerciseName: string;
+  /** Which side is being held, on the exercises that work one side at a time. */
+  subtitle?: string;
   onHome: () => void;
   /** Optional control for the right-hand slot; the slot is reserved either way. */
   action?: ReactNode;
@@ -17,6 +19,7 @@ interface ExerciseHeaderProps {
  */
 export function ExerciseHeader({
   exerciseName,
+  subtitle,
   onHome,
   action,
   className = '',
@@ -41,17 +44,32 @@ export function ExerciseHeader({
             className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7"
             style={{ color: 'var(--ex-warm)' }}
           />
-          <h1
-            className="text-center font-medium tracking-wide"
-            style={{
-              fontFamily: 'var(--font-kids)',
-              fontSize: 'var(--ex-name-size)',
-              color: 'var(--ex-fg)',
-              lineHeight: 1.25,
-            }}
-          >
-            {exerciseName}
-          </h1>
+          <div className="flex min-w-0 flex-col items-center">
+            <h1
+              className="text-center font-medium tracking-wide"
+              style={{
+                fontFamily: 'var(--font-kids)',
+                fontSize: 'var(--ex-name-size)',
+                color: 'var(--ex-fg)',
+                lineHeight: 1.25,
+              }}
+            >
+              {exerciseName}
+            </h1>
+            {subtitle && (
+              <p
+                className="text-center font-semibold"
+                style={{
+                  fontFamily: 'var(--font-kids)',
+                  fontSize: 'var(--ex-bullet-size)',
+                  color: 'var(--ex-warm)',
+                  lineHeight: 1.2,
+                }}
+              >
+                {subtitle}
+              </p>
+            )}
+          </div>
         </div>
       </div>
       {action ? <div className="justify-self-end">{action}</div> : <div />}

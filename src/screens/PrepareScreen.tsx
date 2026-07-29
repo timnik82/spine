@@ -2,12 +2,17 @@ import { CountdownLayout } from '@/components/CountdownLayout';
 
 interface PrepareScreenProps {
   secondsRemaining: number;
+  sideLabel?: string;
   onHome: () => void;
 }
 
-export function PrepareScreen({ secondsRemaining, onHome }: PrepareScreenProps) {
+export function PrepareScreen({
+  secondsRemaining,
+  sideLabel,
+  onHome,
+}: PrepareScreenProps) {
   return (
-    <CountdownLayout title="Preparar" onHome={onHome}>
+    <CountdownLayout title="Preparar" subtitle={sideLabel} onHome={onHome}>
       <p
         className="font-semibold tabular-nums"
         style={{

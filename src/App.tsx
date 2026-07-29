@@ -3,6 +3,7 @@ import {
   playableProgramme,
   REST_SECONDS,
   SIDE_SWAP_HINT,
+  sideLabel,
 } from '@/data/programme';
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTimer } from '@/hooks/useTimer';
@@ -25,6 +26,7 @@ export function App() {
   const [state, dispatch] = useSessionReducer();
   const exercise = playableProgramme[state.exerciseIndex];
   const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
+  const currentSideLabel = sideLabel(exercise, state.sideIndex);
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
   // intro screen, so this buys the fetch and decode seconds rather than the
@@ -117,6 +119,7 @@ export function App() {
           {exercise.mode === 'timer' ? (
             <ActiveScreen
               exerciseName={exercise.name}
+              sideLabel={currentSideLabel}
               secondsRemaining={timer.secondsRemaining}
               totalSeconds={exerciseSeconds}
               isRunning={timer.isRunning}
@@ -152,6 +155,7 @@ export function App() {
       content = (
         <PrepareScreen
           secondsRemaining={state.countdownSecondsRemaining}
+          sideLabel={currentSideLabel}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );

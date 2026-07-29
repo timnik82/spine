@@ -404,6 +404,28 @@ describe('exercise programme', () => {
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
   });
 
+  it('names the leg on the preparation and exercise screens', () => {
+    render(<App />);
+    openEquilibrio();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    expect(screen.getByText('Perna direita')).toBeTruthy();
+
+    advance(3_100);
+    expect(screen.getByText('Perna direita')).toBeTruthy();
+    expect(
+      screen.getByRole('region', { name: /Perna direita/ })
+    ).toBeTruthy();
+
+    advance(20_100);
+    expect(screen.getByText('Perna esquerda')).toBeTruthy();
+
+    advance(3_100);
+    expect(screen.getByText('Perna esquerda')).toBeTruthy();
+  });
+
   it('ends Equilíbrio after the second leg of the last set', () => {
     render(<App />);
     openEquilibrio();
