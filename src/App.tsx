@@ -13,8 +13,11 @@ import { PrepareScreen } from '@/screens/PrepareScreen';
 import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
+import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
+import { renderProbe } from '@/lib/renderProbe';
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
@@ -27,6 +30,11 @@ export function App() {
   useEffect(() => {
     unlockStopwatchSounds();
   }, []);
+
+  // Feeds the ?debug render-rate badge (issue #11).
+  useEffect(() => {
+    renderProbe.count += 1;
+  });
 
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.
@@ -70,9 +78,10 @@ export function App() {
     timer.secondsRemaining,
   ]);
 
+  let content: ReactNode;
   switch (state.screen) {
     case 'intro':
-      return (
+      content = (
         <>
           <IntroScreen
             exerciseName={exercise.name}
@@ -87,9 +96,10 @@ export function App() {
           />
         </>
       );
+      break;
 
     case 'active':
-      return (
+      content = (
         <>
           {exercise.mode === 'timer' ? (
             <ActiveScreen
@@ -121,17 +131,19 @@ export function App() {
           />
         </>
       );
+      break;
 
     case 'prepare':
-      return (
+      content = (
         <PrepareScreen
           secondsRemaining={state.countdownSecondsRemaining}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
+      break;
 
     case 'rest':
-      return (
+      content = (
         <RestScreen
           secondsRemaining={state.countdownSecondsRemaining}
           totalSeconds={REST_SECONDS}
@@ -139,9 +151,10 @@ export function App() {
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
+      break;
 
     case 'done':
-      return (
+      content = (
         <DoneScreen
           exerciseName={exercise.name}
           hasNextExercise={hasNextExercise(state.exerciseIndex)}
@@ -149,7 +162,15 @@ export function App() {
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
+      break;
   }
+
+  return (
+    <>
+      {content}
+      <PerfBadge />
+    </>
+  );
 }
 
 export default App;
