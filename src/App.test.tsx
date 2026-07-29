@@ -1,6 +1,11 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { legsPerSet, phaseLabels, programme } from '@/data/programme';
+import {
+  FINAL_MESSAGE,
+  legsPerSet,
+  phaseLabels,
+  programme,
+} from '@/data/programme';
 import { renderProbe } from '@/lib/renderProbe';
 import { App } from './App';
 
@@ -44,6 +49,27 @@ function openCaoDeCaca() {
     finishRepetitionBlock();
     openNextExercise();
   }
+}
+
+/** Plays the whole programme and stops on the closing screen. */
+function openFinalScreen() {
+  programme.forEach((exercise, index) => {
+    if (exercise.mode === 'timer') {
+      runTimedExercise({
+        durationSec: exercise.durationSec,
+        sets: exercise.sets,
+        legsPerSet: legsPerSet(exercise),
+      });
+    } else {
+      finishRepetitionBlock();
+    }
+
+    if (index < programme.length - 1) openNextExercise();
+  });
+
+  act(() => {
+    screen.getByRole('button', { name: /terminar/i }).click();
+  });
 }
 
 /** Walks everything before Equilíbrio numa perna and leaves its intro open. */
@@ -459,5 +485,38 @@ describe('exercise programme', () => {
         openNextExercise();
       }
     });
+
+    expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /terminar/i })).toBeTruthy();
+  });
+
+  it('closes the session with the checklist, a note and encouragement', () => {
+    render(<App />);
+    openFinalScreen();
+
+    expect(screen.getByText('Respira fundo 3 vezes.')).toBeTruthy();
+    expect(screen.getByText('Bebe um pouco de água.')).toBeTruthy();
+    expect(screen.getByText('Dá uma nota ao treino:')).toBeTruthy();
+    expect(screen.queryByText(FINAL_MESSAGE)).toBeNull();
+
+    const easy = screen.getByRole('button', { name: /fácil/i });
+    act(() => {
+      easy.click();
+    });
+
+    expect(easy.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText(FINAL_MESSAGE)).toBeTruthy();
+  });
+
+  it('starts a fresh session from the final screen', () => {
+    render(<App />);
+    openFinalScreen();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar de novo/i }).click();
+    });
+
+    expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /começar/i })).toBeTruthy();
   });
 });

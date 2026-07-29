@@ -225,6 +225,27 @@ export const programme: Exercise[] = [
   },
 ];
 
+/** The closing block from the source file: checklist, rating, encouragement. */
+export const finalChecklist = [
+  'Respira fundo 3 vezes.',
+  'Bebe um pouco de água.',
+] as const;
+
+export type Rating = 'facil' | 'medio' | 'dificil';
+
+export const ratingOptions: readonly {
+  id: Rating;
+  emoji: string;
+  label: string;
+}[] = [
+  { id: 'facil', emoji: '😃', label: 'Fácil' },
+  { id: 'medio', emoji: '😐', label: 'Mais ou menos' },
+  { id: 'dificil', emoji: '😓', label: 'Difícil' },
+];
+
+export const FINAL_MESSAGE =
+  'Parabéns! Cada vez que fazes os exercícios estás a ajudar o teu corpo a ficar mais forte.';
+
 /** Section headings from the source file, shown on the introduction screens. */
 export const phaseLabels: Record<Phase, string> = {
   aquecimento: 'Aquecimento',

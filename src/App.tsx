@@ -15,6 +15,7 @@ import { RestScreen } from '@/screens/RestScreen';
 import { PrepareScreen } from '@/screens/PrepareScreen';
 import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
+import { FinalScreen } from '@/screens/FinalScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
@@ -180,7 +181,18 @@ export function App() {
           exerciseName={exercise.name}
           hasNextExercise={hasNextExercise(state.exerciseIndex)}
           onNext={() => dispatch({ type: 'NEXT_EXERCISE' })}
+          onFinish={() => dispatch({ type: 'FINISH_SESSION' })}
           onHome={() => dispatch({ type: 'RESET' })}
+        />
+      );
+      break;
+
+    case 'final':
+      content = (
+        <FinalScreen
+          rating={state.rating}
+          onRate={(rating) => dispatch({ type: 'RATE', rating })}
+          onRestart={() => dispatch({ type: 'RESET' })}
         />
       );
       break;
