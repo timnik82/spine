@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { PrimaryButton } from '@/components/PrimaryButton';
 import type { Exercise } from '@/data/programme';
 
 interface InstructionsOverlayProps {
@@ -89,19 +89,9 @@ export function InstructionsOverlay({
 
         <DialogFooter className="justify-center sm:justify-center">
           <DialogClose asChild>
-            <Button
-              onClick={onClose}
-              className="cursor-pointer rounded-[var(--ex-btn-radius)] px-8 font-semibold"
-              style={{
-                height: 'var(--ex-btn-height)',
-                minWidth: 'var(--ex-btn-min-width)',
-                fontSize: 'var(--ex-btn-font-size)',
-                backgroundColor: 'var(--ex-accent)',
-                color: 'var(--ex-accent-fg)',
-              }}
-            >
+            <PrimaryButton onClick={onClose} className="px-8">
               Fechar
-            </Button>
+            </PrimaryButton>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

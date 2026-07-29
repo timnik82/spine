@@ -1,5 +1,5 @@
 import { HomeButton } from '@/components/HomeButton';
-import { Button } from '@/components/ui/button';
+import { PrimaryButton } from '@/components/PrimaryButton';
 
 interface DoneScreenProps {
   exerciseName: string;
@@ -45,19 +45,12 @@ export function DoneScreen({
       >
         Concluído
       </p>
-      <Button
+      <PrimaryButton
         onClick={hasNextExercise ? onNext : onFinish}
-        className="mt-10 cursor-pointer rounded-[var(--ex-btn-radius)] px-12 font-semibold"
-        style={{
-          height: 'var(--ex-btn-height)',
-          minWidth: 'var(--ex-btn-min-width)',
-          fontSize: 'var(--ex-btn-font-size)',
-          backgroundColor: 'var(--ex-accent)',
-          color: 'var(--ex-accent-fg)',
-        }}
+        className="mt-10"
       >
         {hasNextExercise ? 'Seguinte' : 'Terminar'}
-      </Button>
+      </PrimaryButton>
     </div>
   );
 }

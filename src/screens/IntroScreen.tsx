@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { PrimaryButton } from '@/components/PrimaryButton';
 
 interface IntroScreenProps {
   exerciseName: string;
@@ -71,19 +72,9 @@ export function IntroScreen({
           >
             Instruções
           </Button>
-          <Button
-            onClick={onStart}
-            className="cursor-pointer rounded-[var(--ex-btn-radius)] px-12 font-semibold"
-            style={{
-              height: 'var(--ex-btn-height)',
-              minWidth: 'var(--ex-btn-min-width)',
-              fontSize: 'var(--ex-btn-font-size)',
-              backgroundColor: 'var(--ex-accent)',
-              color: 'var(--ex-accent-fg)',
-            }}
-          >
+          <PrimaryButton onClick={onStart}>
             Começar
-          </Button>
+          </PrimaryButton>
         </div>
       </div>
     </div>

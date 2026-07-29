@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HomeButton } from '@/components/HomeButton';
+import { PrimaryButton } from '@/components/PrimaryButton';
 import { finalChecklist, FINAL_MESSAGE, ratingOptions } from '@/data/programme';
 import type { Rating } from '@/data/programme';
 
@@ -111,19 +112,9 @@ export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
           </p>
         )}
 
-        <Button
-          onClick={onRestart}
-          className="cursor-pointer rounded-[var(--ex-btn-radius)] px-12 font-semibold"
-          style={{
-            height: 'var(--ex-btn-height)',
-            minWidth: 'var(--ex-btn-min-width)',
-            fontSize: 'var(--ex-btn-font-size)',
-            backgroundColor: 'var(--ex-accent)',
-            color: 'var(--ex-accent-fg)',
-          }}
-        >
+        <PrimaryButton onClick={onRestart}>
           Começar de novo
-        </Button>
+        </PrimaryButton>
       </main>
     </div>
   );
