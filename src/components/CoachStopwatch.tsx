@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import stopwatchMarkup from '@/assets/stopwatch.svg?raw';
+import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 import {
   playStopwatchPress,
   playStopwatchRelease,
@@ -11,10 +12,25 @@ interface CoachStopwatchProps {
   totalSeconds: number;
   onToggle?: () => void;
   onReset?: () => void;
+  /**
+   * When provided, the seconds hand is driven per animation frame through
+   * this channel instead of React state (issue #11).
+   */
+  frameSink?: FrameSinkRef;
 }
 
 const DIAL_CENTER_X = 500;
 const DIAL_CENTER_Y = 590;
+
+/** Seconds-hand rotation, in degrees, for `remaining` seconds of a `total`-second run. */
+function handRotationDegrees(remaining: number, total: number) {
+  return Math.max(0, total - remaining) * 6;
+}
+
+/** SVG transform attribute placing the seconds hand for `remaining`/`total`. */
+function handTransform(remaining: number, total: number) {
+  return `rotate(${handRotationDegrees(remaining, total)} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`;
+}
 
 /** Matches side pusher transform in stopwatch.svg (radial toward dial center) */
 const SIDE_BUTTON_ROTATE = 'translate(55 48) rotate(33.5 620 278)';
@@ -188,6 +204,7 @@ export function CoachStopwatch({
   totalSeconds,
   onToggle,
   onReset,
+  frameSink,
 }: CoachStopwatchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<SVGGElement | null>(null);
@@ -199,7 +216,6 @@ export function CoachStopwatch({
   onResetRef.current = onReset;
 
   const elapsed = Math.max(0, totalSeconds - secondsRemaining);
-  const handAngle = elapsed * 6;
 
   // Mount the SVG once
   useEffect(() => {
@@ -300,15 +316,25 @@ export function CoachStopwatch({
     };
   }, [mounted]);
 
-  // Rotate the seconds hand using SVG-native transform attribute
+  // Rotate the seconds hand using the SVG-native transform attribute. With a
+  // frame sink the exercise timer pushes fractional seconds straight to the
+  // hand on every animation frame — no React render involved (issue #11).
+  // Without a sink (tests, standalone use) the hand follows whole-second
+  // state instead.
   useEffect(() => {
-    if (handRef.current) {
-      handRef.current.setAttribute(
-        'transform',
-        `rotate(${handAngle} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`
-      );
-    }
-  }, [handAngle]);
+    if (!frameSink) return;
+    frameSink.current = (fractionalRemaining) => {
+      handRef.current?.setAttribute('transform', handTransform(fractionalRemaining, totalSeconds));
+    };
+    return () => {
+      frameSink.current = null;
+    };
+  }, [frameSink, totalSeconds]);
+
+  useEffect(() => {
+    if (frameSink || !handRef.current) return;
+    handRef.current.setAttribute('transform', handTransform(secondsRemaining, totalSeconds));
+  }, [secondsRemaining, totalSeconds, frameSink]);
 
   const timerLabel = `Cronometro: ${Math.floor(elapsed)} de ${totalSeconds} segundos`;
 

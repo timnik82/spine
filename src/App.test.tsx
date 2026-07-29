@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderProbe } from '@/lib/renderProbe';
 import { App } from './App';
 
 vi.mock('@/components/BatteryReps', () => ({
@@ -81,6 +82,39 @@ describe('five-exercise programme', () => {
     expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /pausar/i })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
+  });
+
+  it('announces every second while re-rendering once per second (#11)', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+
+    expect(
+      screen.getByRole('region', { name: /Exercício: 120 segundos restantes/ })
+    ).toBeTruthy();
+
+    const probeStart = renderProbe.count;
+    advance(100);
+    expect(
+      screen.getByRole('region', { name: /Exercício: 119 segundos restantes/ })
+    ).toBeTruthy();
+    advance(1_000);
+    expect(
+      screen.getByRole('region', { name: /Exercício: 118 segundos restantes/ })
+    ).toBeTruthy();
+
+    advance(9_000);
+    // ~600 animation frames elapsed over these ten seconds; only the eleven
+    // whole-second crossings (120→…→109) may reach shared state. Before #11
+    // this window produced a render per frame.
+    expect(renderProbe.count - probeStart).toBeLessThanOrEqual(15);
+
+    // The hand still moves at sub-second precision, driven outside React.
+    const hand = document.querySelector('#seconds-hand');
+    expect(hand?.getAttribute('transform')).toMatch(/rotate\(\d+\.\d+ /);
   });
 
   it('keeps instructions hidden until the child asks for them', () => {

@@ -13,8 +13,12 @@ import { PrepareScreen } from '@/screens/PrepareScreen';
 import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
+import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
-import { useEffect } from 'react';
+import { renderProbe } from '@/lib/renderProbe';
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
+import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
@@ -28,11 +32,26 @@ export function App() {
     unlockStopwatchSounds();
   }, []);
 
+  // Counts every App render for the ?debug render-rate badge (issue #11).
+  // The increment is unconditional: the regression test in App.test.tsx reads
+  // renderProbe.count, and it must measure real renders — not silently read
+  // zero because ?debug isn't in the jsdom URL. PerfBadge stays responsible
+  // for hiding itself when the flag is off, so the production UI pays nothing.
+  useEffect(() => {
+    renderProbe.count += 1;
+  });
+
+  // The stopwatch hand subscribes to this channel; the exercise timer writes
+  // the precise remaining time here every animation frame, so the sweep never
+  // goes through React state (issue #11).
+  const stopwatchSweepRef = useRef<FrameSinkRef['current']>(null);
+
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.
   const timer = useExerciseTimer(
     exerciseSeconds,
-    `${state.screen}:${state.exerciseIndex}:${state.currentSet}`
+    `${state.screen}:${state.exerciseIndex}:${state.currentSet}`,
+    stopwatchSweepRef
   );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
@@ -70,9 +89,10 @@ export function App() {
     timer.secondsRemaining,
   ]);
 
+  let content: ReactNode;
   switch (state.screen) {
     case 'intro':
-      return (
+      content = (
         <>
           <IntroScreen
             exerciseName={exercise.name}
@@ -87,9 +107,10 @@ export function App() {
           />
         </>
       );
+      break;
 
     case 'active':
-      return (
+      content = (
         <>
           {exercise.mode === 'timer' ? (
             <ActiveScreen
@@ -103,6 +124,7 @@ export function App() {
               onReset={timer.restart}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onHome={() => dispatch({ type: 'RESET' })}
+              frameSink={stopwatchSweepRef}
             />
           ) : (
             <RepetitionScreen
@@ -121,17 +143,19 @@ export function App() {
           />
         </>
       );
+      break;
 
     case 'prepare':
-      return (
+      content = (
         <PrepareScreen
           secondsRemaining={state.countdownSecondsRemaining}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
+      break;
 
     case 'rest':
-      return (
+      content = (
         <RestScreen
           secondsRemaining={state.countdownSecondsRemaining}
           totalSeconds={REST_SECONDS}
@@ -139,9 +163,10 @@ export function App() {
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
+      break;
 
     case 'done':
-      return (
+      content = (
         <DoneScreen
           exerciseName={exercise.name}
           hasNextExercise={hasNextExercise(state.exerciseIndex)}
@@ -149,7 +174,15 @@ export function App() {
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
+      break;
   }
+
+  return (
+    <>
+      {content}
+      <PerfBadge />
+    </>
+  );
 }
 
 export default App;
