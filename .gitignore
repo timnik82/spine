@@ -29,4 +29,5 @@ dist-ssr
 
 # Design samples / generated media drafts
 exercise-samples/
+!exercise-samples/PROMPT_GUIDE.md
 
