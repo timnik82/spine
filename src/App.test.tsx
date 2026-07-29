@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { legsPerSet, programme } from '@/data/programme';
 import { renderProbe } from '@/lib/renderProbe';
 import { App } from './App';
 
@@ -433,5 +434,29 @@ describe('exercise programme', () => {
 
     expect(screen.getByText('Concluído')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Equilíbrio numa perna' })).toBeTruthy();
+  });
+
+  it('plays all ten exercises in the prescribed order', () => {
+    render(<App />);
+
+    programme.forEach((exercise, index) => {
+      expect(screen.getByRole('heading', { name: exercise.name })).toBeTruthy();
+
+      if (exercise.mode === 'timer') {
+        runTimedExercise({
+          durationSec: exercise.durationSec,
+          sets: exercise.sets,
+          legsPerSet: legsPerSet(exercise),
+        });
+      } else {
+        finishRepetitionBlock();
+      }
+
+      expect(screen.getByText('Concluído')).toBeTruthy();
+
+      if (index < programme.length - 1) {
+        openNextExercise();
+      }
+    });
   });
 });

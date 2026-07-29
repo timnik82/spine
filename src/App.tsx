@@ -1,6 +1,6 @@
 import {
   hasNextExercise,
-  playableProgramme,
+  programme,
   REST_SECONDS,
   SIDE_SWAP_HINT,
   sideLabel,
@@ -24,7 +24,7 @@ import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
-  const exercise = playableProgramme[state.exerciseIndex];
+  const exercise = programme[state.exerciseIndex];
   const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
   const currentSideLabel = sideLabel(exercise, state.sideIndex);
 

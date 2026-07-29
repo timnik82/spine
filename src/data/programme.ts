@@ -225,15 +225,8 @@ export const programme: Exercise[] = [
   },
 ];
 
-/**
- * The slice of the programme that has screens wired up. The rest stays as
- * reference data until its flow lands, so navigation asks this list how far it
- * can go rather than carrying its own copy of the boundary.
- */
-export const playableProgramme = programme.slice(0, 8);
-
 export function hasNextExercise(exerciseIndex: number): boolean {
-  return exerciseIndex < playableProgramme.length - 1;
+  return exerciseIndex < programme.length - 1;
 }
 
 /**

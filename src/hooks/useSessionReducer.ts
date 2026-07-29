@@ -2,7 +2,7 @@ import { useReducer } from 'react';
 import {
   hasNextExercise,
   legsPerSet,
-  playableProgramme,
+  programme,
   PREPARE_SECONDS,
   REST_SECONDS,
 } from '@/data/programme';
@@ -58,7 +58,7 @@ function enterPrepare(
 }
 
 function reducer(state: SessionState, action: Action): SessionState {
-  const exercise = playableProgramme[state.exerciseIndex];
+  const exercise = programme[state.exerciseIndex];
 
   switch (action.type) {
     case 'START':
