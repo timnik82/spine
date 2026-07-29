@@ -6,6 +6,10 @@ export const REST_SECONDS = 10;
  */
 export const SIDE_SWAP_HINT = 'Em cada repetição troca de lado.';
 export const PREPARE_SECONDS = 3;
+/**
+ * The source permits 15-20 seconds. Issue #9 set the MVP default to the
+ * minimum (15); raise it to 20 only as a deliberate product decision.
+ */
 export const PLANK_SECONDS = 15;
 
 export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';
@@ -260,9 +264,9 @@ export const FINAL_MESSAGE =
 
 /** Section headings from the source file, shown on the introduction screens. */
 export const phaseLabels: Record<Phase, string> = {
-  aquecimento: 'Aquecimento',
+  aquecimento: 'Aquecimento (2 minutos)',
   exercicios: 'Exercícios',
-  alongamentos: 'Alongamentos',
+  alongamentos: 'Alongamentos (3 minutos)',
 };
 
 export function hasNextExercise(exerciseIndex: number): boolean {
