@@ -27,17 +27,10 @@ function completeMarchaAndOpenCrescer() {
   });
   advance(3_100);
   advance(120_100);
-  act(() => {
-    screen.getByRole('button', { name: /seguinte/i }).click();
-  });
 }
 
 function completeCrescerAndOpenRespiracao() {
   runTimedExercise({ durationSec: 10, sets: 10 });
-
-  act(() => {
-    screen.getByRole('button', { name: /seguinte/i }).click();
-  });
 }
 
 /** Walks the four exercises before Cão de caça and leaves its intro open. */
@@ -47,13 +40,12 @@ function openCaoDeCaca() {
 
   for (let block = 0; block < 3; block += 1) {
     finishRepetitionBlock();
-    openNextExercise();
   }
 }
 
 /** Plays the whole programme and stops on the closing screen. */
 function openFinalScreen() {
-  programme.forEach((exercise, index) => {
+  programme.forEach((exercise) => {
     if (exercise.mode === 'timer') {
       runTimedExercise({
         durationSec: exercise.durationSec,
@@ -63,12 +55,6 @@ function openFinalScreen() {
     } else {
       finishRepetitionBlock();
     }
-
-    if (index < programme.length - 1) openNextExercise();
-  });
-
-  act(() => {
-    screen.getByRole('button', { name: /terminar/i }).click();
   });
 }
 
@@ -76,9 +62,7 @@ function openFinalScreen() {
 function openEquilibrio() {
   openCaoDeCaca();
   finishRepetitionBlock();
-  openNextExercise();
   runTimedExercise({ durationSec: 15, sets: 3 });
-  openNextExercise();
 }
 
 /**
@@ -125,11 +109,6 @@ function finishRepetitionBlock() {
   });
 }
 
-function openNextExercise() {
-  act(() => {
-    screen.getByRole('button', { name: /seguinte/i }).click();
-  });
-}
 
 describe('exercise programme', () => {
   beforeEach(() => {
@@ -274,7 +253,7 @@ describe('exercise programme', () => {
     ).toBeTruthy();
   });
 
-  it('requires Seguinte after Marcha before opening Crescer', () => {
+  it('advances directly after Marcha into Crescer intro', () => {
     render(<App />);
 
     act(() => {
@@ -286,13 +265,6 @@ describe('exercise programme', () => {
 
     act(() => {
       vi.advanceTimersByTime(120_100);
-    });
-
-    expect(screen.getByText('Concluído')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
-
-    act(() => {
-      screen.getByRole('button', { name: /seguinte/i }).click();
     });
 
     expect(screen.getByRole('heading', { name: 'Crescer até ao teto' })).toBeTruthy();
@@ -319,7 +291,7 @@ describe('exercise programme', () => {
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
   });
 
-  it('completes all repetitions with one Terminei tap', () => {
+  it('completes all repetitions with one Terminei tap and opens next exercise', () => {
     render(<App />);
     completeMarchaAndOpenCrescer();
     completeCrescerAndOpenRespiracao();
@@ -337,7 +309,7 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /terminei/i }).click();
     });
 
-    expect(screen.getByText('Concluído')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Gato assanhado / Gato e camelo' })).toBeTruthy();
   });
 
   it('runs the repetition blocks in order', () => {
@@ -347,7 +319,6 @@ describe('exercise programme', () => {
 
     const finishBlockAndOpenNext = (nextExercise: string) => {
       finishRepetitionBlock();
-      openNextExercise();
       expect(screen.getByRole('heading', { name: nextExercise })).toBeTruthy();
     };
 
@@ -371,14 +342,13 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /terminei/i }).click();
     });
 
-    expect(screen.getByText('Concluído')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Prancha de joelhos' })).toBeTruthy();
   });
 
-  it('runs Prancha as three timed sets and stops at its completion screen', () => {
+  it('runs Prancha as three timed sets and advances to next exercise', () => {
     render(<App />);
     openCaoDeCaca();
     finishRepetitionBlock();
-    openNextExercise();
 
     expect(screen.getByRole('heading', { name: 'Prancha de joelhos' })).toBeTruthy();
 
@@ -398,7 +368,7 @@ describe('exercise programme', () => {
     advance(3_100);
     advance(15_100);
 
-    expect(screen.getByText('Concluído')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Equilíbrio numa perna' })).toBeTruthy();
   });
 
   it('holds both legs before an Equilíbrio set counts', () => {
@@ -458,14 +428,13 @@ describe('exercise programme', () => {
     openEquilibrio();
     runTimedExercise({ durationSec: 20, sets: 3, legsPerSet: 2 });
 
-    expect(screen.getByText('Concluído')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Equilíbrio numa perna' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Alongamento lateral (sentado ou em pé)' })).toBeTruthy();
   });
 
   it('plays all ten exercises in the prescribed order', () => {
     render(<App />);
 
-    programme.forEach((exercise, index) => {
+    programme.forEach((exercise) => {
       expect(screen.getByRole('heading', { name: exercise.name })).toBeTruthy();
       expect(screen.getByText(phaseLabels[exercise.phase])).toBeTruthy();
 
@@ -478,16 +447,9 @@ describe('exercise programme', () => {
       } else {
         finishRepetitionBlock();
       }
-
-      expect(screen.getByText('Concluído')).toBeTruthy();
-
-      if (index < programme.length - 1) {
-        openNextExercise();
-      }
     });
 
-    expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
-    expect(screen.getByRole('button', { name: /terminar/i })).toBeTruthy();
+    expect(screen.getByText('Dá uma nota ao treino:')).toBeTruthy();
   });
 
   it('closes the session with the checklist, a note and encouragement', () => {

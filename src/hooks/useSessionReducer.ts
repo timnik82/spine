@@ -104,7 +104,10 @@ function reducer(state: SessionState, action: Action): SessionState {
         return enterPrepare(state, state.currentSet, state.sideIndex + 1);
       }
       if (state.currentSet >= exercise.sets) {
-        return { ...state, screen: 'done' };
+        if (!hasNextExercise(state.exerciseIndex)) {
+          return { ...state, screen: 'final', instructionsOpen: false };
+        }
+        return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
       }
       return {
         ...state,
@@ -113,7 +116,10 @@ function reducer(state: SessionState, action: Action): SessionState {
       };
 
     case 'COMPLETE_EXERCISE':
-      return { ...state, screen: 'done' };
+      if (!hasNextExercise(state.exerciseIndex)) {
+        return { ...state, screen: 'final', instructionsOpen: false };
+      }
+      return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
 
     case 'NEXT_EXERCISE':
       if (!hasNextExercise(state.exerciseIndex)) {
