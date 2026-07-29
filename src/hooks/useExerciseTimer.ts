@@ -4,6 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * Channel for the sub-second countdown value (issue #11): the timer writes
  * the precise remaining time here on every animation frame, so a dial can
  * sweep its hand without a React render.
+ *
+ * Ownership deliberately stays in this hook instead of moving the animation
+ * loop into the stopwatch as the issue sketched: the same loop drives pause,
+ * resume and the auto-advance, and splitting the clock across two places
+ * would cost more than the prop drilling this ref incurs.
  */
 export interface FrameSinkRef {
   current: ((fractionalSecondsRemaining: number) => void) | null;
@@ -93,7 +98,9 @@ export function useExerciseTimer(
   }, [isRunning, paused, runVersion, frameSink]);
 
   // A paused or freshly (re)started run emits no frames; push the current
-  // value out so the dial never shows a stale position.
+  // value out so the dial never shows a stale position. No dependency array
+  // on purpose: only the loop knows when it owns the hand, so this re-syncs
+  // after every render. Post-#11 renders are rare, and the body is one call.
   useEffect(() => {
     if (!isRunning || paused) {
       frameSink?.current?.(fractionalRef.current);

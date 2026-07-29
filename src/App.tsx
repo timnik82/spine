@@ -15,9 +15,10 @@ import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
-import { renderProbe } from '@/lib/renderProbe';
+import { renderProbe, renderProbeEnabled } from '@/lib/renderProbe';
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
@@ -31,17 +32,15 @@ export function App() {
     unlockStopwatchSounds();
   }, []);
 
-  // Feeds the ?debug render-rate badge (issue #11).
+  // Feeds the ?debug render-rate badge (issue #11); free when the flag is off.
   useEffect(() => {
-    renderProbe.count += 1;
+    if (renderProbeEnabled) renderProbe.count += 1;
   });
 
   // The stopwatch hand subscribes to this channel; the exercise timer writes
   // the precise remaining time here every animation frame, so the sweep never
   // goes through React state (issue #11).
-  const stopwatchSweepRef = useRef<
-    ((fractionalSecondsRemaining: number) => void) | null
-  >(null);
+  const stopwatchSweepRef = useRef<FrameSinkRef['current']>(null);
 
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { renderProbe } from '@/lib/renderProbe';
+import { renderProbe, renderProbeEnabled } from '@/lib/renderProbe';
 
 /**
  * Renders-per-second readout for verifying issue #11 on a real device. Only
@@ -7,13 +7,10 @@ import { renderProbe } from '@/lib/renderProbe';
  * state is local, so the badge never adds to the App render rate it reports.
  */
 export function PerfBadge() {
-  const [enabled] = useState(
-    () => new URLSearchParams(window.location.search).has('debug')
-  );
   const [rendersPerSecond, setRendersPerSecond] = useState(0);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!renderProbeEnabled) return;
     let last = renderProbe.count;
     const id = setInterval(() => {
       const now = renderProbe.count;
@@ -21,9 +18,9 @@ export function PerfBadge() {
       last = now;
     }, 1000);
     return () => clearInterval(id);
-  }, [enabled]);
+  }, []);
 
-  if (!enabled) return null;
+  if (!renderProbeEnabled) return null;
 
   return (
     <output
