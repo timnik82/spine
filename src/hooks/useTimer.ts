@@ -4,17 +4,17 @@ import type { Screen } from './useSessionReducer';
 export function useTimer(
   screen: Screen,
   paused: boolean,
-  dispatch: (action: { type: 'REST_TICK' }) => void
+  dispatch: (action: { type: 'TICK' }) => void
 ) {
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
 
   useEffect(() => {
-    if (screen !== 'rest') return;
+    if (screen !== 'prepare' && screen !== 'rest') return;
     if (paused) return;
 
     const id = setInterval(() => {
-      dispatchRef.current({ type: 'REST_TICK' });
+      dispatchRef.current({ type: 'TICK' });
     }, 1000);
 
     return () => clearInterval(id);

@@ -18,10 +18,17 @@ export function ExerciseProgressPair({
   onToggle,
   onReset,
 }: ExerciseProgressPairProps) {
+  const hasRepeatedSets = totalReps > 1;
+
   return (
     <section
       className="flex w-full flex-row items-center justify-center gap-4 sm:gap-20"
-      aria-label={`Exercício: ${Math.floor(secondsRemaining)} segundos restantes, ${repsComplete} de ${totalReps} repetições concluídas`}
+      aria-label={
+        `Exercício: ${Math.floor(secondsRemaining)} segundos restantes` +
+        (hasRepeatedSets
+          ? `, ${repsComplete} de ${totalReps} repetições concluídas`
+          : '')
+      }
     >
       <div className="flex min-w-0 flex-1 flex-col items-center" aria-label="Temporizador">
         <CoachStopwatch
@@ -32,9 +39,11 @@ export function ExerciseProgressPair({
         />
       </div>
 
-      <div className="shrink-0">
-        <BatteryReps repsComplete={repsComplete} totalReps={totalReps} />
-      </div>
+      {hasRepeatedSets && (
+        <div className="shrink-0">
+          <BatteryReps repsComplete={repsComplete} totalReps={totalReps} />
+        </div>
+      )}
     </section>
   );
 }

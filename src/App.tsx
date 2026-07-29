@@ -1,18 +1,25 @@
-import { programme, REST_SECONDS } from '@/data/programme';
+import {
+  hasNextExercise,
+  playableProgramme,
+  REST_SECONDS,
+} from '@/data/programme';
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTimer } from '@/hooks/useTimer';
 import { useExerciseTimer } from '@/hooks/useExerciseTimer';
 import { IntroScreen } from '@/screens/IntroScreen';
 import { ActiveScreen } from '@/screens/ActiveScreen';
 import { RestScreen } from '@/screens/RestScreen';
+import { PrepareScreen } from '@/screens/PrepareScreen';
+import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { DoneScreen } from '@/screens/DoneScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { unlockStopwatchSounds } from '@/lib/sounds';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
-  const exercise = programme[state.exerciseIndex];
+  const exercise = playableProgramme[state.exerciseIndex];
+  const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
   // intro screen, so this buys the fetch and decode seconds rather than the
@@ -24,7 +31,7 @@ export function App() {
   // The timer belongs to one run of one set; when that changes it restarts
   // during render, so the set counter and the countdown are never out of step.
   const timer = useExerciseTimer(
-    exercise.durationSec ?? 10,
+    exerciseSeconds,
     `${state.screen}:${state.exerciseIndex}:${state.currentSet}`
   );
 
@@ -35,60 +42,43 @@ export function App() {
     timer.setPaused(state.instructionsOpen);
   }, [state.instructionsOpen, timer.setPaused]);
 
-  // Track whether the user has started this set's timer at least once
-  const hasStarted = useRef(false);
-
-  // Auto-advance when timer completes (only if user actually started it)
   useEffect(() => {
-    if (state.screen !== 'active') return;
-    if (!hasStarted.current) return;
+    if (state.screen === 'active' && exercise.mode === 'timer') {
+      timer.restart();
+    }
+  }, [
+    exercise.mode,
+    state.currentSet,
+    state.exerciseIndex,
+    state.screen,
+    timer.restart,
+  ]);
+
+  // Auto-advance timed exercises when their countdown completes.
+  useEffect(() => {
+    if (state.screen !== 'active' || exercise.mode !== 'timer') return;
 
     const done = timer.secondsRemaining <= 0 && !timer.isRunning;
     if (done) {
-      hasStarted.current = false;
       dispatch({ type: 'ADVANCE_SET' });
     }
-  }, [timer.secondsRemaining, timer.isRunning, state.screen, dispatch]);
-
-  // Track when user starts
-  useEffect(() => {
-    if (timer.isRunning) {
-      hasStarted.current = true;
-    }
-  }, [timer.isRunning]);
-
-  // A new set starts unstarted; the countdown itself is reset by its run key (#4, #8)
-  useEffect(() => {
-    if (state.screen === 'active') {
-      hasStarted.current = false;
-    }
-  }, [state.screen, state.currentSet, state.exerciseIndex]);
+  }, [
+    dispatch,
+    exercise.mode,
+    state.screen,
+    timer.isRunning,
+    timer.secondsRemaining,
+  ]);
 
   switch (state.screen) {
     case 'intro':
       return (
-        <IntroScreen
-          exerciseName={exercise.name}
-          onStart={() => dispatch({ type: 'START' })}
-        />
-      );
-
-    case 'active':
-      return (
         <>
-          <ActiveScreen
+          <IntroScreen
             exerciseName={exercise.name}
-            secondsRemaining={timer.secondsRemaining}
-            totalSeconds={exercise.durationSec ?? 10}
-            isRunning={timer.isRunning}
-            currentSet={state.currentSet}
-            totalSets={exercise.sets}
-            onToggle={timer.toggle}
-            onReset={timer.reset}
+            image={exercise.media.image}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
-            onNext={() => dispatch({ type: 'ADVANCE_SET' })}
-            onRestart={() => dispatch({ type: 'START' })}
-            onHome={() => dispatch({ type: 'RESET' })}
+            onStart={() => dispatch({ type: 'START' })}
           />
           <InstructionsOverlay
             exercise={exercise}
@@ -98,10 +88,52 @@ export function App() {
         </>
       );
 
+    case 'active':
+      return (
+        <>
+          {exercise.mode === 'timer' ? (
+            <ActiveScreen
+              exerciseName={exercise.name}
+              secondsRemaining={timer.secondsRemaining}
+              totalSeconds={exerciseSeconds}
+              isRunning={timer.isRunning}
+              currentSet={state.currentSet}
+              totalSets={exercise.sets}
+              onToggle={timer.toggle}
+              onReset={timer.restart}
+              onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
+              onHome={() => dispatch({ type: 'RESET' })}
+            />
+          ) : (
+            <RepetitionScreen
+              exerciseName={exercise.name}
+              target={exercise.reps}
+              repetitionLabel={exercise.repetitionLabel}
+              onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
+              onComplete={() => dispatch({ type: 'COMPLETE_EXERCISE' })}
+              onHome={() => dispatch({ type: 'RESET' })}
+            />
+          )}
+          <InstructionsOverlay
+            exercise={exercise}
+            open={state.instructionsOpen}
+            onClose={() => dispatch({ type: 'CLOSE_INSTRUCTIONS' })}
+          />
+        </>
+      );
+
+    case 'prepare':
+      return (
+        <PrepareScreen
+          secondsRemaining={state.countdownSecondsRemaining}
+          onHome={() => dispatch({ type: 'RESET' })}
+        />
+      );
+
     case 'rest':
       return (
         <RestScreen
-          secondsRemaining={state.restSecondsRemaining}
+          secondsRemaining={state.countdownSecondsRemaining}
           totalSeconds={REST_SECONDS}
           onSkip={() => dispatch({ type: 'SKIP_REST' })}
           onHome={() => dispatch({ type: 'RESET' })}
@@ -112,6 +144,8 @@ export function App() {
       return (
         <DoneScreen
           exerciseName={exercise.name}
+          hasNextExercise={hasNextExercise(state.exerciseIndex)}
+          onNext={() => dispatch({ type: 'NEXT_EXERCISE' })}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );

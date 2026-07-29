@@ -1,10 +1,11 @@
 export const REST_SECONDS = 10;
-export const PLANK_SECONDS = 20;
+export const PREPARE_SECONDS = 3;
+export const PLANK_SECONDS = 15;
 
 export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';
-export type Mode = 'timer' | 'counter';
+export type Mode = 'timer' | 'repetitions';
 
-export interface Exercise {
+interface ExerciseBase {
   id: string;
   phase: Phase;
   order: number;
@@ -12,14 +13,20 @@ export interface Exercise {
   lead?: string;
   instructions: string[];
   summary: string;
-  mode: Mode;
-  durationSec?: number;
-  reps?: number;
   sets: number;
   perSide?: boolean;
   media: { image?: string; video?: string };
   audio?: string;
 }
+
+/**
+ * The mode decides which counters an exercise carries, so consumers can read
+ * them straight off a narrowed exercise instead of inventing a default each
+ * time they need one.
+ */
+export type Exercise =
+  | (ExerciseBase & { mode: 'timer'; durationSec: number })
+  | (ExerciseBase & { mode: 'repetitions'; reps: number; repetitionLabel: string });
 
 export const programme: Exercise[] = [
   {
@@ -54,7 +61,9 @@ export const programme: Exercise[] = [
     mode: 'timer',
     durationSec: 10,
     sets: 10,
-    media: {},
+    media: {
+      image: '/intro-crescer.webp',
+    },
   },
   {
     id: 'respiracao-profunda',
@@ -68,8 +77,9 @@ export const programme: Exercise[] = [
       'Expira pela boca devagar.',
     ],
     summary: 'Faz 10 respirações lentas.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 10,
+    repetitionLabel: 'respirações',
     sets: 1,
     media: {},
   },
@@ -85,8 +95,9 @@ export const programme: Exercise[] = [
       'Faz os movimentos devagar.',
     ],
     summary: '10 repetições.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 10,
+    repetitionLabel: 'repetições',
     sets: 1,
     media: {},
   },
@@ -103,8 +114,9 @@ export const programme: Exercise[] = [
       'Desce lentamente.',
     ],
     summary: '10 repetições.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 10,
+    repetitionLabel: 'repetições',
     sets: 1,
     media: {},
   },
@@ -122,8 +134,9 @@ export const programme: Exercise[] = [
       'Troca de lado.',
     ],
     summary: '8 repetições para cada lado.',
-    mode: 'counter',
+    mode: 'repetitions',
     reps: 8,
+    repetitionLabel: 'repetições',
     sets: 1,
     perSide: true,
     media: {},
@@ -200,3 +213,14 @@ export const programme: Exercise[] = [
     media: {},
   },
 ];
+
+/**
+ * The slice of the programme that has screens wired up. The rest stays as
+ * reference data until its flow lands, so navigation asks this list how far it
+ * can go rather than carrying its own copy of the boundary.
+ */
+export const playableProgramme = programme.slice(0, 5);
+
+export function hasNextExercise(exerciseIndex: number): boolean {
+  return exerciseIndex < playableProgramme.length - 1;
+}

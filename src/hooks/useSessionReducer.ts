@@ -1,86 +1,97 @@
 import { useReducer } from 'react';
-import { programme, REST_SECONDS } from '@/data/programme';
+import {
+  hasNextExercise,
+  playableProgramme,
+  PREPARE_SECONDS,
+  REST_SECONDS,
+} from '@/data/programme';
 
-export type Screen = 'intro' | 'active' | 'rest' | 'done';
+export type Screen = 'intro' | 'prepare' | 'active' | 'rest' | 'done';
 
 export interface SessionState {
   screen: Screen;
   exerciseIndex: number;
   currentSet: number;
-  secondsRemaining: number;
-  restSecondsRemaining: number;
+  /** Seconds left on whichever countdown screen is showing; unused elsewhere. */
+  countdownSecondsRemaining: number;
   instructionsOpen: boolean;
 }
 
 type Action =
   | { type: 'START' }
-  | { type: 'REST_TICK' }
+  | { type: 'TICK' }
   | { type: 'SKIP_REST' }
   | { type: 'ADVANCE_SET' }
+  | { type: 'COMPLETE_EXERCISE' }
+  | { type: 'NEXT_EXERCISE' }
   | { type: 'RESET' }
   | { type: 'OPEN_INSTRUCTIONS' }
   | { type: 'CLOSE_INSTRUCTIONS' };
 
-const EXERCISE_INDEX = programme.findIndex(e => e.id === 'crescer-ate-ao-teto');
-
 function getInitialState(): SessionState {
-  const exercise = programme[EXERCISE_INDEX];
   return {
     screen: 'intro',
-    exerciseIndex: EXERCISE_INDEX,
+    exerciseIndex: 0,
     currentSet: 1,
-    secondsRemaining: exercise.durationSec ?? 0,
-    restSecondsRemaining: REST_SECONDS,
+    countdownSecondsRemaining: PREPARE_SECONDS,
     instructionsOpen: false,
   };
 }
 
+/** The one place a set begins: the countdown is armed exactly here. */
+function enterPrepare(state: SessionState, currentSet: number): SessionState {
+  return {
+    ...state,
+    screen: 'prepare',
+    currentSet,
+    countdownSecondsRemaining: PREPARE_SECONDS,
+  };
+}
+
 function reducer(state: SessionState, action: Action): SessionState {
-  const exercise = programme[state.exerciseIndex];
+  const exercise = playableProgramme[state.exerciseIndex];
 
   switch (action.type) {
     case 'START':
-      return {
-        ...state,
-        screen: 'active',
-        currentSet: 1,
-        secondsRemaining: exercise.durationSec ?? 0,
-      };
+      return exercise.mode === 'timer'
+        ? enterPrepare({ ...state, instructionsOpen: false }, 1)
+        : { ...state, screen: 'active', currentSet: 1, instructionsOpen: false };
 
-    case 'REST_TICK': {
-      const next = state.restSecondsRemaining - 1;
+    case 'TICK': {
+      if (state.screen !== 'prepare' && state.screen !== 'rest') return state;
+
+      const next = state.countdownSecondsRemaining - 1;
       if (next > 0) {
-        return { ...state, restSecondsRemaining: next };
+        return { ...state, countdownSecondsRemaining: next };
       }
-      return {
-        ...state,
-        screen: 'active',
-        currentSet: state.currentSet + 1,
-        secondsRemaining: exercise.durationSec ?? 0,
-        restSecondsRemaining: REST_SECONDS,
-      };
+      return state.screen === 'rest'
+        ? enterPrepare(state, state.currentSet + 1)
+        : { ...state, screen: 'active' };
     }
 
     case 'SKIP_REST':
-      return {
-        ...state,
-        screen: 'active',
-        currentSet: state.currentSet + 1,
-        secondsRemaining: exercise.durationSec ?? 0,
-        restSecondsRemaining: REST_SECONDS,
-      };
+      return state.screen === 'rest'
+        ? enterPrepare(state, state.currentSet + 1)
+        : state;
 
-    case 'ADVANCE_SET': {
+    case 'ADVANCE_SET':
       if (state.currentSet >= exercise.sets) {
-        return { ...state, secondsRemaining: 0, screen: 'done' };
+        return { ...state, screen: 'done' };
       }
       return {
         ...state,
         screen: 'rest',
-        secondsRemaining: 0,
-        restSecondsRemaining: REST_SECONDS,
+        countdownSecondsRemaining: REST_SECONDS,
       };
-    }
+
+    case 'COMPLETE_EXERCISE':
+      return { ...state, screen: 'done' };
+
+    case 'NEXT_EXERCISE':
+      if (!hasNextExercise(state.exerciseIndex)) {
+        return state;
+      }
+      return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
 
     case 'OPEN_INSTRUCTIONS':
       return { ...state, instructionsOpen: true };

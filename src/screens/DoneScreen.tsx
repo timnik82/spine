@@ -1,11 +1,19 @@
 import { HomeButton } from '@/components/HomeButton';
+import { Button } from '@/components/ui/button';
 
 interface DoneScreenProps {
   exerciseName: string;
+  hasNextExercise: boolean;
+  onNext: () => void;
   onHome: () => void;
 }
 
-export function DoneScreen({ exerciseName, onHome }: DoneScreenProps) {
+export function DoneScreen({
+  exerciseName,
+  hasNextExercise,
+  onNext,
+  onHome,
+}: DoneScreenProps) {
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center"
@@ -35,6 +43,29 @@ export function DoneScreen({ exerciseName, onHome }: DoneScreenProps) {
       >
         Concluído
       </p>
+      {!hasNextExercise && (
+        <p
+          className="mt-8 max-w-xl text-center text-lg font-medium"
+          style={{ color: 'var(--ex-done-fg)' }}
+        >
+          Próximos exercícios serão adicionados no próximo incremento.
+        </p>
+      )}
+      {hasNextExercise && (
+        <Button
+          onClick={onNext}
+          className="mt-10 cursor-pointer rounded-[var(--ex-btn-radius)] px-12 font-semibold"
+          style={{
+            height: 'var(--ex-btn-height)',
+            minWidth: 'var(--ex-btn-min-width)',
+            fontSize: 'var(--ex-btn-font-size)',
+            backgroundColor: 'var(--ex-accent)',
+            color: 'var(--ex-accent-fg)',
+          }}
+        >
+          Seguinte
+        </Button>
+      )}
     </div>
   );
 }

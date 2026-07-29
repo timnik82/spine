@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 interface ExerciseTimer {
   secondsRemaining: number;
   isRunning: boolean;
-  reset: () => void;
+  /** Starts a fresh timing run from the full duration. */
+  restart: () => void;
   toggle: () => void;
   setPaused: (paused: boolean) => void;
 }
@@ -18,6 +19,7 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
   const [secondsRemaining, setSecondsRemaining] = useState(totalSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [paused, setPausedState] = useState(false);
+  const [runVersion, setRunVersion] = useState(0);
 
   // Restart on a new run or an exercise switch, before anything renders.
   const currentRun = useRef({ key: resetKey, total: totalSeconds });
@@ -49,11 +51,12 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
 
     frameId = requestAnimationFrame(updateTimer);
     return () => cancelAnimationFrame(frameId);
-  }, [isRunning, paused]);
+  }, [isRunning, paused, runVersion]);
 
-  const reset = useCallback(() => {
+  const restart = useCallback(() => {
     setSecondsRemaining(totalSeconds);
-    setIsRunning(false);
+    setIsRunning(true);
+    setRunVersion((version) => version + 1);
   }, [totalSeconds]);
 
   const toggle = useCallback(() => {
@@ -68,5 +71,5 @@ export function useExerciseTimer(totalSeconds: number, resetKey: string): Exerci
     setPausedState(p);
   }, []);
 
-  return { secondsRemaining, isRunning, reset, toggle, setPaused };
+  return { secondsRemaining, isRunning, restart, toggle, setPaused };
 }
