@@ -104,6 +104,8 @@ export function App() {
           <IntroScreen
             exerciseName={exercise.name}
             phaseLabel={phaseLabels[exercise.phase]}
+            currentExercise={state.exerciseIndex + 1}
+            totalExercises={programme.length}
             image={exercise.media.image}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
             onStart={() => dispatch({ type: 'START' })}

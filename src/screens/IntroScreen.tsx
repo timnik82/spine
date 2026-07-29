@@ -4,6 +4,8 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 interface IntroScreenProps {
   exerciseName: string;
   phaseLabel: string;
+  currentExercise: number;
+  totalExercises: number;
   image?: string;
   onInstructions: () => void;
   onStart: () => void;
@@ -12,6 +14,8 @@ interface IntroScreenProps {
 export function IntroScreen({
   exerciseName,
   phaseLabel,
+  currentExercise,
+  totalExercises,
   image,
   onInstructions,
   onStart,
@@ -34,18 +38,29 @@ export function IntroScreen({
       )}
 
       <div className="relative z-10 flex flex-col items-center gap-8 pb-16">
-        <div className="flex flex-col items-center gap-4">
-          <p
-            className="rounded-full px-5 py-1.5 font-semibold uppercase tracking-widest"
-            style={{
-              fontSize: 'var(--ex-bullet-size)',
-              color: 'var(--ex-fg-muted)',
-              border: '2px solid var(--ex-border)',
-              backgroundColor: 'var(--ex-badge-bg)',
-            }}
-          >
-            {phaseLabel}
-          </p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span
+              className="rounded-full px-3 py-1 font-bold text-xs tracking-wider"
+              style={{
+                color: 'var(--ex-fg)',
+                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              EXERCÍCIO {currentExercise} DE {totalExercises}
+            </span>
+            <span
+              className="rounded-full px-4 py-1 font-semibold uppercase tracking-widest text-xs"
+              style={{
+                color: 'var(--ex-fg-muted)',
+                border: '1.5px solid var(--ex-border)',
+                backgroundColor: 'var(--ex-badge-bg)',
+              }}
+            >
+              {phaseLabel}
+            </span>
+          </div>
           <h1
             className="text-center font-medium tracking-wide"
             style={{
