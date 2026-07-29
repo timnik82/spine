@@ -27,25 +27,75 @@ function completeMarchaAndOpenCrescer() {
 }
 
 function completeCrescerAndOpenRespiracao() {
-  act(() => {
-    screen.getByRole('button', { name: /começar/i }).click();
-  });
-  advance(3_100);
-
-  for (let set = 1; set <= 10; set += 1) {
-    advance(10_100);
-    if (set < 10) {
-      advance(10_100);
-      advance(3_100);
-    }
-  }
+  runTimedExercise({ durationSec: 10, sets: 10 });
 
   act(() => {
     screen.getByRole('button', { name: /seguinte/i }).click();
   });
 }
 
-describe('five-exercise programme', () => {
+/** Walks the four exercises before Cão de caça and leaves its intro open. */
+function openCaoDeCaca() {
+  completeMarchaAndOpenCrescer();
+  completeCrescerAndOpenRespiracao();
+
+  for (let block = 0; block < 3; block += 1) {
+    finishRepetitionBlock();
+    openNextExercise();
+  }
+}
+
+/**
+ * Plays one timed exercise from its intro to its completion screen, following
+ * the same rules the reducer does: a preparation countdown before every leg, a
+ * rest only after the last leg of a set that is not the last set.
+ */
+function runTimedExercise({
+  durationSec,
+  sets,
+  legsPerSet = 1,
+}: {
+  durationSec: number;
+  sets: number;
+  legsPerSet?: number;
+}) {
+  act(() => {
+    screen.getByRole('button', { name: /começar/i }).click();
+  });
+  advance(3_100);
+
+  for (let set = 1; set <= sets; set += 1) {
+    for (let leg = 1; leg <= legsPerSet; leg += 1) {
+      advance(durationSec * 1_000 + 100);
+
+      if (set === sets && leg === legsPerSet) break;
+
+      if (leg < legsPerSet) {
+        advance(3_100);
+      } else {
+        advance(10_100);
+        advance(3_100);
+      }
+    }
+  }
+}
+
+function finishRepetitionBlock() {
+  act(() => {
+    screen.getByRole('button', { name: /começar/i }).click();
+  });
+  act(() => {
+    screen.getByRole('button', { name: /terminei/i }).click();
+  });
+}
+
+function openNextExercise() {
+  act(() => {
+    screen.getByRole('button', { name: /seguinte/i }).click();
+  });
+}
+
+describe('exercise programme', () => {
   beforeEach(() => {
     vi.useFakeTimers({
       toFake: [
@@ -254,38 +304,64 @@ describe('five-exercise programme', () => {
     expect(screen.getByText('Concluído')).toBeTruthy();
   });
 
-  it('runs the three repetition blocks in order and stops after Ponte', () => {
+  it('runs the repetition blocks in order', () => {
     render(<App />);
     completeMarchaAndOpenCrescer();
     completeCrescerAndOpenRespiracao();
 
     const finishBlockAndOpenNext = (nextExercise: string) => {
-      act(() => {
-        screen.getByRole('button', { name: /começar/i }).click();
-      });
-      act(() => {
-        screen.getByRole('button', { name: /terminei/i }).click();
-      });
-      act(() => {
-        screen.getByRole('button', { name: /seguinte/i }).click();
-      });
+      finishRepetitionBlock();
+      openNextExercise();
       expect(screen.getByRole('heading', { name: nextExercise })).toBeTruthy();
     };
 
     finishBlockAndOpenNext('Gato assanhado / Gato e camelo');
     finishBlockAndOpenNext('Ponte');
+    finishBlockAndOpenNext('Cão de caça (Bird Dog) — ou super-homem');
+  });
+
+  it('counts one Cão de caça repetition as both sides', () => {
+    render(<App />);
+    openCaoDeCaca();
 
     act(() => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
+
+    expect(screen.getByText('8 repetições')).toBeTruthy();
+    expect(screen.getByText('Em cada repetição troca de lado.')).toBeTruthy();
+
     act(() => {
       screen.getByRole('button', { name: /terminei/i }).click();
     });
 
     expect(screen.getByText('Concluído')).toBeTruthy();
-    expect(
-      screen.getByText('Próximos exercícios serão adicionados no próximo incremento.')
-    ).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
+  });
+
+  it('runs Prancha as three timed sets and stops at its completion screen', () => {
+    render(<App />);
+    openCaoDeCaca();
+    finishRepetitionBlock();
+    openNextExercise();
+
+    expect(screen.getByRole('heading', { name: 'Prancha de joelhos' })).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    advance(15_100);
+
+    expect(screen.getByRole('heading', { name: 'Descansa' })).toBeTruthy();
+    advance(10_100);
+    advance(3_100);
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
+
+    advance(15_100);
+    advance(10_100);
+    advance(3_100);
+    advance(15_100);
+
+    expect(screen.getByText('Concluído')).toBeTruthy();
   });
 });

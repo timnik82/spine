@@ -2,6 +2,7 @@ import {
   hasNextExercise,
   playableProgramme,
   REST_SECONDS,
+  SIDE_SWAP_HINT,
 } from '@/data/programme';
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTimer } from '@/hooks/useTimer';
@@ -131,6 +132,7 @@ export function App() {
               exerciseName={exercise.name}
               target={exercise.reps}
               repetitionLabel={exercise.repetitionLabel}
+              hint={exercise.perSide ? SIDE_SWAP_HINT : undefined}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onComplete={() => dispatch({ type: 'COMPLETE_EXERCISE' })}
               onHome={() => dispatch({ type: 'RESET' })}

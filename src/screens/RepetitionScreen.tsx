@@ -5,6 +5,8 @@ interface RepetitionScreenProps {
   exerciseName: string;
   target: number;
   repetitionLabel: string;
+  /** Shown under the target when one repetition covers both sides. */
+  hint?: string;
   onInstructions: () => void;
   onComplete: () => void;
   onHome: () => void;
@@ -14,6 +16,7 @@ export function RepetitionScreen({
   exerciseName,
   target,
   repetitionLabel,
+  hint,
   onInstructions,
   onComplete,
   onHome,
@@ -40,6 +43,17 @@ export function RepetitionScreen({
         >
           {target} {repetitionLabel}
         </p>
+        {hint && (
+          <p
+            className="mt-6 max-w-xl font-medium"
+            style={{
+              fontSize: 'var(--ex-body-size)',
+              color: 'var(--ex-fg-muted)',
+            }}
+          >
+            {hint}
+          </p>
+        )}
       </main>
 
       <footer

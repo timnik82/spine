@@ -1,4 +1,10 @@
 export const REST_SECONDS = 10;
+/**
+ * Shown on repetition exercises marked `perSide`: one repetition covers both
+ * sides, so the child swaps inside the repetition instead of running the block
+ * twice.
+ */
+export const SIDE_SWAP_HINT = 'Em cada repetição troca de lado.';
 export const PREPARE_SECONDS = 3;
 export const PLANK_SECONDS = 15;
 
@@ -219,7 +225,7 @@ export const programme: Exercise[] = [
  * reference data until its flow lands, so navigation asks this list how far it
  * can go rather than carrying its own copy of the boundary.
  */
-export const playableProgramme = programme.slice(0, 5);
+export const playableProgramme = programme.slice(0, 7);
 
 export function hasNextExercise(exerciseIndex: number): boolean {
   return exerciseIndex < playableProgramme.length - 1;
