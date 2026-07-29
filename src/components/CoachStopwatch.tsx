@@ -22,6 +22,16 @@ interface CoachStopwatchProps {
 const DIAL_CENTER_X = 500;
 const DIAL_CENTER_Y = 590;
 
+/** Seconds-hand rotation, in degrees, for `remaining` seconds of a `total`-second run. */
+function handRotationDegrees(remaining: number, total: number) {
+  return Math.max(0, total - remaining) * 6;
+}
+
+/** SVG transform attribute placing the seconds hand for `remaining`/`total`. */
+function handTransform(remaining: number, total: number) {
+  return `rotate(${handRotationDegrees(remaining, total)} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`;
+}
+
 /** Matches side pusher transform in stopwatch.svg (radial toward dial center) */
 const SIDE_BUTTON_ROTATE = 'translate(55 48) rotate(33.5 620 278)';
 /** Local +Y press depth in SVG user units — hat just kisses the case */
@@ -206,7 +216,6 @@ export function CoachStopwatch({
   onResetRef.current = onReset;
 
   const elapsed = Math.max(0, totalSeconds - secondsRemaining);
-  const handAngle = elapsed * 6;
 
   // Mount the SVG once
   useEffect(() => {
@@ -315,11 +324,7 @@ export function CoachStopwatch({
   useEffect(() => {
     if (!frameSink) return;
     frameSink.current = (fractionalRemaining) => {
-      const angle = Math.max(0, totalSeconds - fractionalRemaining) * 6;
-      handRef.current?.setAttribute(
-        'transform',
-        `rotate(${angle} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`
-      );
+      handRef.current?.setAttribute('transform', handTransform(fractionalRemaining, totalSeconds));
     };
     return () => {
       frameSink.current = null;
@@ -328,11 +333,8 @@ export function CoachStopwatch({
 
   useEffect(() => {
     if (frameSink || !handRef.current) return;
-    handRef.current.setAttribute(
-      'transform',
-      `rotate(${handAngle} ${DIAL_CENTER_X} ${DIAL_CENTER_Y})`
-    );
-  }, [handAngle, frameSink]);
+    handRef.current.setAttribute('transform', handTransform(secondsRemaining, totalSeconds));
+  }, [secondsRemaining, totalSeconds, frameSink]);
 
   const timerLabel = `Cronometro: ${Math.floor(elapsed)} de ${totalSeconds} segundos`;
 

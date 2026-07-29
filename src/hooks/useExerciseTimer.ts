@@ -48,13 +48,21 @@ export function useExerciseTimer(
   const fractionalRef = useRef(totalSeconds);
   const lastPromotedRef = useRef(Math.floor(totalSeconds));
 
+  // Reset the countdown bookkeeping to the full duration: the precise value,
+  // the whole-second promotion boundary (floored, to match the RAF's floor()
+  // promotion), and the shared whole-second state. Shared by the render-body
+  // restart, restart() and toggle() so the three can't drift apart.
+  const resetCountdown = useCallback(() => {
+    fractionalRef.current = totalSeconds;
+    lastPromotedRef.current = Math.floor(totalSeconds);
+    setSecondsRemaining(totalSeconds);
+  }, [totalSeconds]);
+
   // Restart on a new run or an exercise switch, before anything renders.
   const currentRun = useRef({ key: resetKey, total: totalSeconds });
   if (currentRun.current.key !== resetKey || currentRun.current.total !== totalSeconds) {
     currentRun.current = { key: resetKey, total: totalSeconds };
-    fractionalRef.current = totalSeconds;
-    lastPromotedRef.current = Math.floor(totalSeconds);
-    setSecondsRemaining(totalSeconds);
+    resetCountdown();
     setIsRunning(false);
   }
 
@@ -108,22 +116,18 @@ export function useExerciseTimer(
   });
 
   const restart = useCallback(() => {
-    fractionalRef.current = totalSeconds;
-    lastPromotedRef.current = Math.floor(totalSeconds);
-    setSecondsRemaining(totalSeconds);
+    resetCountdown();
     setIsRunning(true);
     setRunVersion((version) => version + 1);
-  }, [totalSeconds]);
+  }, [resetCountdown]);
 
   const toggle = useCallback(() => {
     if (fractionalRef.current <= 0) {
-      fractionalRef.current = totalSeconds;
-      lastPromotedRef.current = Math.floor(totalSeconds);
-      setSecondsRemaining(totalSeconds);
+      resetCountdown();
       frameSink?.current?.(totalSeconds);
     }
     setIsRunning((running) => !running);
-  }, [totalSeconds, frameSink]);
+  }, [resetCountdown, frameSink]);
 
   const setPaused = useCallback((p: boolean) => {
     setPausedState(p);
