@@ -32,7 +32,7 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
         // as the set count and no taller: three sets read as three small cells
         // rather than three slabs stretched to fill a fixed case. The cap only
         // bites on long exercises, where the cells give way together.
-        className="flex max-h-[min(18rem,55vw,max(6rem,calc(100vh_-_13rem)))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5 landscape:max-h-[min(18rem,max(6rem,calc(100vh_-_7rem)))]"
+        className="flex max-h-[min(18rem,55vw,max(6rem,calc(100vh_-_13rem)))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5"
         aria-hidden="true"
         style={{
           backgroundColor: 'oklch(0.95 0.02 80)',
@@ -44,7 +44,11 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
           return (
             <div
               key={index}
-              className="h-4 min-h-0 shrink rounded-md border sm:h-5"
+              // The floor matters more than the cap: a cell that compresses to
+              // nothing stops telling the child which sets are done, so on a
+              // viewport too short for ten readable cells the case grows past
+              // its cap rather than the cells vanishing.
+              className="h-4 min-h-1.5 shrink rounded-md border sm:h-5"
               style={{
                 backgroundColor: filled
                   ? 'var(--ex-warm)'
