@@ -76,7 +76,7 @@ export function ActiveScreen({
       */}
       <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 py-2 sm:py-4 landscape:flex-row landscape:gap-6 landscape:py-0">
         {hasMedia && (
-          <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+          <div className="flex w-full min-h-0 min-w-0 flex-1 items-center justify-center">
             <ExerciseMedia
               media={media}
               label=""
@@ -114,7 +114,13 @@ export function ActiveScreen({
         // The footer repeats the working area's split so the play control lands
         // under the dial it drives, while instructions stay parked in the
         // bottom-left corner where they never move between exercises.
-        className="grid w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 landscape:flex landscape:gap-6"
+        className={cn(
+          'grid w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3',
+          // Only split when the working area above is split. Without media the
+          // dial keeps the whole width, so a half-width zone would park the
+          // play control off to one side of the thing it drives.
+          hasMedia && 'landscape:flex landscape:gap-6'
+        )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="flex justify-start landscape:flex-1">
