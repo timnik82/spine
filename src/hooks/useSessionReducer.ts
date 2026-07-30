@@ -8,7 +8,7 @@ import {
 } from '@/data/programme';
 import type { Rating } from '@/data/programme';
 
-export type Screen = 'intro' | 'prepare' | 'active' | 'rest' | 'done' | 'final';
+export type Screen = 'intro' | 'prepare' | 'active' | 'rest' | 'final';
 
 export interface SessionState {
   screen: Screen;
@@ -30,7 +30,6 @@ type Action =
   | { type: 'ADVANCE_SET' }
   | { type: 'COMPLETE_EXERCISE' }
   | { type: 'NEXT_EXERCISE' }
-  | { type: 'FINISH_SESSION' }
   | { type: 'RATE'; rating: Rating }
   | { type: 'RESET' }
   | { type: 'OPEN_INSTRUCTIONS' }
@@ -131,11 +130,6 @@ function reducer(state: SessionState, action: Action): SessionState {
         return state;
       }
       return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
-
-    case 'FINISH_SESSION':
-      return hasNextExercise(state.exerciseIndex)
-        ? state
-        : { ...state, screen: 'final', instructionsOpen: false };
 
     case 'RATE':
       return { ...state, rating: action.rating };

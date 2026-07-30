@@ -1,5 +1,4 @@
 import {
-  hasNextExercise,
   phaseLabels,
   programme,
   REST_SECONDS,
@@ -14,7 +13,6 @@ import { ActiveScreen } from '@/screens/ActiveScreen';
 import { RestScreen } from '@/screens/RestScreen';
 import { PrepareScreen } from '@/screens/PrepareScreen';
 import { RepetitionScreen } from '@/screens/RepetitionScreen';
-import { DoneScreen } from '@/screens/DoneScreen';
 import { FinalScreen } from '@/screens/FinalScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { ExerciseNav } from '@/components/ExerciseNav';
@@ -174,18 +172,6 @@ export function App() {
           secondsRemaining={state.countdownSecondsRemaining}
           totalSeconds={REST_SECONDS}
           onSkip={() => dispatch({ type: 'SKIP_REST' })}
-          onHome={() => dispatch({ type: 'RESET' })}
-        />
-      );
-      break;
-
-    case 'done':
-      content = (
-        <DoneScreen
-          exerciseName={exercise.name}
-          hasNextExercise={hasNextExercise(state.exerciseIndex)}
-          onNext={() => dispatch({ type: 'NEXT_EXERCISE' })}
-          onFinish={() => dispatch({ type: 'FINISH_SESSION' })}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
