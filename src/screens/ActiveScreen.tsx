@@ -111,36 +111,43 @@ export function ActiveScreen({
       </main>
 
       <footer
-        className="mx-auto flex w-full max-w-3xl flex-shrink-0 flex-wrap items-center justify-center gap-3 sm:justify-between"
+        // The footer repeats the working area's split so the play control lands
+        // under the dial it drives, while instructions stay parked in the
+        // bottom-left corner where they never move between exercises.
+        className="grid w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 landscape:flex landscape:gap-6"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <Button
-          onClick={onInstructions}
-          variant="outline"
-          className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
-          style={{
-            borderColor: 'var(--ex-border)',
-            color: 'var(--ex-fg)',
-          }}
-        >
-          Instruções
-        </Button>
+        <div className="flex justify-start landscape:flex-1">
+          <Button
+            onClick={onInstructions}
+            variant="outline"
+            className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
+            style={{
+              borderColor: 'var(--ex-border)',
+              color: 'var(--ex-fg)',
+            }}
+          >
+            Instruções
+          </Button>
+        </div>
 
-        <Button
-          onClick={onToggle}
-          className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
-          style={{
-            backgroundColor: 'var(--ex-accent)',
-            color: 'var(--ex-accent-fg)',
-          }}
-        >
-          {isRunning ? (
-            <Pause className="mr-2 h-5 w-5" aria-hidden="true" />
-          ) : (
-            <Play className="mr-2 h-5 w-5" aria-hidden="true" />
-          )}
-          {isRunning ? 'Pausar' : 'Iniciar'}
-        </Button>
+        <div className="flex justify-center landscape:flex-1">
+          <Button
+            onClick={onToggle}
+            className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
+            style={{
+              backgroundColor: 'var(--ex-accent)',
+              color: 'var(--ex-accent-fg)',
+            }}
+          >
+            {isRunning ? (
+              <Pause className="mr-2 h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Play className="mr-2 h-5 w-5" aria-hidden="true" />
+            )}
+            {isRunning ? 'Pausar' : 'Iniciar'}
+          </Button>
+        </div>
       </footer>
     </div>
   );
