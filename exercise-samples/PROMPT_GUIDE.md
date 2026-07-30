@@ -38,12 +38,12 @@ ffmpeg -y \
   -loop 1 -t 2.0 -i keyframe_neutral.jpg \
   -loop 1 -t 2.0 -i keyframe_arched.jpg \
   -loop 1 -t 2.0 -i keyframe_dipped.jpg \
-  -filter_complex "[0:v]scale=1024:1024:force_original_aspect_ratio=increase,crop=1024:1024[v0]; \
+  -filter_complex "[0:v]scale=1024:1024:force_original_aspect_ratio=increase,crop=1024:1024,split=2[v0a][v0b]; \
                    [1:v]scale=1024:1024:force_original_aspect_ratio=increase,crop=1024:1024[v1]; \
                    [2:v]scale=1024:1024:force_original_aspect_ratio=increase,crop=1024:1024[v2]; \
-                   [v0][v1]xfade=transition=fade:duration=0.6:offset=1.4[f0]; \
+                   [v0a][v1]xfade=transition=fade:duration=0.6:offset=1.4[f0]; \
                    [f0][v2]xfade=transition=fade:duration=0.6:offset=2.8[f1]; \
-                   [f1][v0]xfade=transition=fade:duration=0.6:offset=4.2[outv]" \
+                   [f1][v0b]xfade=transition=fade:duration=0.6:offset=4.2[outv]" \
   -map "[outv]" -c:v libx264 -pix_fmt yuv420p -r 30 exercise_loop.mp4
 
 # Step B: Convert MP4 to high quality looping GIF
