@@ -2,10 +2,13 @@ import { Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExerciseProgressPair } from '@/components/ExerciseProgressPair';
 import { ExerciseHeader } from '@/components/ExerciseHeader';
+import { ExerciseMedia } from '@/components/ExerciseMedia';
+import { cn } from '@/lib/utils';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 interface ActiveScreenProps {
   exerciseName: string;
+  media: { image?: string; video?: string };
   sideLabel?: string;
   secondsRemaining: number;
   totalSeconds: number;
@@ -21,6 +24,7 @@ interface ActiveScreenProps {
 
 export function ActiveScreen({
   exerciseName,
+  media,
   sideLabel,
   secondsRemaining,
   totalSeconds,
@@ -33,11 +37,14 @@ export function ActiveScreen({
   onHome,
   frameSink,
 }: ActiveScreenProps) {
+  const hasMedia = Boolean(media.video || media.image);
+
   return (
     <div
-      // Landscape puts the action buttons in a left-hand column so the dial and
-      // the reps battery get the full height instead of sharing it with a footer.
-      className="fixed inset-0 flex flex-col landscape:grid landscape:grid-cols-[auto_1fr] landscape:grid-rows-[auto_1fr] landscape:gap-x-4"
+      // One column in both orientations: title, then the working area, then the
+      // buttons. Only the working area changes direction — the clip sits beside
+      // the dial in landscape and above it in portrait.
+      className="fixed inset-0 flex flex-col"
       style={{
         background: 'var(--ex-bg)',
         padding: 'var(--ex-page-padding)',
@@ -47,7 +54,6 @@ export function ActiveScreen({
         exerciseName={exerciseName}
         subtitle={sideLabel}
         onHome={onHome}
-        className="landscape:col-span-2"
         action={
           <Button
             variant="ghost"
@@ -62,21 +68,50 @@ export function ActiveScreen({
         }
       />
 
-      <main className="flex flex-1 flex-col items-center justify-center py-2 sm:py-4 landscape:col-start-2 landscape:row-start-2 landscape:min-h-0 landscape:py-0">
-        <ExerciseProgressPair
-          sideLabel={sideLabel}
-          secondsRemaining={secondsRemaining}
-          totalSeconds={totalSeconds}
-          repsComplete={currentSet - 1}
-          totalReps={totalSets}
-          onToggle={onToggle}
-          onReset={onReset}
-          frameSink={frameSink}
-        />
+      {/*
+        The demonstration stays on screen while the clock runs, so the child can
+        keep copying the movement instead of remembering it: beside the dial in
+        landscape, above it in portrait. Without media the dial is alone and
+        centred, exactly as before.
+      */}
+      <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 py-2 sm:py-4 landscape:flex-row landscape:gap-6 landscape:py-0">
+        {hasMedia && (
+          <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+            <ExerciseMedia
+              media={media}
+              label=""
+              className="max-h-full max-w-full rounded-2xl object-contain"
+            />
+          </div>
+        )}
+
+        {/*
+          The dial sizes itself from the viewport height, assuming it is the
+          only thing between the header and the footer. Stacked above it in
+          portrait, the clip breaks that assumption, so the dial is capped by
+          width — its aspect ratio turns that into the height it may claim.
+        */}
+        <div
+          className={cn(
+            'flex w-full min-w-0 shrink-0 items-center justify-center landscape:min-h-0 landscape:w-auto landscape:flex-1',
+            hasMedia && 'portrait:max-w-[38vh]'
+          )}
+        >
+          <ExerciseProgressPair
+            sideLabel={sideLabel}
+            secondsRemaining={secondsRemaining}
+            totalSeconds={totalSeconds}
+            repsComplete={currentSet - 1}
+            totalReps={totalSets}
+            onToggle={onToggle}
+            onReset={onReset}
+            frameSink={frameSink}
+          />
+        </div>
       </main>
 
       <footer
-        className="mx-auto flex w-full max-w-3xl flex-shrink-0 flex-wrap items-center justify-center gap-3 sm:justify-between landscape:col-start-1 landscape:row-start-2 landscape:mx-0 landscape:min-h-0 landscape:w-auto landscape:max-w-none landscape:flex-col landscape:flex-nowrap landscape:justify-center! landscape:overflow-y-auto"
+        className="mx-auto flex w-full max-w-3xl flex-shrink-0 flex-wrap items-center justify-center gap-3 sm:justify-between"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <Button

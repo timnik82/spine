@@ -164,6 +164,22 @@ describe('exercise programme', () => {
     expect(screen.queryByRole('button', { name: /seguinte/i })).toBeNull();
   });
 
+  it('keeps the demonstration on screen while a timed exercise runs', () => {
+    render(<App />);
+
+    expect(document.querySelector('video[src="/marcha-no-lugar.mp4"]')).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+
+    // The clip is what the child copies, so it has to outlive the intro rather
+    // than hand the running screen over to the dial alone.
+    expect(screen.getByRole('button', { name: /pausar/i })).toBeTruthy();
+    expect(document.querySelector('video[src="/marcha-no-lugar.mp4"]')).toBeTruthy();
+  });
+
   it('announces every second while re-rendering once per second (#11)', () => {
     render(<App />);
 
