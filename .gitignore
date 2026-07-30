@@ -28,6 +28,6 @@ dist-ssr
 .claude/launch.json
 
 # Design samples / generated media drafts
-exercise-samples/
+exercise-samples/*
 !exercise-samples/PROMPT_GUIDE.md
 
