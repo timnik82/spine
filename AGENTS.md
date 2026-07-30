@@ -13,7 +13,12 @@ Spine is a single-page, frontend-only React app (Vite + TypeScript + Tailwind v4
 
 The app ships to **mobile Safari on iOS**. That is the reference browser — not Chrome, not desktop.
 
-The dev preview runs on Chromium, so "it works in the preview" is not evidence for input, audio, or viewport behaviour. When a change touches any of those, state plainly whether it was verified on a real iPhone or only locally. An unverified fix is fine; an unverified fix reported as done is not.
+Two devices matter, and they answer different questions:
+
+- **A 9.7-inch iPad (768x1024 points) is the delivery target.** Judge layout, spacing, and anything viewport-shaped against it. A phone-sized screen is the wrong reference for how the app will actually be used, and no simulator ships that exact size any more — the closest checks are an iPad simulator for real WebKit plus a 768x1024 browser viewport for the geometry.
+- **An iPhone is the device on hand for verification.** It settles input, audio, and WebKit behaviour; it says nothing about whether the iPad layout holds.
+
+The dev preview runs on Chromium, so "it works in the preview" is not evidence for input, audio, or viewport behaviour. When a change touches any of those, state plainly which device it was verified on, or that it was only checked locally. An unverified fix is fine; an unverified fix reported as done is not.
 
 ## Touch input is best-effort
 
