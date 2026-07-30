@@ -67,7 +67,9 @@ export const programme: Exercise[] = [
     mode: 'timer',
     durationSec: 120,
     sets: 1,
-    media: {},
+    media: {
+      video: '/marcha-no-lugar.mp4',
+    },
   },
   {
     id: 'crescer-ate-ao-teto',
