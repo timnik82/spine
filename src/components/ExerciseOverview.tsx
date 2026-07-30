@@ -99,8 +99,9 @@ export function ExerciseOverview({
           <div className="flex flex-wrap items-center justify-center gap-2">
             {targetSummary && (
               <p
-                className="rounded-full px-4 py-1.5 text-xs font-bold tracking-wide shadow-xs"
+                className="rounded-full px-5 py-2 font-bold tracking-wide shadow-xs"
                 style={{
+                  fontSize: 'var(--ex-target-size)',
                   color: 'var(--ex-fg)',
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   border: '1.5px solid var(--ex-border)',
@@ -113,8 +114,9 @@ export function ExerciseOverview({
               <p
                 role="timer"
                 aria-label={`Tempo decorrido: ${formatElapsedTime(elapsedSeconds)}`}
-                className="rounded-full px-4 py-1.5 text-xs font-bold tabular-nums tracking-wide shadow-xs"
+                className="rounded-full px-5 py-2 font-bold tabular-nums tracking-wide shadow-xs"
                 style={{
+                  fontSize: 'var(--ex-target-size)',
                   color: 'var(--ex-fg)',
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   border: '1.5px solid var(--ex-border)',
