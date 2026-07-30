@@ -105,7 +105,7 @@ export function App() {
             currentExercise={state.exerciseIndex + 1}
             totalExercises={programme.length}
             targetSummary={exercise.summary}
-            image={exercise.media.image}
+            media={exercise.media}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
             onStart={() => dispatch({ type: 'START' })}
           />

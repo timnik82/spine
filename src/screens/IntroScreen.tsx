@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { ExerciseMedia } from '@/components/ExerciseMedia';
 import { PrimaryButton } from '@/components/PrimaryButton';
 
 interface IntroScreenProps {
@@ -7,7 +8,7 @@ interface IntroScreenProps {
   currentExercise: number;
   totalExercises: number;
   targetSummary?: string;
-  image?: string;
+  media: { image?: string; video?: string };
   onInstructions: () => void;
   onStart: () => void;
 }
@@ -18,7 +19,7 @@ export function IntroScreen({
   currentExercise,
   totalExercises,
   targetSummary,
-  image,
+  media,
   onInstructions,
   onStart,
 }: IntroScreenProps) {
@@ -29,11 +30,11 @@ export function IntroScreen({
         background: 'var(--ex-bg-intro)',
       }}
     >
-      {image && (
+      {(media.video || media.image) && (
         <div className="absolute inset-x-0 top-16 bottom-48 flex items-center justify-center p-4">
-          <img
-            src={image}
-            alt=""
+          <ExerciseMedia
+            media={media}
+            label=""
             className="max-h-full max-w-full rounded-2xl object-contain shadow-sm bg-white/50 p-2 backdrop-blur-sm"
           />
         </div>
