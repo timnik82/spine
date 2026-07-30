@@ -28,7 +28,11 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
       />
       {/* Battery Body */}
       <div
-        className="flex h-[min(18rem,55vw,max(6rem,calc(100vh_-_13rem)))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5 landscape:h-[min(18rem,max(6rem,calc(100vh_-_7rem)))]"
+        // A cell is the same size on every exercise, so the battery is as tall
+        // as the set count and no taller: three sets read as three small cells
+        // rather than three slabs stretched to fill a fixed case. The cap only
+        // bites on long exercises, where the cells give way together.
+        className="flex max-h-[min(18rem,55vw,max(6rem,calc(100vh_-_13rem)))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5 landscape:max-h-[min(18rem,max(6rem,calc(100vh_-_7rem)))]"
         aria-hidden="true"
         style={{
           backgroundColor: 'oklch(0.95 0.02 80)',
@@ -40,7 +44,7 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
           return (
             <div
               key={index}
-              className="min-h-0 flex-1 rounded-md border"
+              className="h-4 min-h-0 shrink rounded-md border sm:h-5"
               style={{
                 backgroundColor: filled
                   ? 'var(--ex-warm)'
