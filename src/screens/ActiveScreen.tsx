@@ -75,8 +75,14 @@ export function ActiveScreen({
         centred, exactly as before.
       */}
       <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 py-2 sm:py-4 landscape:flex-row landscape:gap-6 landscape:py-0">
+        {/*
+          Stretching is what gives the wrapper a definite height in landscape,
+          where flex-1 only governs width and the centred default would let the
+          clip's own height set the box — and then max-h-full has nothing to
+          measure against, so a short viewport pushes it over the buttons.
+        */}
         {hasMedia && (
-          <div className="flex w-full min-h-0 min-w-0 flex-1 items-center justify-center">
+          <div className="flex w-full min-h-0 min-w-0 flex-1 items-center justify-center landscape:self-stretch">
             <ExerciseMedia
               media={media}
               label=""

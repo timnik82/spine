@@ -341,8 +341,12 @@ export function CoachStopwatch({
   return (
     <div
       // Fills the width its container leaves, capped so the dial never grows
-      // taller than the viewport; the ratio matches the SVG's viewBox.
-      className="relative aspect-[640/760] w-[min(100%,calc((100vh_-_12rem)*0.842),44rem)] overflow-hidden landscape:w-[min(100%,calc((100vh_-_7rem)*0.842),44rem)]"
+      // taller than the viewport; the ratio matches the SVG's viewBox. The
+      // reserve covers the title above and the buttons below, which now cost
+      // the same in both orientations — landscape used to keep its buttons in a
+      // side column and got a smaller reserve, and that is what let the dial
+      // reach into them once they moved down.
+      className="relative aspect-[640/760] w-[min(100%,calc((100vh_-_12rem)*0.842),44rem)] overflow-hidden"
       role="img"
       aria-label={timerLabel}
     >
