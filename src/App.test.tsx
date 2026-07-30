@@ -302,7 +302,11 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
 
-    expect(screen.getByText('10 respirações')).toBeTruthy();
+    expect(screen.getByText('Faz 10 respirações lentas.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Respiração profunda' })).toBeTruthy();
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:00' })
+    ).toBeTruthy();
     expect(screen.queryByRole('progressbar')).toBeNull();
 
     act(() => {
@@ -327,6 +331,77 @@ describe('exercise programme', () => {
     finishBlockAndOpenNext('Cão de caça (Bird Dog) — ou super-homem');
   });
 
+  it('keeps repetition media mounted when the exercise starts', () => {
+    render(<App />);
+
+    const exerciseSelect = screen.getByRole('combobox', {
+      name: /selecionar exercício/i,
+    });
+    act(() => {
+      exerciseSelect.setAttribute('value', '3');
+      Object.getOwnPropertyDescriptor(
+        HTMLSelectElement.prototype,
+        'value'
+      )?.set?.call(exerciseSelect, '3');
+      exerciseSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const videoBeforeStart = document.querySelector(
+      'video[src="/gato-assanhado.mp4"]'
+    );
+    expect(videoBeforeStart).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+
+    expect(screen.getByRole('button', { name: /terminei/i })).toBeTruthy();
+    expect(screen.getByText('10 repetições.')).toBeTruthy();
+    expect(document.querySelector('video[src="/gato-assanhado.mp4"]')).toBe(
+      videoBeforeStart
+    );
+  });
+
+  it('counts repetition time, pauses for instructions and resets on navigation', () => {
+    render(<App />);
+    completeMarchaAndOpenCrescer();
+    completeCrescerAndOpenRespiracao();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(2_100);
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:02' })
+    ).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /instruções/i }).click();
+    });
+    advance(3_000);
+    expect(
+      document.querySelector('[role="timer"]')?.getAttribute('aria-label')
+    ).toBe('Tempo decorrido: 00:02');
+
+    act(() => {
+      screen.getByRole('button', { name: /fechar/i }).click();
+    });
+    advance(1_100);
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:03' })
+    ).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /próximo exercício/i }).click();
+    });
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:00' })
+    ).toBeTruthy();
+  });
+
   it('counts one Cão de caça repetition as both sides', () => {
     render(<App />);
     openCaoDeCaca();
@@ -335,7 +410,7 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
 
-    expect(screen.getByText('8 repetições')).toBeTruthy();
+    expect(screen.getByText('8 repetições para cada lado.')).toBeTruthy();
     expect(screen.getByText('Em cada repetição troca de lado.')).toBeTruthy();
 
     act(() => {

@@ -8,13 +8,13 @@ import {
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTimer } from '@/hooks/useTimer';
 import { useExerciseTimer } from '@/hooks/useExerciseTimer';
-import { IntroScreen } from '@/screens/IntroScreen';
+import { useElapsedTimer } from '@/hooks/useElapsedTimer';
 import { ActiveScreen } from '@/screens/ActiveScreen';
 import { RestScreen } from '@/screens/RestScreen';
 import { PrepareScreen } from '@/screens/PrepareScreen';
-import { RepetitionScreen } from '@/screens/RepetitionScreen';
 import { FinalScreen } from '@/screens/FinalScreen';
 import { InstructionsOverlay } from '@/components/InstructionsOverlay';
+import { ExerciseOverview } from '@/components/ExerciseOverview';
 import { ExerciseNav } from '@/components/ExerciseNav';
 import { PerfBadge } from '@/components/PerfBadge';
 import { unlockStopwatchSounds } from '@/lib/sounds';
@@ -59,6 +59,11 @@ export function App() {
   );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
+  const repetitionElapsedSeconds = useElapsedTimer(
+    state.screen === 'active' && exercise.mode === 'repetitions',
+    state.instructionsOpen,
+    state.exerciseIndex
+  );
 
   // Pause exercise timer when instructions overlay is open (#10)
   useEffect(() => {
@@ -99,7 +104,7 @@ export function App() {
     case 'intro':
       content = (
         <>
-          <IntroScreen
+          <ExerciseOverview
             exerciseName={exercise.name}
             phaseLabel={phaseLabels[exercise.phase]}
             currentExercise={state.exerciseIndex + 1}
@@ -107,7 +112,7 @@ export function App() {
             targetSummary={exercise.summary}
             media={exercise.media}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
-            onStart={() => dispatch({ type: 'START' })}
+            onPrimaryAction={() => dispatch({ type: 'START' })}
           />
           <InstructionsOverlay
             exercise={exercise}
@@ -137,14 +142,18 @@ export function App() {
               frameSink={stopwatchSweepRef}
             />
           ) : (
-            <RepetitionScreen
+            <ExerciseOverview
               exerciseName={exercise.name}
-              target={exercise.reps}
-              repetitionLabel={exercise.repetitionLabel}
+              phaseLabel={phaseLabels[exercise.phase]}
+              currentExercise={state.exerciseIndex + 1}
+              totalExercises={programme.length}
+              targetSummary={exercise.summary}
+              media={exercise.media}
+              active
+              elapsedSeconds={repetitionElapsedSeconds}
               hint={exercise.perSide ? SIDE_SWAP_HINT : undefined}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
-              onComplete={() => dispatch({ type: 'COMPLETE_EXERCISE' })}
-              onHome={() => dispatch({ type: 'RESET' })}
+              onPrimaryAction={() => dispatch({ type: 'COMPLETE_EXERCISE' })}
             />
           )}
           <InstructionsOverlay
