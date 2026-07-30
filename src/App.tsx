@@ -152,6 +152,7 @@ export function App() {
               active
               elapsedSeconds={repetitionElapsedSeconds}
               hint={exercise.perSide ? SIDE_SWAP_HINT : undefined}
+              onHome={() => dispatch({ type: 'RESET' })}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onPrimaryAction={() => dispatch({ type: 'COMPLETE_EXERCISE' })}
             />

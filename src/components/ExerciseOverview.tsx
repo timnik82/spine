@@ -1,4 +1,5 @@
 import { ExerciseMedia } from '@/components/ExerciseMedia';
+import { HomeButton } from '@/components/HomeButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +13,7 @@ interface ExerciseOverviewProps {
   active?: boolean;
   elapsedSeconds?: number;
   hint?: string;
+  onHome?: () => void;
   onInstructions: () => void;
   onPrimaryAction: () => void;
 }
@@ -37,6 +39,7 @@ export function ExerciseOverview({
   active = false,
   elapsedSeconds = 0,
   hint,
+  onHome,
   onInstructions,
   onPrimaryAction,
 }: ExerciseOverviewProps) {
@@ -45,6 +48,10 @@ export function ExerciseOverview({
       className="fixed inset-0 flex flex-col items-center justify-end"
       style={{ background: 'var(--ex-bg-intro)' }}
     >
+      {active && onHome && (
+        <HomeButton onHome={onHome} color="var(--ex-fg)" />
+      )}
+
       {(media.video || media.image) && (
         <div className="absolute inset-x-0 top-16 bottom-60 flex items-center justify-center p-4">
           <ExerciseMedia

@@ -119,6 +119,7 @@ describe('exercise programme', () => {
         'requestAnimationFrame',
         'cancelAnimationFrame',
         'performance',
+        'Date',
       ],
     });
   });
@@ -400,6 +401,42 @@ describe('exercise programme', () => {
     expect(
       screen.getByRole('timer', { name: 'Tempo decorrido: 00:00' })
     ).toBeTruthy();
+  });
+
+  it('keeps repetition elapsed time accurate after a throttled interval', () => {
+    render(<App />);
+    completeMarchaAndOpenCrescer();
+    completeCrescerAndOpenRespiracao();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+
+    act(() => {
+      vi.setSystemTime(Date.now() + 9_000);
+      vi.advanceTimersToNextTimer();
+    });
+
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:10' })
+    ).toBeTruthy();
+  });
+
+  it('offers a Home button during an active repetition exercise', () => {
+    render(<App />);
+    completeMarchaAndOpenCrescer();
+    completeCrescerAndOpenRespiracao();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+
+    act(() => {
+      screen.getByRole('button', { name: /voltar ao início/i }).click();
+    });
+
+    expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /começar/i })).toBeTruthy();
   });
 
   it('counts one Cão de caça repetition as both sides', () => {
