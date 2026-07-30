@@ -45,7 +45,7 @@ export function ExerciseOverview({
 }: ExerciseOverviewProps) {
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-end"
+      className="fixed inset-0 flex flex-col items-center justify-end overflow-hidden pt-16"
       style={{ background: 'var(--ex-bg-intro)' }}
     >
       {active && onHome && (
@@ -53,7 +53,7 @@ export function ExerciseOverview({
       )}
 
       {(media.video || media.image) && (
-        <div className="absolute inset-x-0 top-16 bottom-60 flex items-center justify-center p-4">
+        <div className="flex w-full min-h-0 flex-1 items-center justify-center p-4">
           <ExerciseMedia
             media={media}
             label=""
@@ -62,7 +62,7 @@ export function ExerciseOverview({
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col items-center gap-6 px-4 pb-16">
+      <div className="relative z-10 flex w-full shrink-0 flex-col items-center gap-6 px-4 pb-16">
         <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             <span
