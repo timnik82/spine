@@ -34,7 +34,7 @@ export function ExerciseNav({
       <select
         value={currentIndex}
         onChange={(e) => onSelect(Number(e.target.value))}
-        className="cursor-pointer rounded-md bg-transparent px-1.5 py-0.5 font-medium text-slate-800 focus:outline-none"
+        className="cursor-pointer rounded-md bg-transparent px-1.5 py-0.5 font-medium text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600"
         aria-label="Selecionar exercício"
       >
         {programme.map((ex, idx) => (
