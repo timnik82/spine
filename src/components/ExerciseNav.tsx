@@ -19,13 +19,15 @@ export function ExerciseNav({
   return (
     <nav
       aria-label="Navegação rápida de exercícios"
-      className="fixed top-2 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-black/10 bg-white/85 px-3 py-1.5 text-xs shadow-md backdrop-blur-md transition-all sm:gap-2"
+      // Exercise names run long, so the bar is held inside the viewport and the
+      // name gives way first: the two controls must stay reachable at any width.
+      className="fixed top-2 left-1/2 z-40 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-black/10 bg-white/85 px-3 py-1.5 text-xs shadow-md backdrop-blur-md transition-all sm:gap-2"
     >
       <button
         type="button"
         onClick={onPrev}
         disabled={isFirst}
-        className="rounded-full px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+        className="shrink-0 rounded-full px-2.5 py-1 font-semibold whitespace-nowrap text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
         aria-label="Exercício anterior"
       >
         ‹ Anterior
@@ -34,7 +36,7 @@ export function ExerciseNav({
       <select
         value={currentIndex}
         onChange={(e) => onSelect(Number(e.target.value))}
-        className="cursor-pointer rounded-md bg-transparent px-1.5 py-0.5 font-medium text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600"
+        className="min-w-0 flex-1 cursor-pointer truncate rounded-md bg-transparent px-1.5 py-0.5 font-medium text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600"
         aria-label="Selecionar exercício"
       >
         {programme.map((ex, idx) => (
@@ -48,7 +50,7 @@ export function ExerciseNav({
         type="button"
         onClick={onNext}
         disabled={isLast}
-        className="rounded-full px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+        className="shrink-0 rounded-full px-2.5 py-1 font-semibold whitespace-nowrap text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
         aria-label="Próximo exercício"
       >
         Seguinte ›
