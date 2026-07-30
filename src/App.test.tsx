@@ -109,6 +109,20 @@ function finishRepetitionBlock() {
   });
 }
 
+/** Jumps straight to an exercise through the always-present navigation. */
+function selectExercise(index: number) {
+  const exerciseSelect = screen.getByRole('combobox', {
+    name: /selecionar exercício/i,
+  });
+  act(() => {
+    Object.getOwnPropertyDescriptor(
+      HTMLSelectElement.prototype,
+      'value'
+    )?.set?.call(exerciseSelect, String(index));
+    exerciseSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
 
 describe('exercise programme', () => {
   beforeEach(() => {
@@ -335,17 +349,7 @@ describe('exercise programme', () => {
   it('keeps repetition media mounted when the exercise starts', () => {
     render(<App />);
 
-    const exerciseSelect = screen.getByRole('combobox', {
-      name: /selecionar exercício/i,
-    });
-    act(() => {
-      exerciseSelect.setAttribute('value', '3');
-      Object.getOwnPropertyDescriptor(
-        HTMLSelectElement.prototype,
-        'value'
-      )?.set?.call(exerciseSelect, '3');
-      exerciseSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    selectExercise(3);
 
     const videoBeforeStart = document.querySelector(
       'video[src="/gato-assanhado.mp4"]'
@@ -403,6 +407,31 @@ describe('exercise programme', () => {
     ).toBeTruthy();
   });
 
+  it('restarts the repetition timer when the running exercise is reselected', () => {
+    render(<App />);
+    completeMarchaAndOpenCrescer();
+    completeCrescerAndOpenRespiracao();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(2_100);
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:02' })
+    ).toBeTruthy();
+
+    // Reselecting the running exercise restarts it without moving the index,
+    // so the elapsed time has to fall back to zero all the same.
+    selectExercise(2);
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+
+    expect(
+      screen.getByRole('timer', { name: 'Tempo decorrido: 00:00' })
+    ).toBeTruthy();
+  });
+
   it('keeps repetition elapsed time accurate after a throttled interval', () => {
     render(<App />);
     completeMarchaAndOpenCrescer();
@@ -412,14 +441,22 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
 
+    // A throttled interval fires far less often than it was scheduled to, so
+    // the clock is pushed ahead of the single tick that does get through.
+    const tickingClock = performance.now.bind(performance);
+    const throttledClock = vi
+      .spyOn(performance, 'now')
+      .mockImplementation(() => tickingClock() + 9_000);
+
     act(() => {
-      vi.setSystemTime(Date.now() + 9_000);
       vi.advanceTimersToNextTimer();
     });
 
     expect(
       screen.getByRole('timer', { name: 'Tempo decorrido: 00:10' })
     ).toBeTruthy();
+
+    throttledClock.mockRestore();
   });
 
   it('offers a Home button during an active repetition exercise', () => {

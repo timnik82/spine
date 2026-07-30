@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * A deliberately low-frequency count-up timer for repetition exercises.
- * Reading instructions pauses it; changing exercise resets it.
+ * Reading instructions pauses it; a new `resetKey` starts a fresh run from
+ * zero, so the key has to identify the run rather than just the exercise.
  */
 export function useElapsedTimer(
   enabled: boolean,
@@ -22,11 +23,11 @@ export function useElapsedTimer(
   useEffect(() => {
     if (!enabled || paused) return;
 
-    startedAt.current = Date.now();
+    startedAt.current = performance.now();
 
     const updateElapsedTime = () => {
       const currentRunMilliseconds =
-        startedAt.current === null ? 0 : Date.now() - startedAt.current;
+        startedAt.current === null ? 0 : performance.now() - startedAt.current;
       setElapsedSeconds(
         Math.floor(
           (accumulatedMilliseconds.current + currentRunMilliseconds) / 1_000
@@ -41,7 +42,7 @@ export function useElapsedTimer(
     return () => {
       clearInterval(id);
       if (startedAt.current !== null) {
-        accumulatedMilliseconds.current += Date.now() - startedAt.current;
+        accumulatedMilliseconds.current += performance.now() - startedAt.current;
         startedAt.current = null;
         updateElapsedTime();
       }

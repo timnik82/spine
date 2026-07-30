@@ -62,7 +62,9 @@ export function App() {
   const repetitionElapsedSeconds = useElapsedTimer(
     state.screen === 'active' && exercise.mode === 'repetitions',
     state.instructionsOpen,
-    state.exerciseIndex
+    // Reselecting the running exercise sends it back to its intro without
+    // moving the index, so the screen has to be part of what identifies a run.
+    `${state.exerciseIndex}:${state.screen}`
   );
 
   // Pause exercise timer when instructions overlay is open (#10)
