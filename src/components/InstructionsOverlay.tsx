@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { ExerciseMedia } from '@/components/ExerciseMedia';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import type { Exercise } from '@/data/programme';
 
@@ -49,6 +50,16 @@ export function InstructionsOverlay({
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-4">
+          {(exercise.media.video || exercise.media.image) && (
+            <div className="flex h-56 items-center justify-center overflow-hidden rounded-xl bg-black/5 p-2">
+              <ExerciseMedia
+                media={exercise.media}
+                label={exercise.name}
+                className="max-h-full w-auto object-contain rounded-lg"
+              />
+            </div>
+          )}
+
           {exercise.lead && (
             <p
               className="italic"

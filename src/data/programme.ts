@@ -123,7 +123,9 @@ export const programme: Exercise[] = [
     reps: 10,
     repetitionLabel: 'repetições',
     sets: 1,
-    media: {},
+    media: {
+      video: '/gato-assanhado.mp4',
+    },
   },
   {
     id: 'ponte',

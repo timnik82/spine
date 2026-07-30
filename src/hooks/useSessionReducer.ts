@@ -8,7 +8,7 @@ import {
 } from '@/data/programme';
 import type { Rating } from '@/data/programme';
 
-export type Screen = 'intro' | 'prepare' | 'active' | 'rest' | 'done' | 'final';
+export type Screen = 'intro' | 'prepare' | 'active' | 'rest' | 'final';
 
 export interface SessionState {
   screen: Screen;
@@ -30,11 +30,12 @@ type Action =
   | { type: 'ADVANCE_SET' }
   | { type: 'COMPLETE_EXERCISE' }
   | { type: 'NEXT_EXERCISE' }
-  | { type: 'FINISH_SESSION' }
   | { type: 'RATE'; rating: Rating }
   | { type: 'RESET' }
   | { type: 'OPEN_INSTRUCTIONS' }
-  | { type: 'CLOSE_INSTRUCTIONS' };
+  | { type: 'CLOSE_INSTRUCTIONS' }
+  | { type: 'PREV_EXERCISE' }
+  | { type: 'SELECT_EXERCISE'; index: number };
 
 function getInitialState(): SessionState {
   return {
@@ -96,13 +97,21 @@ function reducer(state: SessionState, action: Action): SessionState {
         : state;
 
     case 'ADVANCE_SET':
+      // A completion queued by the timer must not land on a session the child
+      // has already navigated away from, so the set only advances while the
+      // exercise it belongs to is still the one running.
+      if (state.screen !== 'active') return state;
+
       // Swapping sides is part of the same set, so it goes straight into the
       // preparation countdown; the rest belongs to the end of a whole set.
       if (state.sideIndex + 1 < legsPerSet(exercise)) {
         return enterPrepare(state, state.currentSet, state.sideIndex + 1);
       }
       if (state.currentSet >= exercise.sets) {
-        return { ...state, screen: 'done' };
+        if (!hasNextExercise(state.exerciseIndex)) {
+          return { ...state, screen: 'final', instructionsOpen: false };
+        }
+        return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
       }
       return {
         ...state,
@@ -111,7 +120,10 @@ function reducer(state: SessionState, action: Action): SessionState {
       };
 
     case 'COMPLETE_EXERCISE':
-      return { ...state, screen: 'done' };
+      if (!hasNextExercise(state.exerciseIndex)) {
+        return { ...state, screen: 'final', instructionsOpen: false };
+      }
+      return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
 
     case 'NEXT_EXERCISE':
       if (!hasNextExercise(state.exerciseIndex)) {
@@ -119,16 +131,20 @@ function reducer(state: SessionState, action: Action): SessionState {
       }
       return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
 
-    case 'FINISH_SESSION':
-      return hasNextExercise(state.exerciseIndex)
-        ? state
-        : { ...state, screen: 'final', instructionsOpen: false };
-
     case 'RATE':
       return { ...state, rating: action.rating };
 
     case 'OPEN_INSTRUCTIONS':
       return { ...state, instructionsOpen: true };
+
+    case 'PREV_EXERCISE':
+      if (state.exerciseIndex <= 0) return state;
+      return { ...getInitialState(), exerciseIndex: state.exerciseIndex - 1 };
+
+    case 'SELECT_EXERCISE': {
+      const targetIndex = Math.max(0, Math.min(programme.length - 1, action.index));
+      return { ...getInitialState(), exerciseIndex: targetIndex };
+    }
 
     case 'CLOSE_INSTRUCTIONS':
       return { ...state, instructionsOpen: false };
