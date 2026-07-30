@@ -98,6 +98,11 @@ function reducer(state: SessionState, action: Action): SessionState {
         : state;
 
     case 'ADVANCE_SET':
+      // A completion queued by the timer must not land on a session the child
+      // has already navigated away from, so the set only advances while the
+      // exercise it belongs to is still the one running.
+      if (state.screen !== 'active') return state;
+
       // Swapping sides is part of the same set, so it goes straight into the
       // preparation countdown; the rest belongs to the end of a whole set.
       if (state.sideIndex + 1 < legsPerSet(exercise)) {
