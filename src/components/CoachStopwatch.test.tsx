@@ -382,3 +382,146 @@ describe('CoachStopwatch crown button', () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
 });
+
+describe('CoachStopwatch target-duration marker', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  async function renderTimed(secondsRemaining: number, totalSeconds: number) {
+    const view = render(
+      <CoachStopwatch secondsRemaining={secondsRemaining} totalSeconds={totalSeconds} />
+    );
+    await waitFor(() => {
+      expect(getTopButton(view.container)).toBeTruthy();
+    });
+    return view;
+  }
+
+  function getMarker(container: HTMLElement) {
+    return container.querySelector<SVGGElement>('svg [id="target-time-marker"]');
+  }
+
+  function getLabel(container: HTMLElement) {
+    return container.querySelector<SVGTextElement>('.stopwatch-target__label');
+  }
+
+  it('shows the target duration before the stopwatch starts', async () => {
+    const { container } = await renderTimed(20, 20);
+
+    const marker = getMarker(container);
+    expect(marker).toBeTruthy();
+    expect(getLabel(container)?.textContent).toBe('20');
+    expect(marker?.classList.contains('stopwatch-target--reached')).toBe(false);
+  });
+
+  it('sits below the seconds hand so the hand stays readable', async () => {
+    const { container } = await renderTimed(20, 20);
+
+    const marker = getMarker(container)!;
+    const hand = container.querySelector('svg [id="seconds-hand"]')!;
+    expect(marker.nextElementSibling).toBe(hand);
+  });
+
+  it('labels a whole-minute duration and places it at the top of the dial', async () => {
+    const { container } = await renderTimed(120, 120);
+
+    expect(getLabel(container)?.textContent).toBe('2 min');
+    // Two full revolutions land on 60 — straight up from the dial centre.
+    expect(getMarker(container)?.getAttribute('transform')).toBe('translate(500 419)');
+  });
+
+  it('colours the printed dial number instead of stacking a second one on it', async () => {
+    const { container } = await renderTimed(15, 15);
+
+    const fifteens = [...container.querySelectorAll('svg text')].filter(
+      (t) => t.textContent?.trim() === '15'
+    );
+    // The dial's own `15`, moved into the marker — not a duplicate over it.
+    expect(fifteens).toHaveLength(1);
+    expect(fifteens[0].closest('#target-time-marker')).toBeTruthy();
+    expect(fifteens[0].getAttribute('class')).toBe('stopwatch-target__label');
+  });
+
+  it('puts the adopted dial number back when the duration changes', async () => {
+    const { container, rerender } = await renderTimed(15, 15);
+
+    rerender(<CoachStopwatch secondsRemaining={20} totalSeconds={20} />);
+
+    const fifteen = [...container.querySelectorAll('svg text')].find(
+      (t) => t.textContent?.trim() === '15'
+    )!;
+    expect(fifteen.closest('#target-time-marker')).toBeNull();
+    expect(fifteen.getAttribute('x')).toBe('671.0');
+    expect(getLabel(container)?.textContent).toBe('20');
+  });
+
+  it('labels a non-whole-minute duration as m:ss', async () => {
+    const { container } = await renderTimed(75, 75);
+
+    expect(getLabel(container)?.textContent).toBe('1:15');
+  });
+
+  it('marks the target reached when the countdown hits zero', async () => {
+    const { container, rerender } = await renderTimed(20, 20);
+
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={20} />);
+
+    expect(getMarker(container)?.classList.contains('stopwatch-target--reached')).toBe(true);
+  });
+
+  it('does not re-arm the reached animation on later renders at zero', async () => {
+    const { container, rerender } = await renderTimed(20, 20);
+    const marker = getMarker(container)!;
+
+    const observer = new MutationObserver(() => {});
+    observer.observe(marker, { attributes: true, attributeFilter: ['class'] });
+
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={20} />);
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={20} />);
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={20} />);
+
+    // Records are delivered on a microtask; drain them synchronously instead.
+    const classChanges = observer.takeRecords();
+    observer.disconnect();
+    // The class landed once; the marker itself was never rebuilt.
+    expect(classChanges).toHaveLength(1);
+    expect(getMarker(container)).toBe(marker);
+    expect(marker.classList.contains('stopwatch-target--reached')).toBe(true);
+  });
+
+  it('re-arms when the next set restores a positive remaining time', async () => {
+    const { container, rerender } = await renderTimed(20, 20);
+
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={20} />);
+    expect(getMarker(container)?.classList.contains('stopwatch-target--reached')).toBe(true);
+
+    rerender(<CoachStopwatch secondsRemaining={20} totalSeconds={20} />);
+    expect(getMarker(container)?.classList.contains('stopwatch-target--reached')).toBe(false);
+
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={20} />);
+    expect(getMarker(container)?.classList.contains('stopwatch-target--reached')).toBe(true);
+  });
+
+  it('renders no marker for a non-positive or invalid duration', async () => {
+    const { container, rerender } = await renderTimed(0, 0);
+    expect(getMarker(container)).toBeNull();
+
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={Number.NaN} />);
+    expect(getMarker(container)).toBeNull();
+
+    rerender(<CoachStopwatch secondsRemaining={0} totalSeconds={-5} />);
+    expect(getMarker(container)).toBeNull();
+  });
+
+  it('rebuilds the marker when the exercise duration changes', async () => {
+    const { container, rerender } = await renderTimed(20, 20);
+    expect(getLabel(container)?.textContent).toBe('20');
+
+    rerender(<CoachStopwatch secondsRemaining={10} totalSeconds={10} />);
+
+    expect(container.querySelectorAll('.stopwatch-target__label')).toHaveLength(1);
+    expect(getLabel(container)?.textContent).toBe('10');
+  });
+});
