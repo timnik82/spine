@@ -34,4 +34,4 @@ memorizar a sequência ou consultar folhas de papel.
 - Instruções detalhadas para cada exercício
 - Pausas de descanso cronometradas entre séries
 - Botão de regresso imediato ao início a partir de qualquer ecrã
-- Definições de descanso ajustáveis e persistentes para cada exercício
+- Definições de descanso ajustáveis e persistentes para exercícios cronometrados com mais de uma série

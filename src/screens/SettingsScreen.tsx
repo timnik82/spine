@@ -76,7 +76,7 @@ export function SettingsScreen({
             </p>
           </div>
 
-          <div className="divide-y" style={{ borderColor: 'var(--ex-border)' }}>
+          <div className="divide-y divide-[color:var(--ex-border)]">
             {restAdjustableExercises.map((exercise) => {
               const seconds = restSecondsFor(exercise.id);
 

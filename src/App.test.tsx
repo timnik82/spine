@@ -176,6 +176,19 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /concluído/i }).click();
     });
     expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
+
+    // The persisted 0s value has to flow through App and ADVANCE_SET: finishing
+    // a Crescer set must land on the next preparation countdown, not on Descansa.
+    completeMarchaAndOpenCrescer();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    runTimedLeg(10);
+
+    expect(screen.queryByRole('heading', { name: 'Descansa' })).toBeNull();
+    expect(screen.getByRole('heading', { name: /preparar/i })).toBeTruthy();
   });
 
   afterEach(() => {

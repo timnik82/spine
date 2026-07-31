@@ -1,3 +1,6 @@
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
 class MemoryStorage implements Storage {
   private readonly items = new Map<string, string>();
 
@@ -25,6 +28,11 @@ class MemoryStorage implements Storage {
     this.items.set(key, String(value));
   }
 }
+
+// With `globals: false` (see vitest.config.ts) React Testing Library cannot
+// register its own cleanup, so each test leaves mounted components behind for
+// the next unless we do it here.
+afterEach(cleanup);
 
 // Node 24 exposes an unavailable experimental localStorage to Vitest. A small
 // in-memory browser-compatible adapter keeps jsdom tests deterministic.
