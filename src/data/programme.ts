@@ -1,4 +1,3 @@
-export const REST_SECONDS = 10;
 /**
  * Shown on repetition exercises marked `perSide`: one repetition covers both
  * sides, so the child swaps inside the repetition instead of running the block

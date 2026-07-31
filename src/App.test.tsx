@@ -132,6 +132,7 @@ function selectExercise(index: number) {
 
 describe('exercise programme', () => {
   beforeEach(() => {
+    window.localStorage.clear();
     vi.useFakeTimers({
       // The hold on a finished timed exercise is a setTimeout, so the fakes
       // have to cover it; real time still advances underneath, which keeps
@@ -148,6 +149,46 @@ describe('exercise programme', () => {
         'Date',
       ],
     });
+  });
+
+  it('opens per-exercise rest settings from an introduction screen', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: 'Definições' }).click();
+    });
+
+    expect(screen.getByRole('heading', { name: 'Definições' })).toBeTruthy();
+    expect(
+      screen.getByRole('group', { name: 'Crescer até ao teto' })
+    ).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Marcha no lugar' })).toBeNull();
+
+    const decrease = screen.getByRole('button', {
+      name: 'Diminuir descanso de Crescer até ao teto',
+    });
+    act(() => decrease.click());
+    act(() => decrease.click());
+
+    expect(screen.getByText('Sem descanso')).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /concluído/i }).click();
+    });
+    expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
+
+    // The persisted 0s value has to flow through App and ADVANCE_SET: finishing
+    // a Crescer set must land on the next preparation countdown, not on Descansa.
+    completeMarchaAndOpenCrescer();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    runTimedLeg(10);
+
+    expect(screen.queryByRole('heading', { name: 'Descansa' })).toBeNull();
+    expect(screen.getByRole('heading', { name: /preparar/i })).toBeTruthy();
   });
 
   afterEach(() => {

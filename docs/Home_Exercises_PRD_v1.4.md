@@ -65,7 +65,7 @@ When the programme specifies a count, show a simple progress counter such as "1 
 
 Where the programme combines time, repetitions, sides, or sets, the screen must show the relevant current progress. Examples include 10-second holds repeated 10 times, 8 repetitions on each side, and 20 seconds on each leg repeated 3 times.
 
-A short automatic rest timer appears between repeated timed holds or sets. Its duration is a single configurable constant.
+A short automatic rest timer appears between repeated timed holds or sets. Its duration can be configured separately for each eligible exercise from 0 to 60 seconds in five-second steps. Zero skips the rest screen and moves directly to the next preparation countdown.
 
 Moving to the next exercise is always manual through a Next button.
 
@@ -100,11 +100,11 @@ No other sound behaviour is required in this version.
 - Store exercise media references with the exercise data.  
 - Reuse the same introduction, timer, counter, instructions, and next-exercise patterns across the programme.  
 - Version 1 does not require a backend, database, authentication, or Supabase.  
-- No browser storage is used; nothing is persisted between sessions.
+- Rest-duration preferences are stored locally in the browser. No session progress or personal data is persisted.
 
 ## 7\. Open Decisions
 
-- Duration of the short rest between repeated timed holds or sets (currently a constant, default 15 seconds).  
+- Rest duration defaults to 10 seconds for each eligible exercise and can be changed in Settings.
 - Whether the plank timer should use 15 seconds, 20 seconds, or allow choosing between the two (currently a constant, default 20 seconds).  
 - Final images, videos, music, and sounds.  
 - Progressive web app packaging: deferred. To be added once the content and flow are stable, so that offline caching does not interfere with iteration.
@@ -138,4 +138,3 @@ The application is built in increments, each one small enough to test on the tab
 - Increment 4 — the full programme in order, section labels, and the final screen with the rating and the encouragement message.  
 - Increment 5 — media and audio.  
 - Increment 6 — progressive web app packaging, if still wanted.
-

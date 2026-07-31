@@ -1,7 +1,6 @@
 import {
   phaseLabels,
   programme,
-  REST_SECONDS,
   SIDE_SWAP_HINT,
   sideLabel,
 } from '@/data/programme';
@@ -17,9 +16,12 @@ import { InstructionsOverlay } from '@/components/InstructionsOverlay';
 import { ExerciseOverview } from '@/components/ExerciseOverview';
 import { ExerciseNav } from '@/components/ExerciseNav';
 import { PerfBadge } from '@/components/PerfBadge';
+import { SettingsButton } from '@/components/SettingsButton';
+import { SettingsScreen } from '@/screens/SettingsScreen';
 import { unlockStopwatchSounds } from '@/lib/sounds';
 import { renderProbe } from '@/lib/renderProbe';
-import { useEffect, useRef } from 'react';
+import { useRestSettings } from '@/hooks/useRestSettings';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
@@ -31,8 +33,12 @@ export const TARGET_REACHED_HOLD_MS = 1_400;
 
 export function App() {
   const [state, dispatch] = useSessionReducer();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { restSecondsFor, setRestSeconds, resetRestSeconds } =
+    useRestSettings();
   const exercise = programme[state.exerciseIndex];
   const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
+  const restSeconds = restSecondsFor(exercise.id);
   const currentSideLabel = sideLabel(exercise, state.sideIndex);
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
@@ -103,7 +109,7 @@ export function App() {
     if (!done) return;
 
     const advance = setTimeout(() => {
-      dispatch({ type: 'ADVANCE_SET' });
+      dispatch({ type: 'ADVANCE_SET', restSeconds });
     }, TARGET_REACHED_HOLD_MS);
     // Anything that ends the run mid-hold — navigation, a reset, the crown —
     // changes these deps and drops the pending advance with it.
@@ -111,10 +117,22 @@ export function App() {
   }, [
     dispatch,
     exercise.mode,
+    restSeconds,
     state.screen,
     timer.isRunning,
     timer.secondsRemaining,
   ]);
+
+  if (settingsOpen) {
+    return (
+      <SettingsScreen
+        restSecondsFor={restSecondsFor}
+        onChangeRestSeconds={setRestSeconds}
+        onReset={resetRestSeconds}
+        onClose={() => setSettingsOpen(false)}
+      />
+    );
+  }
 
   let content: ReactNode;
   switch (state.screen) {
@@ -136,6 +154,7 @@ export function App() {
             open={state.instructionsOpen}
             onClose={() => dispatch({ type: 'CLOSE_INSTRUCTIONS' })}
           />
+          <SettingsButton onClick={() => setSettingsOpen(true)} />
         </>
       );
       break;
@@ -198,7 +217,7 @@ export function App() {
       content = (
         <RestScreen
           secondsRemaining={state.countdownSecondsRemaining}
-          totalSeconds={REST_SECONDS}
+          totalSeconds={restSeconds}
           onSkip={() => dispatch({ type: 'SKIP_REST' })}
           onHome={() => dispatch({ type: 'RESET' })}
         />
