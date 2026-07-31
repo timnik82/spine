@@ -267,9 +267,15 @@ export const FINAL_MESSAGE =
   'Parabéns! Cada vez que fazes os exercícios estás a ajudar o teu corpo a ficar mais forte.';
 
 /** Section headings from the source file, shown on the introduction screens. */
+/**
+ * The main block carries no label: the counter beside it already says
+ * "Exercício N de 10", so the word on its own only repeats that. The other two
+ * name a section the counter does not, and say how long it lasts. An empty
+ * label means the screen shows no phase badge at all.
+ */
 export const phaseLabels: Record<Phase, string> = {
   aquecimento: 'Aquecimento (2 minutos)',
-  exercicios: 'Exercícios',
+  exercicios: '',
   alongamentos: 'Alongamentos (3 minutos)',
 };
 

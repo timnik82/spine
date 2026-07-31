@@ -75,16 +75,18 @@ export function ExerciseOverview({
             >
               EXERCÍCIO {currentExercise} DE {totalExercises}
             </span>
-            <span
-              className="rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-widest"
-              style={{
-                color: 'var(--ex-fg-muted)',
-                border: '1.5px solid var(--ex-border)',
-                backgroundColor: 'var(--ex-badge-bg)',
-              }}
-            >
-              {phaseLabel}
-            </span>
+            {phaseLabel && (
+              <span
+                className="rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-widest"
+                style={{
+                  color: 'var(--ex-fg-muted)',
+                  border: '1.5px solid var(--ex-border)',
+                  backgroundColor: 'var(--ex-badge-bg)',
+                }}
+              >
+                {phaseLabel}
+              </span>
+            )}
           </div>
           <h1
             className="text-center font-medium tracking-wide"

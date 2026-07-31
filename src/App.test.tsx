@@ -601,7 +601,14 @@ describe('exercise programme', () => {
 
     programme.forEach((exercise) => {
       expect(screen.getByRole('heading', { name: exercise.name })).toBeTruthy();
-      expect(screen.getByText(phaseLabels[exercise.phase])).toBeTruthy();
+
+      // The main block deliberately carries no phase badge; the counter names it.
+      const phaseLabel = phaseLabels[exercise.phase];
+      if (phaseLabel) {
+        expect(screen.getByText(phaseLabel)).toBeTruthy();
+      } else {
+        expect(screen.queryByText('Exercícios')).toBeNull();
+      }
 
       if (exercise.mode === 'timer') {
         runTimedExercise({
