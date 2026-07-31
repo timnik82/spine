@@ -21,6 +21,95 @@ interface CoachStopwatchProps {
 
 const DIAL_CENTER_X = 500;
 const DIAL_CENTER_Y = 590;
+/** Radius of the printed dial numbers (the `15` sits at x=671, y=590). */
+const TARGET_LABEL_RADIUS = 171;
+const TARGET_MARKER_ID = 'target-time-marker';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Only positive, finite durations have a place on the dial. */
+function hasTargetMarker(total: number) {
+  return Number.isFinite(total) && total > 0;
+}
+
+/**
+ * The dial position (1–60) a `total`-second run finishes on. Whole minutes
+ * land on 60 — the top — rather than on the zero that `% 60` would give.
+ */
+function targetDialSecond(total: number) {
+  const remainder = total % 60;
+  return remainder === 0 ? 60 : remainder;
+}
+
+/** Dial coordinates of the target label for a `total`-second run. */
+function targetMarkerPoint(total: number) {
+  const angle = ((targetDialSecond(total) % 60) * 6 * Math.PI) / 180;
+  return {
+    x: DIAL_CENTER_X + TARGET_LABEL_RADIUS * Math.sin(angle),
+    y: DIAL_CENTER_Y - TARGET_LABEL_RADIUS * Math.cos(angle),
+  };
+}
+
+/** `20`, `2 min`, `1:15` — never an ambiguous bare number past one minute. */
+function formatTargetLabel(total: number) {
+  const seconds = Math.round(total);
+  if (seconds <= 60) return `${seconds}`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (rest === 0) return `${minutes} min`;
+  return `${minutes}:${String(rest).padStart(2, '0')}`;
+}
+
+/**
+ * The dial number already printed at (`x`, `y`), if it says the same thing the
+ * target does. The artwork places 5…55 on exactly the radius the marker uses,
+ * so every multiple-of-five duration up to a minute has one.
+ */
+function findPrintedDialNumber(root: ParentNode, x: number, y: number, text: string) {
+  const numbers = root.querySelectorAll<SVGTextElement>('text');
+  for (const element of numbers) {
+    if (element.textContent?.trim() !== text) continue;
+    const nx = Number(element.getAttribute('x'));
+    const ny = Number(element.getAttribute('y'));
+    if (Math.abs(nx - x) > 0.5 || Math.abs(ny - y) > 0.5) continue;
+    return { element };
+  }
+  return null;
+}
+
+function setOrRemoveAttribute(element: Element, name: string, value: string | null) {
+  if (value === null) element.removeAttribute(name);
+  else element.setAttribute(name, value);
+}
+
+/** Label for a target the dial does not already print — drawn from scratch. */
+function buildTargetLabel(text: string) {
+  const label = document.createElementNS(SVG_NS, 'text');
+  label.setAttribute('class', 'stopwatch-target__label');
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('dominant-baseline', 'central');
+
+  const minutes = /^(\d+) (min)$/.exec(text);
+  if (!minutes) {
+    label.textContent = text;
+    return label;
+  }
+
+  // `2 min` on one line is wide enough to run into the neighbouring dial
+  // numbers, so stack the unit under the count. The leading space keeps the
+  // element's text reading "2 min"; SVG collapses it away when rendering.
+  label.setAttribute('class', 'stopwatch-target__label stopwatch-target__label--stacked');
+  const count = document.createElementNS(SVG_NS, 'tspan');
+  count.setAttribute('x', '0');
+  count.setAttribute('dy', '-10');
+  count.textContent = minutes[1];
+  const unit = document.createElementNS(SVG_NS, 'tspan');
+  unit.setAttribute('class', 'stopwatch-target__unit');
+  unit.setAttribute('x', '0');
+  unit.setAttribute('dy', '32');
+  unit.textContent = ` ${minutes[2]}`;
+  label.append(count, unit);
+  return label;
+}
 
 /** Seconds-hand rotation, in degrees, for `remaining` seconds of a `total`-second run. */
 function handRotationDegrees(remaining: number, total: number) {
@@ -208,6 +297,9 @@ export function CoachStopwatch({
 }: CoachStopwatchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<SVGGElement | null>(null);
+  const targetMarkerRef = useRef<SVGGElement | null>(null);
+  /** One-shot latch: the reached animation plays once per run, not once per render at zero. */
+  const hasReachedTargetRef = useRef(false);
   const [mounted, setMounted] = useState(false);
 
   const onToggleRef = useRef(onToggle);
@@ -335,6 +427,103 @@ export function CoachStopwatch({
     if (frameSink || !handRef.current) return;
     handRef.current.setAttribute('transform', handTransform(secondsRemaining, totalSeconds));
   }, [secondsRemaining, totalSeconds, frameSink]);
+
+  // Draw the target duration on the dial as a generated overlay layer, so the
+  // artwork stays a single static file and every exercise can mark its own
+  // duration. Rebuilt whenever the duration changes.
+  useEffect(() => {
+    if (!mounted) return;
+    const hand = handRef.current;
+    const parent = hand?.parentNode;
+    if (!hand || !parent || !hasTargetMarker(totalSeconds)) return;
+
+    const { x, y } = targetMarkerPoint(totalSeconds);
+
+    const marker = document.createElementNS(SVG_NS, 'g');
+    marker.setAttribute('id', TARGET_MARKER_ID);
+    marker.setAttribute('class', 'stopwatch-target');
+    // The position lives on the attribute; the pulse animates the inner group,
+    // whose CSS transform would otherwise replace this one outright.
+    marker.setAttribute('transform', `translate(${x} ${y})`);
+    // Decorative: the duration is already in the screen's accessible labels.
+    marker.setAttribute('aria-hidden', 'true');
+
+    const pulse = document.createElementNS(SVG_NS, 'g');
+    pulse.setAttribute('class', 'stopwatch-target__pulse');
+
+    const text = formatTargetLabel(totalSeconds);
+
+    const halo = document.createElementNS(SVG_NS, 'circle');
+    halo.setAttribute('class', 'stopwatch-target__halo');
+    halo.setAttribute('r', '36');
+    pulse.append(halo);
+
+    // Most durations land exactly on a printed dial number. Colour that number
+    // instead of drawing a second one over it: two 15s stacked on the same spot
+    // read as artwork gone wrong, not as a target.
+    const adopted = findPrintedDialNumber(parent, x, y, text);
+    let restore: (() => void) | null = null;
+
+    if (adopted) {
+      const { element } = adopted;
+      const home = { parent: element.parentNode, next: element.nextSibling };
+      const originalX = element.getAttribute('x');
+      const originalY = element.getAttribute('y');
+      const originalClass = element.getAttribute('class');
+      // The group carries the position now, so the pulse scales the number in
+      // place rather than around the dial's origin.
+      element.setAttribute('x', '0');
+      element.setAttribute('y', '0');
+      element.setAttribute('class', 'stopwatch-target__label');
+      pulse.append(element);
+      restore = () => {
+        setOrRemoveAttribute(element, 'x', originalX);
+        setOrRemoveAttribute(element, 'y', originalY);
+        setOrRemoveAttribute(element, 'class', originalClass);
+        home.parent?.insertBefore(element, home.next);
+      };
+    } else {
+      // Nothing was printed here, so the marker lands on whatever artwork the
+      // dial has at that spot — at the top, the minutes sub-dial. An opaque
+      // backdrop keeps the label from tangling with it.
+      halo.setAttribute('class', 'stopwatch-target__halo stopwatch-target__halo--badge');
+      halo.setAttribute('r', '44');
+      pulse.append(buildTargetLabel(text));
+    }
+
+    marker.append(pulse);
+    // Below the hand, which must stay readable as it sweeps past.
+    parent.insertBefore(marker, hand);
+    targetMarkerRef.current = marker;
+
+    return () => {
+      marker.remove();
+      restore?.();
+      targetMarkerRef.current = null;
+      hasReachedTargetRef.current = false;
+    };
+  }, [mounted, totalSeconds]);
+
+  // Reached state, driven by the countdown the timer already owns — not by hand
+  // rotation or animation events, and without per-frame React state.
+  useEffect(() => {
+    const marker = targetMarkerRef.current;
+    if (!marker) return;
+
+    if (secondsRemaining > 0) {
+      hasReachedTargetRef.current = false;
+      // Guarded: this runs on every whole second, and an unguarded remove()
+      // rewrites the attribute each time for nothing.
+      if (marker.classList.contains('stopwatch-target--reached')) {
+        marker.classList.remove('stopwatch-target--reached');
+      }
+      return;
+    }
+    // Later renders at zero must not restart the pulse.
+    if (hasReachedTargetRef.current) return;
+    hasReachedTargetRef.current = true;
+    marker.classList.add('stopwatch-target--reached');
+  }, [mounted, secondsRemaining, totalSeconds]);
 
   const timerLabel = `Cronometro: ${Math.floor(elapsed)} de ${totalSeconds} segundos`;
 

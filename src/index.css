@@ -155,3 +155,83 @@
     width: 100%;
   }
 }
+
+/* ─── Target-duration marker on the stopwatch dial ───
+   Generated in CoachStopwatch and inserted below the seconds hand. It is a
+   decorative overlay: it must never take a touch away from the crown or the
+   side pusher underneath. */
+.stopwatch-target {
+  pointer-events: none;
+}
+
+/* Either the dial number the target lands on, adopted from the artwork, or a
+   label generated for a target the dial does not print. */
+.stopwatch-target__label {
+  font-family: Arial, Helvetica, sans-serif;
+  /* A step above the 43px printed dial numbers, so the target still reads as
+     the target when the colour is not available. */
+  font-size: 52px;
+  font-weight: 700;
+  fill: var(--ex-target-marker);
+}
+
+.stopwatch-target__label--stacked {
+  font-size: 46px;
+}
+
+.stopwatch-target__unit {
+  font-size: 24px;
+}
+
+.stopwatch-target__halo {
+  fill: var(--ex-target-marker-soft);
+  stroke: var(--ex-target-marker-ring);
+  stroke-width: 3;
+  transition: fill 200ms ease, stroke 200ms ease, stroke-width 200ms ease;
+}
+
+.stopwatch-target__halo--badge {
+  fill: var(--ex-overlay-bg);
+  stroke: var(--ex-target-marker);
+  stroke-width: 4;
+}
+
+/* Two soft pulses, once, when the hand reaches the target. */
+.stopwatch-target--reached .stopwatch-target__pulse {
+  animation: stopwatch-target-pulse 620ms ease-in-out 2;
+}
+
+/* Stays after the pulses finish, so reaching the target is still visible
+   without relying on the animation — or on colour alone. */
+.stopwatch-target--reached .stopwatch-target__halo {
+  fill: oklch(0.55 0.15 155 / 0.32);
+  stroke: var(--ex-target-marker);
+  stroke-width: 5;
+}
+
+/* The badge stays opaque when reached — it is hiding artwork underneath. */
+.stopwatch-target--reached .stopwatch-target__halo--badge {
+  fill: var(--ex-overlay-bg);
+  stroke-width: 7;
+}
+
+@keyframes stopwatch-target-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stopwatch-target--reached .stopwatch-target__pulse {
+    animation: none;
+    /* The static half of the reached state: a permanent, modest enlargement
+       instead of the pulses. */
+    transform: scale(1.08);
+  }
+}
