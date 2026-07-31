@@ -25,6 +25,12 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
+/**
+ * How long a finished timed exercise stays on screen before the session moves
+ * on: long enough for the stopwatch's target marker to complete its two pulses.
+ */
+export const TARGET_REACHED_HOLD_MS = 1_400;
+
 export function App() {
   const [state, dispatch] = useSessionReducer();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -91,14 +97,23 @@ export function App() {
     timer.restart,
   ]);
 
-  // Auto-advance timed exercises when their countdown completes.
+  // Auto-advance timed exercises when their countdown completes, after a beat
+  // on the finished dial. Advancing on the same tick took the screen away
+  // ~10ms after the target marker lit up, so the child never saw the exercise
+  // land — the marker's two pulses (620ms each, `stopwatch-target-pulse` in
+  // index.css) played to nobody. The hold covers them with a little slack.
   useEffect(() => {
     if (state.screen !== 'active' || exercise.mode !== 'timer') return;
 
     const done = timer.secondsRemaining <= 0 && !timer.isRunning;
-    if (done) {
+    if (!done) return;
+
+    const advance = setTimeout(() => {
       dispatch({ type: 'ADVANCE_SET', restSeconds });
-    }
+    }, TARGET_REACHED_HOLD_MS);
+    // Anything that ends the run mid-hold — navigation, a reset, the crown —
+    // changes these deps and drops the pending advance with it.
+    return () => clearTimeout(advance);
   }, [
     dispatch,
     exercise.mode,

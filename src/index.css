@@ -155,3 +155,67 @@
     width: 100%;
   }
 }
+
+/* ─── Target-duration marker on the stopwatch dial ───
+   Generated in CoachStopwatch and inserted below the seconds hand. It is a
+   decorative overlay: it must never take a touch away from the crown or the
+   side pusher underneath. */
+.stopwatch-target {
+  pointer-events: none;
+}
+
+/* Either the dial number the target lands on, adopted from the artwork, or a
+   label generated for a target the dial does not print. */
+.stopwatch-target__label {
+  font-family: Arial, Helvetica, sans-serif;
+  /* A step above the 43px printed dial numbers, so the target still reads as
+     the target when the colour is not available. */
+  font-size: 52px;
+  font-weight: 700;
+  fill: var(--ex-target-marker);
+}
+
+.stopwatch-target__label--stacked {
+  font-size: 46px;
+}
+
+.stopwatch-target__unit {
+  font-size: 24px;
+}
+
+/* Only under a generated label, to keep it off the artwork it lands on. */
+.stopwatch-target__plate {
+  /* The dial's own paper colour at that radius (the `dial` gradient in
+     stopwatch.svg runs #ffffff → #fbfbf8), so the plate reads as clear face
+     rather than as something laid on top of it. */
+  fill: #fcfcfa;
+  stroke: none;
+}
+
+/* Two soft pulses when the hand reaches the target, and a size the marker then
+   keeps — so reaching it is still visible once the pulses are over, and without
+   relying on colour. The animation runs between the same enlarged bounds so it
+   does not snap when it hands back over. */
+.stopwatch-target--reached .stopwatch-target__pulse {
+  transform: scale(1.12);
+  animation: stopwatch-target-pulse 620ms ease-in-out 2;
+}
+
+@keyframes stopwatch-target-pulse {
+  0% {
+    transform: scale(1.12);
+  }
+  50% {
+    transform: scale(1.29);
+  }
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The static half of the reached state, without the pulses. */
+  .stopwatch-target--reached .stopwatch-target__pulse {
+    animation: none;
+  }
+}

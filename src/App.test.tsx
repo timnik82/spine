@@ -7,7 +7,7 @@ import {
   programme,
 } from '@/data/programme';
 import { renderProbe } from '@/lib/renderProbe';
-import { App } from './App';
+import { App, TARGET_REACHED_HOLD_MS } from './App';
 
 vi.mock('@/components/BatteryReps', () => ({
   BatteryReps: ({ repsComplete, totalReps }: { repsComplete: number; totalReps: number }) => (
@@ -21,12 +21,18 @@ function advance(milliseconds: number) {
   });
 }
 
+/** Runs a timed leg to zero and sits through the hold on the finished dial. */
+function runTimedLeg(durationSec: number) {
+  advance(durationSec * 1_000 + 100);
+  advance(TARGET_REACHED_HOLD_MS);
+}
+
 function completeMarchaAndOpenCrescer() {
   act(() => {
     screen.getByRole('button', { name: /começar/i }).click();
   });
   advance(3_100);
-  advance(120_100);
+  runTimedLeg(120);
 }
 
 function completeCrescerAndOpenRespiracao() {
@@ -86,7 +92,7 @@ function runTimedExercise({
 
   for (let set = 1; set <= sets; set += 1) {
     for (let leg = 1; leg <= legsPerSet; leg += 1) {
-      advance(durationSec * 1_000 + 100);
+      runTimedLeg(durationSec);
 
       if (set === sets && leg === legsPerSet) break;
 
@@ -128,7 +134,13 @@ describe('exercise programme', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.useFakeTimers({
+      // The hold on a finished timed exercise is a setTimeout, so the fakes
+      // have to cover it; real time still advances underneath, which keeps
+      // React's own scheduling alive.
+      shouldAdvanceTime: true,
       toFake: [
+        'setTimeout',
+        'clearTimeout',
         'setInterval',
         'clearInterval',
         'requestAnimationFrame',
@@ -322,11 +334,45 @@ describe('exercise programme', () => {
       vi.advanceTimersByTime(3_100);
     });
 
-    act(() => {
-      vi.advanceTimersByTime(120_100);
-    });
+    runTimedLeg(120);
 
     expect(screen.getByRole('heading', { name: 'Crescer até ao teto' })).toBeTruthy();
+  });
+
+  it('holds the finished dial long enough for the target marker to pulse', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    advance(120_100);
+
+    // Still on the exercise, with the marker in its reached state — advancing
+    // on the same tick took this away before the child could see it land.
+    const marker = document.querySelector('#target-time-marker');
+    expect(marker?.classList.contains('stopwatch-target--reached')).toBe(true);
+    expect(screen.getByRole('img', { name: 'Cronometro: 120 de 120 segundos' })).toBeTruthy();
+
+    advance(TARGET_REACHED_HOLD_MS);
+    expect(screen.getByRole('heading', { name: 'Crescer até ao teto' })).toBeTruthy();
+  });
+
+  it('drops the pending advance when the child leaves mid-hold', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    advance(120_100);
+
+    selectExercise(6);
+    advance(TARGET_REACHED_HOLD_MS * 2);
+
+    // The queued completion belonged to Marcha; it must not advance past the
+    // exercise the child just chose.
+    expect(screen.getByRole('heading', { name: 'Prancha de joelhos' })).toBeTruthy();
   });
 
   it('continues from a Crescer rest into the next set without another tap', () => {
@@ -337,7 +383,7 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
     advance(3_100);
-    advance(10_100);
+    runTimedLeg(10);
 
     expect(screen.getByRole('heading', { name: 'Descansa' })).toBeTruthy();
 
@@ -549,17 +595,17 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
     advance(3_100);
-    advance(15_100);
+    runTimedLeg(15);
 
     expect(screen.getByRole('heading', { name: 'Descansa' })).toBeTruthy();
     advance(10_100);
     advance(3_100);
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
 
-    advance(15_100);
+    runTimedLeg(15);
     advance(10_100);
     advance(3_100);
-    advance(15_100);
+    runTimedLeg(15);
 
     expect(screen.getByRole('heading', { name: 'Equilíbrio numa perna' })).toBeTruthy();
   });
@@ -574,7 +620,7 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /começar/i }).click();
     });
     advance(3_100);
-    advance(20_100);
+    runTimedLeg(20);
 
     // Swapping legs happens inside the set: preparation only, no rest.
     expect(screen.getByRole('heading', { name: /preparar/i })).toBeTruthy();
@@ -586,7 +632,7 @@ describe('exercise programme', () => {
       screen.getByRole('img', { name: 'Cronometro: 0 de 20 segundos' })
     ).toBeTruthy();
 
-    advance(20_100);
+    runTimedLeg(20);
     expect(screen.getByRole('heading', { name: 'Descansa' })).toBeTruthy();
 
     advance(10_100);
@@ -609,7 +655,7 @@ describe('exercise programme', () => {
       screen.getByRole('region', { name: /Perna direita/ })
     ).toBeTruthy();
 
-    advance(20_100);
+    runTimedLeg(20);
     expect(screen.getByText('Perna esquerda')).toBeTruthy();
 
     advance(3_100);
