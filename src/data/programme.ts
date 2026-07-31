@@ -144,7 +144,7 @@ export const programme: Exercise[] = [
     id: 'gato-assanhado',
     phase: 'exercicios',
     order: 4,
-    name: 'Gato assanhado / Gato e camelo',
+    name: 'Gato assanhado',
     instructions: [
       'Coloca-te de mãos e joelhos.',
       'Arredonda as costas como um camelo, olhando para cima. (Expirar)',
@@ -185,7 +185,7 @@ export const programme: Exercise[] = [
     id: 'cao-de-caca',
     phase: 'exercicios',
     order: 6,
-    name: 'Cão de caça (Bird Dog) — ou super-homem',
+    name: 'super-homem',
     instructions: [
       'Fica de mãos e joelhos.',
       'Estica um braço para a frente. (Expirar)',
@@ -202,6 +202,10 @@ export const programme: Exercise[] = [
     perSide: true,
     media: {
       image: '/cao-de-caca.jpg',
+      sideImages: [
+        '/cao-de-caca.jpg',
+        '/cao-de-caca-esquerda.png',
+      ],
     },
   },
   {

@@ -44,7 +44,10 @@ export function ExerciseOverview({
   onInstructions,
   onPrimaryAction,
 }: ExerciseOverviewProps) {
-  const sideImages = !active ? media.sideImages : undefined;
+  // Timed side exercises pick a pose from their reducer state in ActiveScreen.
+  // Bird Dog is a repetition block: the child swaps sides within each rep, so
+  // its two poses keep alternating here while the block is active as well.
+  const sideImages = media.sideImages;
   const mediaClassName =
     'max-h-full max-w-full rounded-2xl bg-white/50 object-contain p-2 shadow-sm backdrop-blur-sm';
 

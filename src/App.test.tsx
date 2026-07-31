@@ -431,7 +431,7 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /terminei/i }).click();
     });
 
-    expect(screen.getByRole('heading', { name: 'Gato assanhado / Gato e camelo' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Gato assanhado' })).toBeTruthy();
   });
 
   it('runs the repetition blocks in order', () => {
@@ -444,9 +444,9 @@ describe('exercise programme', () => {
       expect(screen.getByRole('heading', { name: nextExercise })).toBeTruthy();
     };
 
-    finishBlockAndOpenNext('Gato assanhado / Gato e camelo');
+    finishBlockAndOpenNext('Gato assanhado');
     finishBlockAndOpenNext('Ponte');
-    finishBlockAndOpenNext('Cão de caça (Bird Dog) — ou super-homem');
+    finishBlockAndOpenNext('super-homem');
   });
 
   it('keeps repetition media mounted when the exercise starts', () => {
@@ -740,6 +740,29 @@ describe('exercise programme', () => {
       document.querySelector(
         'img[src="/alongamento-lateral-esquerda.png"]'
       )
+    ).toBeTruthy();
+  });
+
+  it('alternates both Bird Dog poses during the repetition block', () => {
+    render(<App />);
+    selectExercise(5);
+
+    expect(
+      document.querySelector('img[src="/cao-de-caca.jpg"]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/cao-de-caca-esquerda.png"]')
+    ).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    expect(screen.getByText('Em cada repetição troca de lado.')).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/cao-de-caca.jpg"]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/cao-de-caca-esquerda.png"]')
     ).toBeTruthy();
   });
 
