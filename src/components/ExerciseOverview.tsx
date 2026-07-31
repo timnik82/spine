@@ -1,3 +1,4 @@
+import { AlternatingPosePair } from '@/components/AlternatingPosePair';
 import { ExerciseMedia } from '@/components/ExerciseMedia';
 import { HomeButton } from '@/components/HomeButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -44,10 +45,6 @@ export function ExerciseOverview({
   onInstructions,
   onPrimaryAction,
 }: ExerciseOverviewProps) {
-  // Timed side exercises pick a pose from their reducer state in ActiveScreen.
-  // Bird Dog is a repetition block: the child swaps sides within each rep, so
-  // its two poses keep alternating here while the block is active as well.
-  const sideImages = media.sideImages;
   const mediaClassName =
     'max-h-full max-w-full rounded-2xl bg-white/50 object-contain p-2 shadow-sm backdrop-blur-sm';
 
@@ -62,21 +59,11 @@ export function ExerciseOverview({
 
       {hasDemonstration(media) && (
         <div className="flex w-full min-h-0 flex-1 items-center justify-center p-4">
-          {sideImages ? (
-            <div className="relative flex h-full w-full items-center justify-center">
-              <img
-                src={sideImages[0]}
-                alt=""
-                aria-hidden="true"
-                className={`exercise-side-pose ${mediaClassName}`}
-              />
-              <img
-                src={sideImages[1]}
-                alt=""
-                aria-hidden="true"
-                className={`exercise-side-pose exercise-side-pose--left absolute ${mediaClassName}`}
-              />
-            </div>
+          {media.sideImages ? (
+            <AlternatingPosePair
+              images={media.sideImages}
+              className={mediaClassName}
+            />
           ) : (
             <ExerciseMedia media={media} label="" className={mediaClassName} />
           )}
