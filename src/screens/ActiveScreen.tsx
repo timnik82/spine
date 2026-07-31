@@ -134,8 +134,11 @@ export function ActiveScreen({
           <Button
             onClick={onInstructions}
             variant="outline"
-            className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
+            className="cursor-pointer rounded-2xl px-6 font-semibold"
             style={{
+              height: 'var(--ex-btn-height)',
+              minWidth: 'var(--ex-btn-min-width)',
+              fontSize: 'var(--ex-btn-font-size)',
               borderColor: 'var(--ex-border)',
               color: 'var(--ex-fg)',
             }}
@@ -147,8 +150,11 @@ export function ActiveScreen({
         <div className="flex justify-center landscape:flex-1">
           <Button
             onClick={onToggle}
-            className="h-14 min-w-[8.5rem] cursor-pointer sm:min-w-40 rounded-2xl px-6 text-base font-semibold"
+            className="cursor-pointer rounded-2xl px-6 font-semibold"
             style={{
+              height: 'var(--ex-btn-height)',
+              minWidth: 'var(--ex-btn-min-width)',
+              fontSize: 'var(--ex-btn-font-size)',
               backgroundColor: 'var(--ex-accent)',
               color: 'var(--ex-accent-fg)',
             }}
