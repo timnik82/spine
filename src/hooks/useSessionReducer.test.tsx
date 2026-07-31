@@ -23,7 +23,7 @@ describe('session reducer', () => {
     expect(result.current[0]).toMatchObject({ screen: 'intro', exerciseIndex: 1 });
 
     // The timer of the exercise just abandoned reports its completion late.
-    act(() => result.current[1]({ type: 'ADVANCE_SET' }));
+    act(() => result.current[1]({ type: 'ADVANCE_SET', restSeconds: 10 }));
 
     expect(result.current[0]).toMatchObject({
       screen: 'intro',
@@ -42,7 +42,7 @@ describe('session reducer', () => {
     runPrepareCountdown(result.current[1]);
     expect(result.current[0].screen).toBe('active');
 
-    act(() => result.current[1]({ type: 'ADVANCE_SET' }));
+    act(() => result.current[1]({ type: 'ADVANCE_SET', restSeconds: 10 }));
 
     expect(result.current[0].screen).toBe('rest');
   });
@@ -51,7 +51,7 @@ describe('session reducer', () => {
     const { result } = renderHook(() => useSessionReducer());
 
     act(() => result.current[1]({ type: 'SELECT_EXERCISE', index: 1 }));
-    act(() => result.current[1]({ type: 'ADVANCE_SET' }));
+    act(() => result.current[1]({ type: 'ADVANCE_SET', restSeconds: 10 }));
     act(() => result.current[1]({ type: 'START' }));
     runPrepareCountdown(result.current[1]);
 
@@ -59,6 +59,23 @@ describe('session reducer', () => {
       screen: 'active',
       exerciseIndex: 1,
       currentSet: 1,
+    });
+  });
+
+  it('skips the rest screen when that exercise is set to zero seconds', () => {
+    const { result } = renderHook(() => useSessionReducer());
+
+    act(() => result.current[1]({ type: 'SELECT_EXERCISE', index: 1 }));
+    act(() => result.current[1]({ type: 'START' }));
+    runPrepareCountdown(result.current[1]);
+
+    act(() => result.current[1]({ type: 'ADVANCE_SET', restSeconds: 0 }));
+
+    expect(result.current[0]).toMatchObject({
+      screen: 'prepare',
+      currentSet: 2,
+      sideIndex: 0,
+      countdownSecondsRemaining: PREPARE_SECONDS,
     });
   });
 });

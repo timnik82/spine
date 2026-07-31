@@ -126,6 +126,7 @@ function selectExercise(index: number) {
 
 describe('exercise programme', () => {
   beforeEach(() => {
+    window.localStorage.clear();
     vi.useFakeTimers({
       toFake: [
         'setInterval',
@@ -136,6 +137,33 @@ describe('exercise programme', () => {
         'Date',
       ],
     });
+  });
+
+  it('opens per-exercise rest settings from an introduction screen', () => {
+    render(<App />);
+
+    act(() => {
+      screen.getByRole('button', { name: 'Definições' }).click();
+    });
+
+    expect(screen.getByRole('heading', { name: 'Definições' })).toBeTruthy();
+    expect(
+      screen.getByRole('group', { name: 'Crescer até ao teto' })
+    ).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Marcha no lugar' })).toBeNull();
+
+    const decrease = screen.getByRole('button', {
+      name: 'Diminuir descanso de Crescer até ao teto',
+    });
+    act(() => decrease.click());
+    act(() => decrease.click());
+
+    expect(screen.getByText('Sem descanso')).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /concluído/i }).click();
+    });
+    expect(screen.getByRole('heading', { name: 'Marcha no lugar' })).toBeTruthy();
   });
 
   afterEach(() => {

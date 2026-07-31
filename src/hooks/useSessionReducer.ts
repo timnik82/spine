@@ -4,7 +4,6 @@ import {
   legsPerSet,
   programme,
   PREPARE_SECONDS,
-  REST_SECONDS,
 } from '@/data/programme';
 import type { Rating } from '@/data/programme';
 
@@ -27,7 +26,7 @@ type Action =
   | { type: 'START' }
   | { type: 'TICK' }
   | { type: 'SKIP_REST' }
-  | { type: 'ADVANCE_SET' }
+  | { type: 'ADVANCE_SET'; restSeconds: number }
   | { type: 'COMPLETE_EXERCISE' }
   | { type: 'NEXT_EXERCISE' }
   | { type: 'RATE'; rating: Rating }
@@ -113,10 +112,13 @@ function reducer(state: SessionState, action: Action): SessionState {
         }
         return { ...getInitialState(), exerciseIndex: state.exerciseIndex + 1 };
       }
+      if (action.restSeconds <= 0) {
+        return enterPrepare(state, state.currentSet + 1, 0);
+      }
       return {
         ...state,
         screen: 'rest',
-        countdownSecondsRemaining: REST_SECONDS,
+        countdownSecondsRemaining: action.restSeconds,
       };
 
     case 'COMPLETE_EXERCISE':
