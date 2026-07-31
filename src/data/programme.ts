@@ -16,6 +16,20 @@ export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';
 export type Mode = 'timer' | 'repetitions';
 export type SideNoun = 'lado' | 'perna';
 
+/**
+ * The demonstration shown for an exercise. A clip is preferred when present
+ * (see `ExerciseMedia`); the image is the fallback.
+ */
+export interface ExerciseMedia {
+  image?: string;
+  video?: string;
+}
+
+/** Whether an exercise carries any demonstration to render at all. */
+export function hasExerciseMedia(media: ExerciseMedia): boolean {
+  return Boolean(media.video || media.image);
+}
+
 interface ExerciseBase {
   id: string;
   phase: Phase;
@@ -25,7 +39,7 @@ interface ExerciseBase {
   instructions: string[];
   summary: string;
   sets: number;
-  media: { image?: string; video?: string };
+  media: ExerciseMedia;
   audio?: string;
 }
 

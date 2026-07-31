@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button';
 import { ExerciseProgressPair } from '@/components/ExerciseProgressPair';
 import { ExerciseHeader } from '@/components/ExerciseHeader';
 import { ExerciseMedia } from '@/components/ExerciseMedia';
+import { hasExerciseMedia, type ExerciseMedia as ExerciseMediaAsset } from '@/data/programme';
 import { cn } from '@/lib/utils';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 
 interface ActiveScreenProps {
   exerciseName: string;
-  media: { image?: string; video?: string };
+  media: ExerciseMediaAsset;
   sideLabel?: string;
   secondsRemaining: number;
   totalSeconds: number;
@@ -37,7 +38,7 @@ export function ActiveScreen({
   onHome,
   frameSink,
 }: ActiveScreenProps) {
-  const hasMedia = Boolean(media.video || media.image);
+  const hasMedia = hasExerciseMedia(media);
 
   return (
     <div
