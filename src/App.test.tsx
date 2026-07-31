@@ -431,7 +431,7 @@ describe('exercise programme', () => {
       screen.getByRole('button', { name: /terminei/i }).click();
     });
 
-    expect(screen.getByRole('heading', { name: 'Gato assanhado / Gato e camelo' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Gato assanhado' })).toBeTruthy();
   });
 
   it('runs the repetition blocks in order', () => {
@@ -444,9 +444,9 @@ describe('exercise programme', () => {
       expect(screen.getByRole('heading', { name: nextExercise })).toBeTruthy();
     };
 
-    finishBlockAndOpenNext('Gato assanhado / Gato e camelo');
+    finishBlockAndOpenNext('Gato assanhado');
     finishBlockAndOpenNext('Ponte');
-    finishBlockAndOpenNext('Cão de caça (Bird Dog) — ou super-homem');
+    finishBlockAndOpenNext('super-homem');
   });
 
   it('keeps repetition media mounted when the exercise starts', () => {
@@ -667,12 +667,139 @@ describe('exercise programme', () => {
     expect(
       screen.getByRole('region', { name: /Perna direita/ })
     ).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/equilibrio-numa-perna.jpg"]')
+    ).toBeTruthy();
 
     runTimedLeg(20);
     expect(screen.getByText('Perna esquerda')).toBeTruthy();
 
     advance(3_100);
     expect(screen.getByText('Perna esquerda')).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/equilibrio-numa-perna-esquerda.png"]'
+      )
+    ).toBeTruthy();
+  });
+
+  it('keeps both balance poses ready to fade between on the exercise introduction', () => {
+    render(<App />);
+    openEquilibrio();
+
+    expect(
+      document.querySelector('img[src="/equilibrio-numa-perna.jpg"]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/equilibrio-numa-perna-esquerda.png"]'
+      )
+    ).toBeTruthy();
+  });
+
+  it('shows the matching lateral-stretch pose for each side', () => {
+    render(<App />);
+    selectExercise(8);
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Alongamento lateral (sentado ou em pé)',
+      })
+    ).toBeTruthy();
+
+    expect(
+      document.querySelector('img[src="/alongamento-lateral.jpg"]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/alongamento-lateral-esquerda.png"]'
+      )
+    ).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    expect(
+      screen.getByRole('heading', { name: 'Alongamento lateral' })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Alongamento lateral (sentado ou em pé)',
+      })
+    ).toBeNull();
+    expect(screen.getByText('Lado direito')).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/alongamento-lateral.jpg"]')
+    ).toBeTruthy();
+
+    runTimedLeg(20);
+    advance(3_100);
+    expect(screen.getByText('Lado esquerdo')).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/alongamento-lateral-esquerda.png"]'
+      )
+    ).toBeTruthy();
+  });
+
+  it('alternates both Bird Dog poses during the repetition block', () => {
+    render(<App />);
+    selectExercise(5);
+
+    expect(
+      document.querySelector('img[src="/cao-de-caca.jpg"]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/cao-de-caca-esquerda.png"]')
+    ).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    expect(screen.getByText('Em cada repetição troca de lado.')).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/cao-de-caca.jpg"]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector('img[src="/cao-de-caca-esquerda.png"]')
+    ).toBeTruthy();
+  });
+
+  it('shows the matching hamstring-stretch pose for each leg', () => {
+    render(<App />);
+    selectExercise(9);
+
+    expect(
+      document.querySelector(
+        'img[src="/alongamento-musculos-coxa-direita.png"]'
+      )
+    ).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/alongamento-musculos-coxa-esquerda.png"]'
+      )
+    ).toBeTruthy();
+
+    act(() => {
+      screen.getByRole('button', { name: /começar/i }).click();
+    });
+    advance(3_100);
+    expect(screen.getByText('Perna direita')).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/alongamento-musculos-coxa-direita.png"]'
+      )
+    ).toBeTruthy();
+
+    runTimedLeg(20);
+    advance(3_100);
+    expect(screen.getByText('Perna esquerda')).toBeTruthy();
+    expect(
+      document.querySelector(
+        'img[src="/alongamento-musculos-coxa-esquerda.png"]'
+      )
+    ).toBeTruthy();
   });
 
   it('ends Equilíbrio after the second leg of the last set', () => {

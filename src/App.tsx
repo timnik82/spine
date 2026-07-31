@@ -3,6 +3,7 @@ import {
   programme,
   SIDE_SWAP_HINT,
   sideLabel,
+  demonstrationForSide,
 } from '@/data/programme';
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTimer } from '@/hooks/useTimer';
@@ -40,6 +41,8 @@ export function App() {
   const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
   const restSeconds = restSecondsFor(exercise.id);
   const currentSideLabel = sideLabel(exercise, state.sideIndex);
+  const activeMedia = demonstrationForSide(exercise.media, state.sideIndex);
+  const activeExerciseName = exercise.activeName ?? exercise.name;
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
   // intro screen, so this buys the fetch and decode seconds rather than the
@@ -164,8 +167,8 @@ export function App() {
         <>
           {exercise.mode === 'timer' ? (
             <ActiveScreen
-              exerciseName={exercise.name}
-              media={exercise.media}
+              exerciseName={activeExerciseName}
+              media={activeMedia}
               sideLabel={currentSideLabel}
               secondsRemaining={timer.secondsRemaining}
               totalSeconds={exerciseSeconds}
@@ -180,7 +183,7 @@ export function App() {
             />
           ) : (
             <ExerciseOverview
-              exerciseName={exercise.name}
+              exerciseName={activeExerciseName}
               phaseLabel={phaseLabels[exercise.phase]}
               currentExercise={state.exerciseIndex + 1}
               totalExercises={programme.length}

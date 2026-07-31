@@ -45,6 +45,9 @@
   --ex-heading-size: clamp(2.2rem, 5.5vh, 3.8rem);
   --ex-body-size: clamp(1.1rem, 2.2vh, 1.5rem);
   --ex-bullet-size: clamp(1rem, 2vh, 1.35rem);
+  /* On the spacious three-second preparation screen, make the current side
+     comfortably readable before the child starts moving. */
+  --ex-side-size: clamp(1.35rem, min(3vh, 5vw), 2rem);
 
   /* ─── Spacing ─── */
   /* Scaled like the type around them: fixed pixels here meant the buttons kept

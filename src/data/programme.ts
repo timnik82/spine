@@ -21,6 +21,11 @@ export type SideNoun = 'lado' | 'perna';
  */
 export interface Demonstration {
   image?: string;
+  /**
+   * Images for a one-side-at-a-time exercise, in right-then-left order. The
+   * regular image remains the default for intros and instructions.
+   */
+  sideImages?: readonly [right: string, left: string];
   video?: string;
 }
 
@@ -29,11 +34,22 @@ export function hasDemonstration(media: Demonstration): boolean {
   return Boolean(media.video || media.image);
 }
 
+/** Returns the matching pose while a one-side-at-a-time exercise is running. */
+export function demonstrationForSide(
+  media: Demonstration,
+  sideIndex: number
+): Demonstration {
+  const image = media.sideImages?.[sideIndex];
+  return image ? { ...media, image } : media;
+}
+
 interface ExerciseBase {
   id: string;
   phase: Phase;
   order: number;
   name: string;
+  /** A shorter name for the compact screen shown while the exercise runs. */
+  activeName?: string;
   lead?: string;
   instructions: string[];
   summary: string;
@@ -128,7 +144,7 @@ export const programme: Exercise[] = [
     id: 'gato-assanhado',
     phase: 'exercicios',
     order: 4,
-    name: 'Gato assanhado / Gato e camelo',
+    name: 'Gato assanhado',
     instructions: [
       'Coloca-te de mãos e joelhos.',
       'Arredonda as costas como um camelo, olhando para cima. (Expirar)',
@@ -169,7 +185,7 @@ export const programme: Exercise[] = [
     id: 'cao-de-caca',
     phase: 'exercicios',
     order: 6,
-    name: 'Cão de caça (Bird Dog) — ou super-homem',
+    name: 'super-homem',
     instructions: [
       'Fica de mãos e joelhos.',
       'Estica um braço para a frente. (Expirar)',
@@ -186,6 +202,10 @@ export const programme: Exercise[] = [
     perSide: true,
     media: {
       image: '/cao-de-caca.jpg',
+      sideImages: [
+        '/cao-de-caca.jpg',
+        '/cao-de-caca-esquerda.png',
+      ],
     },
   },
   {
@@ -227,6 +247,10 @@ export const programme: Exercise[] = [
     sideNoun: 'perna',
     media: {
       image: '/equilibrio-numa-perna.jpg',
+      sideImages: [
+        '/equilibrio-numa-perna.jpg',
+        '/equilibrio-numa-perna-esquerda.png',
+      ],
     },
   },
   {
@@ -234,6 +258,7 @@ export const programme: Exercise[] = [
     phase: 'alongamentos',
     order: 9,
     name: 'Alongamento lateral (sentado ou em pé)',
+    activeName: 'Alongamento lateral',
     instructions: [
       'Levanta um braço acima da cabeça.',
       'Inclina o corpo para o lado contrário.',
@@ -247,6 +272,10 @@ export const programme: Exercise[] = [
     sideNoun: 'lado',
     media: {
       image: '/alongamento-lateral.jpg',
+      sideImages: [
+        '/alongamento-lateral.jpg',
+        '/alongamento-lateral-esquerda.png',
+      ],
     },
   },
   {
@@ -267,7 +296,11 @@ export const programme: Exercise[] = [
     perSide: true,
     sideNoun: 'perna',
     media: {
-      image: '/alongamento-musculos-coxa.jpg',
+      image: '/alongamento-musculos-coxa-direita.png',
+      sideImages: [
+        '/alongamento-musculos-coxa-direita.png',
+        '/alongamento-musculos-coxa-esquerda.png',
+      ],
     },
   },
 ];

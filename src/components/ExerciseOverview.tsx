@@ -1,3 +1,4 @@
+import { AlternatingPosePair } from '@/components/AlternatingPosePair';
 import { ExerciseMedia } from '@/components/ExerciseMedia';
 import { HomeButton } from '@/components/HomeButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -44,6 +45,9 @@ export function ExerciseOverview({
   onInstructions,
   onPrimaryAction,
 }: ExerciseOverviewProps) {
+  const mediaClassName =
+    'max-h-full max-w-full rounded-2xl bg-white/50 object-contain p-2 shadow-sm backdrop-blur-sm';
+
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-end overflow-hidden pt-16"
@@ -55,11 +59,14 @@ export function ExerciseOverview({
 
       {hasDemonstration(media) && (
         <div className="flex w-full min-h-0 flex-1 items-center justify-center p-4">
-          <ExerciseMedia
-            media={media}
-            label=""
-            className="max-h-full max-w-full rounded-2xl bg-white/50 object-contain p-2 shadow-sm backdrop-blur-sm"
-          />
+          {media.sideImages ? (
+            <AlternatingPosePair
+              images={media.sideImages}
+              className={mediaClassName}
+            />
+          ) : (
+            <ExerciseMedia media={media} label="" className={mediaClassName} />
+          )}
         </div>
       )}
 
