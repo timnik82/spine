@@ -31,13 +31,22 @@ export function BatteryReps({ repsComplete, totalReps }: BatteryRepsProps) {
         // A cell is the same size on every exercise, so the battery is as tall
         // as the set count and no taller: three sets read as three small cells
         // rather than three slabs stretched to fill a fixed case. The cap only
-        // bites on long exercises, where the cells give way together.
-        className="flex max-h-[min(18rem,55vw,max(6rem,calc(100vh_-_13rem)))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5"
+        // bites on long exercises, where the cells give way together — down to
+        // their floor, and no further. Past that the case has to grow, so the
+        // cap yields to the height the cells and the casing actually need;
+        // capping alone would hold the box still and let the cells spill out
+        // through the rounded border.
+        className="flex max-h-[max(calc(14px*var(--cells)+28px),min(18rem,55vw,max(6rem,calc(100vh_-_13rem))))] w-[clamp(4.5rem,12vw,6.5rem)] flex-col gap-1.5 rounded-[1.25rem] border-4 p-2.5 sm:gap-2 sm:p-3.5"
         aria-hidden="true"
-        style={{
-          backgroundColor: 'oklch(0.95 0.02 80)',
-          borderColor: '#2f343a',
-        }}
+        style={
+          {
+            backgroundColor: 'oklch(0.95 0.02 80)',
+            borderColor: '#2f343a',
+            // Feeds the floor above: one cell at its minimum plus the gap that
+            // follows it, plus the padding and border the casing always costs.
+            '--cells': totalReps,
+          } as React.CSSProperties
+        }
       >
         {Array.from({ length: totalReps }, (_, index) => {
           const filled = index >= totalReps - repsComplete;
