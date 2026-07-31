@@ -24,9 +24,7 @@ memorizar a sequência ou consultar folhas de papel.
 ## Estado atual
 
 - Dados completos para 10 exercícios em 3 fases
-- Sequência jogável dos primeiros 5 exercícios:
-  Marcha no lugar, Crescer até ao teto, Respiração profunda,
-  Gato assanhado / Gato e camelo e Ponte
+- Programa completo jogável, do primeiro ao último exercício
 - Contagem de preparação antes dos exercícios cronometrados
 - Temporizador circular com contagem decrescente visual
 - Continuação automática entre séries cronometradas e descansos
