@@ -8,10 +8,8 @@
   --ex-accent-fg: oklch(0.99 0 0);
   --ex-accent-hover: oklch(0.48 0.13 155);
   /* Target-duration marker on the stopwatch dial: the accent, darkened for
-     contrast against the cream dial, plus its translucent halo. */
+     contrast against the cream dial. */
   --ex-target-marker: oklch(0.48 0.13 155);
-  --ex-target-marker-soft: oklch(0.55 0.15 155 / 0.18);
-  --ex-target-marker-ring: oklch(0.55 0.15 155 / 0.45);
   --ex-rest-bg: oklch(0.94 0.04 200);
   --ex-rest-fg: oklch(0.25 0.04 200);
   --ex-done-bg: oklch(0.95 0.05 140);

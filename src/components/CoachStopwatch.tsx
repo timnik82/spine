@@ -453,11 +453,6 @@ export function CoachStopwatch({
 
     const text = formatTargetLabel(totalSeconds);
 
-    const halo = document.createElementNS(SVG_NS, 'circle');
-    halo.setAttribute('class', 'stopwatch-target__halo');
-    halo.setAttribute('r', '36');
-    pulse.append(halo);
-
     // Most durations land exactly on a printed dial number. Colour that number
     // instead of drawing a second one over it: two 15s stacked on the same spot
     // read as artwork gone wrong, not as a target.
@@ -483,12 +478,14 @@ export function CoachStopwatch({
         home.parent?.insertBefore(element, home.next);
       };
     } else {
-      // Nothing was printed here, so the marker lands on whatever artwork the
-      // dial has at that spot — at the top, the minutes sub-dial. An opaque
-      // backdrop keeps the label from tangling with it.
-      halo.setAttribute('class', 'stopwatch-target__halo stopwatch-target__halo--badge');
-      halo.setAttribute('r', '44');
-      pulse.append(buildTargetLabel(text));
+      // Nothing is printed here, so the label lands on whatever artwork the dial
+      // does have at that spot — at the top, the minutes sub-dial. A plate the
+      // colour of the dial keeps the two from reading as one tangle. Adopted
+      // numbers need no such thing: they are already sitting in clear space.
+      const plate = document.createElementNS(SVG_NS, 'circle');
+      plate.setAttribute('class', 'stopwatch-target__plate');
+      plate.setAttribute('r', '44');
+      pulse.append(plate, buildTargetLabel(text));
     }
 
     marker.append(pulse);
