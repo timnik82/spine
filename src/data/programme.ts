@@ -17,16 +17,16 @@ export type Mode = 'timer' | 'repetitions';
 export type SideNoun = 'lado' | 'perna';
 
 /**
- * The demonstration shown for an exercise. A clip is preferred when present
- * (see `ExerciseMedia`); the image is the fallback.
+ * What an exercise has to show the child. Either form may be absent; when both
+ * are present the clip wins, which the component that renders it decides.
  */
-export interface ExerciseMedia {
+export interface Demonstration {
   image?: string;
   video?: string;
 }
 
-/** Whether an exercise carries any demonstration to render at all. */
-export function hasExerciseMedia(media: ExerciseMedia): boolean {
+/** Whether there is anything to show at all. */
+export function hasDemonstration(media: Demonstration): boolean {
   return Boolean(media.video || media.image);
 }
 
@@ -39,7 +39,7 @@ interface ExerciseBase {
   instructions: string[];
   summary: string;
   sets: number;
-  media: ExerciseMedia;
+  media: Demonstration;
   audio?: string;
 }
 

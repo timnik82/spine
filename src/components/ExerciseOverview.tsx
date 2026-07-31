@@ -2,7 +2,7 @@ import { ExerciseMedia } from '@/components/ExerciseMedia';
 import { HomeButton } from '@/components/HomeButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { Button } from '@/components/ui/button';
-import { hasExerciseMedia, type ExerciseMedia as ExerciseMediaAsset } from '@/data/programme';
+import { hasDemonstration, type Demonstration } from '@/data/programme';
 
 interface ExerciseOverviewProps {
   exerciseName: string;
@@ -10,7 +10,7 @@ interface ExerciseOverviewProps {
   currentExercise: number;
   totalExercises: number;
   targetSummary?: string;
-  media: ExerciseMediaAsset;
+  media: Demonstration;
   active?: boolean;
   elapsedSeconds?: number;
   hint?: string;
@@ -53,7 +53,7 @@ export function ExerciseOverview({
         <HomeButton onHome={onHome} color="var(--ex-fg)" />
       )}
 
-      {hasExerciseMedia(media) && (
+      {hasDemonstration(media) && (
         <div className="flex w-full min-h-0 flex-1 items-center justify-center p-4">
           <ExerciseMedia
             media={media}
