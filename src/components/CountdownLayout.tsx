@@ -45,7 +45,7 @@ export function CountdownLayout({
               className="font-semibold"
               style={{
                 fontFamily: 'var(--font-kids)',
-                fontSize: 'var(--ex-body-size)',
+                fontSize: 'var(--ex-side-size)',
                 color: 'var(--ex-rest-fg)',
               }}
             >

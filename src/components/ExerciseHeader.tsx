@@ -60,10 +60,10 @@ export function ExerciseHeader({
               <p
                 className="text-center font-semibold"
                 style={{
-                  fontFamily: 'var(--font-kids)',
-                  fontSize: 'var(--ex-bullet-size)',
-                  color: 'var(--ex-warm)',
-                  lineHeight: 1.2,
+                fontFamily: 'var(--font-kids)',
+                fontSize: 'var(--ex-bullet-size)',
+                color: 'var(--ex-warm)',
+                lineHeight: 1.2,
                 }}
               >
                 {subtitle}

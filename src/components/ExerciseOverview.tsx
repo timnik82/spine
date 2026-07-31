@@ -44,6 +44,10 @@ export function ExerciseOverview({
   onInstructions,
   onPrimaryAction,
 }: ExerciseOverviewProps) {
+  const sideImages = !active ? media.sideImages : undefined;
+  const mediaClassName =
+    'max-h-full max-w-full rounded-2xl bg-white/50 object-contain p-2 shadow-sm backdrop-blur-sm';
+
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-end overflow-hidden pt-16"
@@ -55,11 +59,24 @@ export function ExerciseOverview({
 
       {hasDemonstration(media) && (
         <div className="flex w-full min-h-0 flex-1 items-center justify-center p-4">
-          <ExerciseMedia
-            media={media}
-            label=""
-            className="max-h-full max-w-full rounded-2xl bg-white/50 object-contain p-2 shadow-sm backdrop-blur-sm"
-          />
+          {sideImages ? (
+            <div className="relative flex h-full w-full items-center justify-center">
+              <img
+                src={sideImages[0]}
+                alt=""
+                aria-hidden="true"
+                className={`exercise-side-pose ${mediaClassName}`}
+              />
+              <img
+                src={sideImages[1]}
+                alt=""
+                aria-hidden="true"
+                className={`exercise-side-pose exercise-side-pose--left absolute ${mediaClassName}`}
+              />
+            </div>
+          ) : (
+            <ExerciseMedia media={media} label="" className={mediaClassName} />
+          )}
         </div>
       )}
 

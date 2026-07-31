@@ -213,9 +213,43 @@
   }
 }
 
+/* On an exercise introduction, gently alternate the two available poses.
+   Keeping both images in place avoids a layout jump while one fades into the
+   other. The second pose starts halfway through the first pose's cycle. */
+.exercise-side-pose {
+  animation: exercise-side-pose-swap 5s ease-in-out infinite;
+}
+
+.exercise-side-pose--left {
+  opacity: 0;
+  animation-delay: -2.5s;
+}
+
+@keyframes exercise-side-pose-swap {
+  0%,
+  40% {
+    opacity: 1;
+  }
+  50%,
+  90% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* The static half of the reached state, without the pulses. */
   .stopwatch-target--reached .stopwatch-target__pulse {
     animation: none;
+  }
+
+  .exercise-side-pose {
+    animation: none;
+  }
+
+  .exercise-side-pose--left {
+    display: none;
   }
 }
