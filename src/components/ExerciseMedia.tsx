@@ -1,5 +1,7 @@
+import type { Demonstration } from '@/data/programme';
+
 interface ExerciseMediaProps {
-  media: { image?: string; video?: string };
+  media: Demonstration;
   /** Names the pose for assistive tech; empty marks the media decorative. */
   label: string;
   className?: string;

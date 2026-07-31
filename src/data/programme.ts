@@ -16,6 +16,20 @@ export type Phase = 'aquecimento' | 'exercicios' | 'alongamentos';
 export type Mode = 'timer' | 'repetitions';
 export type SideNoun = 'lado' | 'perna';
 
+/**
+ * What an exercise has to show the child. Either form may be absent; when both
+ * are present the clip wins, which the component that renders it decides.
+ */
+export interface Demonstration {
+  image?: string;
+  video?: string;
+}
+
+/** Whether there is anything to show at all. */
+export function hasDemonstration(media: Demonstration): boolean {
+  return Boolean(media.video || media.image);
+}
+
 interface ExerciseBase {
   id: string;
   phase: Phase;
@@ -25,7 +39,7 @@ interface ExerciseBase {
   instructions: string[];
   summary: string;
   sets: number;
-  media: { image?: string; video?: string };
+  media: Demonstration;
   audio?: string;
 }
 
@@ -267,9 +281,15 @@ export const FINAL_MESSAGE =
   'Parabéns! Cada vez que fazes os exercícios estás a ajudar o teu corpo a ficar mais forte.';
 
 /** Section headings from the source file, shown on the introduction screens. */
+/**
+ * The main block carries no label: the counter beside it already says
+ * "Exercício N de 10", so the word on its own only repeats that. The other two
+ * name a section the counter does not, and say how long it lasts. An empty
+ * label means the screen shows no phase badge at all.
+ */
 export const phaseLabels: Record<Phase, string> = {
   aquecimento: 'Aquecimento (2 minutos)',
-  exercicios: 'Exercícios',
+  exercicios: '',
   alongamentos: 'Alongamentos (3 minutos)',
 };
 

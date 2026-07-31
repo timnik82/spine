@@ -44,11 +44,18 @@
   --ex-bullet-size: clamp(1rem, 2vh, 1.35rem);
 
   /* ─── Spacing ─── */
-  --ex-btn-height: 72px;
-  --ex-btn-min-width: 200px;
+  /* Scaled like the type around them: fixed pixels here meant the buttons kept
+     their full size on a short landscape viewport and the demonstration above
+     absorbed the whole squeeze. The maximum is the old value, so a tall screen
+     looks exactly as before. */
+  --ex-btn-height: clamp(3rem, 8vh, 4.5rem);
+  --ex-btn-min-width: clamp(9rem, 22vh, 12.5rem);
   --ex-btn-gap: 1.5rem;
   --ex-btn-radius: 1rem;
-  --ex-btn-font-size: clamp(1.1rem, 2.2vh, 1.4rem);
+  --ex-btn-font-size: clamp(0.95rem, 1.8vh, 1.15rem);
+  /* What the child actually has to do — how many, or for how long. It outranks
+     the button labels, which say the same thing on every exercise. */
+  --ex-target-size: clamp(1.15rem, 2.8vh, 1.75rem);
   /* Applied on both axes, so it follows whichever one is scarcer. */
   --ex-page-padding: clamp(0.75rem, min(4vw, 4vh), 2rem);
   --ex-section-gap: 2rem;

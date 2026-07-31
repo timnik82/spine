@@ -2,6 +2,7 @@ import { ExerciseMedia } from '@/components/ExerciseMedia';
 import { HomeButton } from '@/components/HomeButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { Button } from '@/components/ui/button';
+import { hasDemonstration, type Demonstration } from '@/data/programme';
 
 interface ExerciseOverviewProps {
   exerciseName: string;
@@ -9,7 +10,7 @@ interface ExerciseOverviewProps {
   currentExercise: number;
   totalExercises: number;
   targetSummary?: string;
-  media: { image?: string; video?: string };
+  media: Demonstration;
   active?: boolean;
   elapsedSeconds?: number;
   hint?: string;
@@ -52,7 +53,7 @@ export function ExerciseOverview({
         <HomeButton onHome={onHome} color="var(--ex-fg)" />
       )}
 
-      {(media.video || media.image) && (
+      {hasDemonstration(media) && (
         <div className="flex w-full min-h-0 flex-1 items-center justify-center p-4">
           <ExerciseMedia
             media={media}
@@ -75,16 +76,18 @@ export function ExerciseOverview({
             >
               EXERCÍCIO {currentExercise} DE {totalExercises}
             </span>
-            <span
-              className="rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-widest"
-              style={{
-                color: 'var(--ex-fg-muted)',
-                border: '1.5px solid var(--ex-border)',
-                backgroundColor: 'var(--ex-badge-bg)',
-              }}
-            >
-              {phaseLabel}
-            </span>
+            {phaseLabel && (
+              <span
+                className="rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-widest"
+                style={{
+                  color: 'var(--ex-fg-muted)',
+                  border: '1.5px solid var(--ex-border)',
+                  backgroundColor: 'var(--ex-badge-bg)',
+                }}
+              >
+                {phaseLabel}
+              </span>
+            )}
           </div>
           <h1
             className="text-center font-medium tracking-wide"
@@ -99,8 +102,9 @@ export function ExerciseOverview({
           <div className="flex flex-wrap items-center justify-center gap-2">
             {targetSummary && (
               <p
-                className="rounded-full px-4 py-1.5 text-xs font-bold tracking-wide shadow-xs"
+                className="rounded-full px-5 py-2 font-bold tracking-wide shadow-xs"
                 style={{
+                  fontSize: 'var(--ex-target-size)',
                   color: 'var(--ex-fg)',
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   border: '1.5px solid var(--ex-border)',
@@ -113,8 +117,9 @@ export function ExerciseOverview({
               <p
                 role="timer"
                 aria-label={`Tempo decorrido: ${formatElapsedTime(elapsedSeconds)}`}
-                className="rounded-full px-4 py-1.5 text-xs font-bold tabular-nums tracking-wide shadow-xs"
+                className="rounded-full px-5 py-2 font-bold tabular-nums tracking-wide shadow-xs"
                 style={{
+                  fontSize: 'var(--ex-target-size)',
                   color: 'var(--ex-fg)',
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   border: '1.5px solid var(--ex-border)',

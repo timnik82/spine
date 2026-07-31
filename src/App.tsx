@@ -131,6 +131,7 @@ export function App() {
           {exercise.mode === 'timer' ? (
             <ActiveScreen
               exerciseName={exercise.name}
+              media={exercise.media}
               sideLabel={currentSideLabel}
               secondsRemaining={timer.secondsRemaining}
               totalSeconds={exerciseSeconds}
