@@ -102,7 +102,7 @@ export const programme: Exercise[] = [
     durationSec: 10,
     sets: 10,
     media: {
-      image: '/intro-crescer.webp',
+      image: '/intro-crescer.jpg',
     },
   },
   {
@@ -121,7 +121,9 @@ export const programme: Exercise[] = [
     reps: 10,
     repetitionLabel: 'respirações',
     sets: 1,
-    media: {},
+    media: {
+      image: '/respiracao-profunda.jpg',
+    },
   },
   {
     id: 'gato-assanhado',
@@ -160,7 +162,9 @@ export const programme: Exercise[] = [
     reps: 10,
     repetitionLabel: 'repetições',
     sets: 1,
-    media: {},
+    media: {
+      image: '/ponte.jpg',
+    },
   },
   {
     id: 'cao-de-caca',
@@ -181,7 +185,9 @@ export const programme: Exercise[] = [
     repetitionLabel: 'repetições',
     sets: 1,
     perSide: true,
-    media: {},
+    media: {
+      image: '/cao-de-caca.jpg',
+    },
   },
   {
     id: 'prancha-de-joelhos',
@@ -198,7 +204,9 @@ export const programme: Exercise[] = [
     mode: 'timer',
     durationSec: PLANK_SECONDS,
     sets: 3,
-    media: {},
+    media: {
+      image: '/prancha-de-joelhos.jpg',
+    },
   },
   {
     id: 'equilibrio-numa-perna',
@@ -218,7 +226,9 @@ export const programme: Exercise[] = [
     sets: 3,
     perSide: true,
     sideNoun: 'perna',
-    media: {},
+    media: {
+      image: '/equilibrio-numa-perna.jpg',
+    },
   },
   {
     id: 'alongamento-lateral',
@@ -236,7 +246,9 @@ export const programme: Exercise[] = [
     sets: 2,
     perSide: true,
     sideNoun: 'lado',
-    media: {},
+    media: {
+      image: '/alongamento-lateral.jpg',
+    },
   },
   {
     id: 'alongamento-musculos-coxa',
@@ -255,7 +267,9 @@ export const programme: Exercise[] = [
     sets: 2,
     perSide: true,
     sideNoun: 'perna',
-    media: {},
+    media: {
+      image: '/alongamento-musculos-coxa.jpg',
+    },
   },
 ];
 
