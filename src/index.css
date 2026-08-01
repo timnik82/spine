@@ -160,7 +160,10 @@
   position: fixed;
   z-index: 50;
   right: 1rem;
-  top: max(3.5rem, env(safe-area-inset-top) + 3rem);
+  bottom: max(
+    1rem,
+    calc(var(--ex-btn-height) + var(--ex-page-padding) + env(safe-area-inset-bottom, 0px))
+  );
   left: 1rem;
   display: flex;
   align-items: center;

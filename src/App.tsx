@@ -47,6 +47,13 @@ export function App() {
   const currentSideLabel = sideLabel(exercise, state.sideIndex);
   const activeMedia = demonstrationForSide(exercise.media, state.sideIndex);
   const activeExerciseName = exercise.activeName ?? exercise.name;
+  const updateBanner = updateAvailable ? (
+    <UpdateBanner
+      isApplying={isApplying}
+      onApply={applyUpdate}
+      onDismiss={dismissUpdate}
+    />
+  ) : null;
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
   // intro screen, so this buys the fetch and decode seconds rather than the
@@ -132,12 +139,15 @@ export function App() {
 
   if (settingsOpen) {
     return (
-      <SettingsScreen
-        restSecondsFor={restSecondsFor}
-        onChangeRestSeconds={setRestSeconds}
-        onReset={resetRestSeconds}
-        onClose={() => setSettingsOpen(false)}
-      />
+      <>
+        <SettingsScreen
+          restSecondsFor={restSecondsFor}
+          onChangeRestSeconds={setRestSeconds}
+          onReset={resetRestSeconds}
+          onClose={() => setSettingsOpen(false)}
+        />
+        {updateBanner}
+      </>
     );
   }
 
@@ -254,13 +264,7 @@ export function App() {
       )}
       {content}
       <PerfBadge />
-      {updateAvailable && (
-        <UpdateBanner
-          isApplying={isApplying}
-          onApply={applyUpdate}
-          onDismiss={dismissUpdate}
-        />
-      )}
+      {updateBanner}
     </>
   );
 }

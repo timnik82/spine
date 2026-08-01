@@ -53,6 +53,7 @@ describe('usePwaUpdate', () => {
   const originalServiceWorker = navigator.serviceWorker;
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     Object.defineProperty(navigator, 'serviceWorker', {
       configurable: true,
@@ -101,7 +102,7 @@ describe('usePwaUpdate', () => {
     expect(serviceWorker.controllerChangeListeners).toBe(1);
   });
 
-  it('removes the reload listener when the update hook unmounts', async () => {
+  it('reloads after the fallback when controllerchange never arrives', async () => {
     vi.useFakeTimers();
     const registration = new FakeRegistration();
     const waitingWorker = new FakeWorker();
@@ -112,7 +113,50 @@ describe('usePwaUpdate', () => {
       value: serviceWorker,
     });
 
-    const { unmount } = render(<TestHarness />);
+    const reload = vi.fn();
+    function FallbackHarness() {
+      const update = usePwaUpdate(reload);
+      return (
+        <button type="button" onClick={update.applyUpdate} disabled={!update.updateAvailable}>
+          Update now
+        </button>
+      );
+    }
+
+    render(<FallbackHarness />);
+    await act(async () => {});
+    await act(async () => {
+      screen.getByRole('button', { name: 'Update now' }).click();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(UPDATE_RELOAD_FALLBACK_MS);
+    });
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes the reload listener when the update hook unmounts', async () => {
+    vi.useFakeTimers();
+    const registration = new FakeRegistration();
+    const waitingWorker = new FakeWorker();
+    registration.waiting = waitingWorker;
+    const serviceWorker = new FakeServiceWorkerContainer(registration);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: serviceWorker,
+    });
+    const reload = vi.fn();
+
+    function CleanupHarness() {
+      const update = usePwaUpdate(reload);
+      return (
+        <button type="button" onClick={update.applyUpdate} disabled={!update.updateAvailable}>
+          Update now
+        </button>
+      );
+    }
+
+    const { unmount } = render(<CleanupHarness />);
     await act(async () => {});
     await act(async () => {
       screen.getByRole('button', { name: 'Update now' }).click();
@@ -120,7 +164,9 @@ describe('usePwaUpdate', () => {
     unmount();
 
     expect(serviceWorker.controllerChangeListeners).toBe(0);
-    expect(() => vi.advanceTimersByTime(UPDATE_RELOAD_FALLBACK_MS)).not.toThrow();
-    vi.useRealTimers();
+    act(() => {
+      vi.advanceTimersByTime(UPDATE_RELOAD_FALLBACK_MS);
+    });
+    expect(reload).not.toHaveBeenCalled();
   });
 });

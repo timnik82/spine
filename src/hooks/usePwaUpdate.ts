@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const UPDATE_RELOAD_FALLBACK_MS = 5_000;
+const reloadPage = () => window.location.reload();
 
-export function usePwaUpdate() {
+export function usePwaUpdate(reloadPageNow = reloadPage) {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const reloadCleanupRef = useRef<(() => void) | null>(null);
@@ -11,33 +12,39 @@ export function usePwaUpdate() {
     if (!('serviceWorker' in navigator)) return;
 
     let disposed = false;
+    let registration: ServiceWorkerRegistration | null = null;
+    const workerListeners = new Map<ServiceWorker, () => void>();
+
+    const showWaitingWorker = (worker: ServiceWorker | null) => {
+      if (
+        !disposed &&
+        navigator.serviceWorker.controller &&
+        worker?.state === 'installed'
+      ) {
+        setWaitingWorker(worker);
+      }
+    };
+
+    const onUpdateFound = () => {
+      const installingWorker = registration?.installing;
+      if (!installingWorker || workerListeners.has(installingWorker)) return;
+
+      const onStateChange = () => {
+        if (installingWorker.state === 'installed') {
+          showWaitingWorker(installingWorker);
+        }
+      };
+      workerListeners.set(installingWorker, onStateChange);
+      installingWorker.addEventListener('statechange', onStateChange);
+    };
 
     const register = async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-
-        const showWaitingWorker = (worker: ServiceWorker | null) => {
-          if (
-            !disposed &&
-            navigator.serviceWorker.controller &&
-            worker?.state === 'installed'
-          ) {
-            setWaitingWorker(worker);
-          }
-        };
+        registration = await navigator.serviceWorker.register('/sw.js');
+        if (disposed) return;
 
         showWaitingWorker(registration.waiting);
-
-        registration.addEventListener('updatefound', () => {
-          const installingWorker = registration.installing;
-          if (!installingWorker) return;
-
-          installingWorker.addEventListener('statechange', () => {
-            if (installingWorker.state === 'installed') {
-              showWaitingWorker(installingWorker);
-            }
-          });
-        });
+        registration.addEventListener('updatefound', onUpdateFound);
       } catch {
         // A missing or unavailable service worker must not affect the workout.
       }
@@ -47,6 +54,11 @@ export function usePwaUpdate() {
 
     return () => {
       disposed = true;
+      registration?.removeEventListener('updatefound', onUpdateFound);
+      workerListeners.forEach((listener, worker) => {
+        worker.removeEventListener('statechange', listener);
+      });
+      workerListeners.clear();
       reloadCleanupRef.current?.();
       reloadCleanupRef.current = null;
     };
@@ -68,7 +80,7 @@ export function usePwaUpdate() {
       if (reloaded) return;
       reloaded = true;
       cleanupReload();
-      window.location.reload();
+      reloadPageNow();
     };
     const fallbackReload = window.setTimeout(reload, UPDATE_RELOAD_FALLBACK_MS);
 
@@ -77,7 +89,7 @@ export function usePwaUpdate() {
     });
     reloadCleanupRef.current = cleanupReload;
     waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-  }, [waitingWorker]);
+  }, [reloadPageNow, waitingWorker]);
 
   const dismissUpdate = useCallback(() => {
     setWaitingWorker(null);
