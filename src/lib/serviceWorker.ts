@@ -49,14 +49,19 @@ export function watchServiceWorkerUpdates(
     const installingWorker = registration?.installing;
     if (!installingWorker || workerListeners.has(installingWorker)) return;
 
-    // The statechange listener is only wanted until the worker reaches
-    // `installed`; after that it can never fire usefully again, so drop it
-    // (and its Map entry) to keep the listener set bounded across updates.
+    // The statechange listener is only wanted until the worker reaches a
+    // terminal state. `installed` reports a waiting update; `redundant` means
+    // the install failed or was superseded and can be dropped. Either way the
+    // listener and its Map entry go, so the set stays bounded across updates.
     const onStateChange = () => {
-      if (installingWorker.state !== 'installed') return;
-      showIfWaiting(installingWorker);
-      installingWorker.removeEventListener('statechange', onStateChange);
-      workerListeners.delete(installingWorker);
+      const state = installingWorker.state;
+      if (state === 'installed') {
+        showIfWaiting(installingWorker);
+      }
+      if (state === 'installed' || state === 'redundant') {
+        installingWorker.removeEventListener('statechange', onStateChange);
+        workerListeners.delete(installingWorker);
+      }
     };
     workerListeners.set(installingWorker, onStateChange);
     installingWorker.addEventListener('statechange', onStateChange);
