@@ -22,6 +22,8 @@ import { SettingsScreen } from '@/screens/SettingsScreen';
 import { unlockStopwatchSounds } from '@/lib/sounds';
 import { renderProbe } from '@/lib/renderProbe';
 import { useRestSettings } from '@/hooks/useRestSettings';
+import { usePwaUpdate } from '@/hooks/usePwaUpdate';
+import { UpdateBanner } from '@/components/UpdateBanner';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
@@ -37,12 +39,21 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { restSecondsFor, setRestSeconds, resetRestSeconds } =
     useRestSettings();
+  const { updateAvailable, isApplying, applyUpdate, dismissUpdate } =
+    usePwaUpdate();
   const exercise = programme[state.exerciseIndex];
   const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
   const restSeconds = restSecondsFor(exercise.id);
   const currentSideLabel = sideLabel(exercise, state.sideIndex);
   const activeMedia = demonstrationForSide(exercise.media, state.sideIndex);
   const activeExerciseName = exercise.activeName ?? exercise.name;
+  const updateBanner = updateAvailable ? (
+    <UpdateBanner
+      isApplying={isApplying}
+      onApply={applyUpdate}
+      onDismiss={dismissUpdate}
+    />
+  ) : null;
 
   // Decode the stopwatch clicks at startup. The crown only appears after the
   // intro screen, so this buys the fetch and decode seconds rather than the
@@ -128,12 +139,15 @@ export function App() {
 
   if (settingsOpen) {
     return (
-      <SettingsScreen
-        restSecondsFor={restSecondsFor}
-        onChangeRestSeconds={setRestSeconds}
-        onReset={resetRestSeconds}
-        onClose={() => setSettingsOpen(false)}
-      />
+      <>
+        <SettingsScreen
+          restSecondsFor={restSecondsFor}
+          onChangeRestSeconds={setRestSeconds}
+          onReset={resetRestSeconds}
+          onClose={() => setSettingsOpen(false)}
+        />
+        {updateBanner}
+      </>
     );
   }
 
@@ -250,6 +264,7 @@ export function App() {
       )}
       {content}
       <PerfBadge />
+      {updateBanner}
     </>
   );
 }
