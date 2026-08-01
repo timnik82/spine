@@ -21,6 +21,13 @@ self.addEventListener('install', () => {
   void BUILD_VERSION;
 });
 
+// Take control of the open tab as soon as the new worker activates. Without
+// this, Safari does not deliver 'controllerchange' to a page the new worker
+// has not claimed, so the 'Update now' reload would stall on the 5s fallback.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
     void self.skipWaiting();
