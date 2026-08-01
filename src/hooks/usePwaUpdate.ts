@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-type WaitingWorker = ServiceWorker;
+export const UPDATE_RELOAD_FALLBACK_MS = 5_000;
 
 export function usePwaUpdate() {
-  const [waitingWorker, setWaitingWorker] = useState<WaitingWorker | null>(null);
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  const reloadCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -46,6 +47,8 @@ export function usePwaUpdate() {
 
     return () => {
       disposed = true;
+      reloadCleanupRef.current?.();
+      reloadCleanupRef.current = null;
     };
   }, []);
 
@@ -53,10 +56,26 @@ export function usePwaUpdate() {
     if (!waitingWorker) return;
 
     setIsApplying(true);
-    const reload = () => window.location.reload();
-    navigator.serviceWorker.addEventListener('controllerchange', reload, {
+    reloadCleanupRef.current?.();
+    const serviceWorker = navigator.serviceWorker;
+
+    let reloaded = false;
+    const cleanupReload = () => {
+      window.clearTimeout(fallbackReload);
+      serviceWorker.removeEventListener('controllerchange', reload);
+    };
+    const reload = () => {
+      if (reloaded) return;
+      reloaded = true;
+      cleanupReload();
+      window.location.reload();
+    };
+    const fallbackReload = window.setTimeout(reload, UPDATE_RELOAD_FALLBACK_MS);
+
+    serviceWorker.addEventListener('controllerchange', reload, {
       once: true,
     });
+    reloadCleanupRef.current = cleanupReload;
     waitingWorker.postMessage({ type: 'SKIP_WAITING' });
   }, [waitingWorker]);
 
