@@ -156,6 +156,66 @@
   }
 }
 
+.pwa-update-banner {
+  position: fixed;
+  z-index: 50;
+  right: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 42rem;
+  margin-inline: auto;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 0.5rem 1.5rem oklch(0 0 0 / 15%);
+}
+
+.pwa-update-banner p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.pwa-update-banner__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+.pwa-update-banner__actions button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.pwa-update-banner__actions button:first-child {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+@media (max-width: 30rem) {
+  .pwa-update-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pwa-update-banner__actions button {
+    flex: 1;
+  }
+}
+
 /* ─── Target-duration marker on the stopwatch dial ───
    Generated in CoachStopwatch and inserted below the seconds hand. It is a
    decorative overlay: it must never take a touch away from the crown or the

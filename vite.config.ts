@@ -5,7 +5,32 @@ import { defineConfig } from "vite"
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: 'version-service-worker',
+      generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'sw.js',
+          source: `const BUILD_VERSION = '${Date.now()}';
+
+self.addEventListener('install', () => {
+  // Leave updates waiting until the user explicitly chooses “Update now”.
+  void BUILD_VERSION;
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    void self.skipWaiting();
+  }
+});
+`,
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       // fileURLToPath yields a platform-correct filesystem path. Using

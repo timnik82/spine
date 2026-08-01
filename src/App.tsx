@@ -22,6 +22,8 @@ import { SettingsScreen } from '@/screens/SettingsScreen';
 import { unlockStopwatchSounds } from '@/lib/sounds';
 import { renderProbe } from '@/lib/renderProbe';
 import { useRestSettings } from '@/hooks/useRestSettings';
+import { usePwaUpdate } from '@/hooks/usePwaUpdate';
+import { UpdateBanner } from '@/components/UpdateBanner';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
@@ -37,6 +39,8 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { restSecondsFor, setRestSeconds, resetRestSeconds } =
     useRestSettings();
+  const { updateAvailable, isApplying, applyUpdate, dismissUpdate } =
+    usePwaUpdate();
   const exercise = programme[state.exerciseIndex];
   const exerciseSeconds = exercise.mode === 'timer' ? exercise.durationSec : 0;
   const restSeconds = restSecondsFor(exercise.id);
@@ -250,6 +254,13 @@ export function App() {
       )}
       {content}
       <PerfBadge />
+      {updateAvailable && (
+        <UpdateBanner
+          isApplying={isApplying}
+          onApply={applyUpdate}
+          onDismiss={dismissUpdate}
+        />
+      )}
     </>
   );
 }
