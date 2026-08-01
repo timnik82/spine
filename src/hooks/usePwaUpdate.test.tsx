@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { UPDATE_RELOAD_FALLBACK_MS, usePwaUpdate } from './usePwaUpdate';
+import { UPDATE_RELOAD_FALLBACK_MS } from '@/lib/serviceWorker';
+import { usePwaUpdate } from './usePwaUpdate';
 
 class FakeWorker extends EventTarget {
   state = 'installed';
