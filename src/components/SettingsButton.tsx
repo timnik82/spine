@@ -13,7 +13,7 @@ export function SettingsButton({ onClick }: SettingsButtonProps) {
       variant="outline"
       size="icon"
       aria-label="Definições"
-      className="fixed right-4 top-16 z-40 h-11 w-11 cursor-pointer rounded-full bg-white/90 shadow-md backdrop-blur-sm sm:top-4"
+      className="fixed right-4 z-40 h-11 w-11 cursor-pointer rounded-full bg-white/90 shadow-md backdrop-blur-sm top-[calc(4rem+env(safe-area-inset-top,0px))] sm:top-[calc(1rem+env(safe-area-inset-top,0px))]"
       style={{
         borderColor: 'var(--ex-border)',
         color: 'var(--ex-fg)',

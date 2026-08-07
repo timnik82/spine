@@ -186,7 +186,7 @@ describe('usePwaUpdate', () => {
     expect(reload).not.toHaveBeenCalled();
   });
 
-  it('checks for updates on resume and shows the banner for a newly waiting worker', async () => {
+  it('checks for updates on visible visibilitychange and shows a newly waiting worker', async () => {
     const registration = new FakeRegistration();
     const serviceWorker = new FakeServiceWorkerContainer(registration);
     Object.defineProperty(navigator, 'serviceWorker', {
@@ -198,10 +198,15 @@ describe('usePwaUpdate', () => {
     await flushRegistration();
     expect(screen.getByText('hidden').textContent).toBe('hidden');
 
+    registration.update.mockClear();
     await act(async () => {
-      window.dispatchEvent(new Event('focus'));
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
     });
-    expect(registration.update).toHaveBeenCalled();
+    expect(registration.update).toHaveBeenCalledTimes(1);
 
     const installingWorker = new FakeWorker();
     installingWorker.state = 'installing';
@@ -212,6 +217,37 @@ describe('usePwaUpdate', () => {
     });
 
     expect(screen.getByText('available').textContent).toBe('available');
+  });
+
+  it('checks for updates on focus only while the document is visible', async () => {
+    const registration = new FakeRegistration();
+    const serviceWorker = new FakeServiceWorkerContainer(registration);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: serviceWorker,
+    });
+
+    render(<TestHarness />);
+    await flushRegistration();
+
+    registration.update.mockClear();
+    await act(async () => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'hidden',
+      });
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(registration.update).not.toHaveBeenCalled();
+
+    await act(async () => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(registration.update).toHaveBeenCalledTimes(1);
   });
 
   it('does not re-show a dismissed waiting worker on resume alone', async () => {
@@ -240,10 +276,14 @@ describe('usePwaUpdate', () => {
         value: 'visible',
       });
       document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(registration.update).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('hidden').textContent).toBe('hidden');
+
+    await act(async () => {
       window.dispatchEvent(new Event('focus'));
     });
-
-    expect(registration.update).toHaveBeenCalled();
+    expect(registration.update).toHaveBeenCalledTimes(2);
     expect(screen.getByText('hidden').textContent).toBe('hidden');
 
     const newerWorker = new FakeWorker();

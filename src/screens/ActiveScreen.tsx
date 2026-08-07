@@ -49,6 +49,8 @@ export function ActiveScreen({
       style={{
         background: 'var(--ex-bg)',
         padding: 'var(--ex-page-padding)',
+        paddingTop:
+          'calc(var(--ex-page-padding) + env(safe-area-inset-top, 0px))',
       }}
     >
       <ExerciseHeader

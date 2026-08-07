@@ -85,7 +85,9 @@ export function watchServiceWorkerUpdates(
   };
 
   const onFocus = () => {
-    checkForUpdate();
+    if (document.visibilityState === 'visible') {
+      checkForUpdate();
+    }
   };
 
   void (async () => {
