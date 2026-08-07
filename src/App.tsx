@@ -6,6 +6,7 @@ import {
   demonstrationForSide,
 } from '@/data/programme';
 import { useSessionReducer } from '@/hooks/useSessionReducer';
+import { useTrackedSessionDispatch } from '@/hooks/useTrackedSessionDispatch';
 import { useTimer } from '@/hooks/useTimer';
 import { useExerciseTimer } from '@/hooks/useExerciseTimer';
 import { useElapsedTimer } from '@/hooks/useElapsedTimer';
@@ -35,7 +36,8 @@ import type { FrameSinkRef } from '@/hooks/useExerciseTimer';
 export const TARGET_REACHED_HOLD_MS = 1_400;
 
 export function App() {
-  const [state, dispatch] = useSessionReducer();
+  const [state, rawDispatch] = useSessionReducer();
+  const dispatch = useTrackedSessionDispatch(state, rawDispatch);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { restSecondsFor, setRestSeconds, resetRestSeconds } =
     useRestSettings();

@@ -33,3 +33,19 @@ memorizar a sequência ou consultar folhas de papel.
 - Pausas de descanso cronometradas entre séries
 - Botão de regresso imediato ao início a partir de qualquer ecrã
 - Definições de descanso ajustáveis e persistentes para exercícios cronometrados com mais de uma série
+
+## Analytics (PostHog)
+
+A app envia eventos anónimos de funil (início de sessão/exercício, séries, saltos de descanso, navegação, classificação) via PostHog. Sem token configurado, o SDK não inicia.
+
+1. Cria um projeto em [PostHog](https://posthog.com) e copia o project token e o host (US `https://us.i.posthog.com` ou EU `https://eu.i.posthog.com`).
+2. Copia `.env.example` para `.env.local` e preenche:
+
+```bash
+VITE_POSTHOG_PROJECT_TOKEN=phc_...
+VITE_POSTHOG_HOST=https://us.i.posthog.com
+```
+
+3. No deploy (ex. Vercel), define as mesmas variáveis de ambiente.
+
+Eventos custom: `session_started`, `exercise_started`, `leg_completed`, `set_completed`, `exercise_completed`, `rest_skipped`, `instructions_opened` / `instructions_closed`, `exercise_navigated`, `session_rated`, `session_reset`. Autocapture de cliques/pageviews fica ativa com os defaults do SDK (`defaults: '2026-05-30'`).
