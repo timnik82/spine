@@ -10,6 +10,9 @@ export function usePwaUpdate(reloadPageNow = reloadPage) {
 
   useEffect(
     () => {
+      // Registration + foreground resume update() checks live in the watcher.
+      // Dismiss only clears React state; the same waiting worker is not
+      // re-prompted until a later updatefound installs a newer worker.
       const stopWatching = watchServiceWorkerUpdates(setWaitingWorker);
       return () => {
         stopWatching();

@@ -1,20 +1,26 @@
 {
   "name": "Spine",
   "short_name": "Spine",
+  "lang": "pt-PT",
+  "id": "/",
+  "description": "Programa de exercícios terapêuticos para a coluna para fazer em casa.",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#fffdf7",
   "theme_color": "#2a9364",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

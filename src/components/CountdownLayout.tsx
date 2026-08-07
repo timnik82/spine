@@ -25,6 +25,8 @@ export function CountdownLayout({
       style={{
         background: 'var(--ex-rest-bg)',
         padding: 'var(--ex-page-padding)',
+        paddingTop:
+          'calc(var(--ex-page-padding) + env(safe-area-inset-top, 0px))',
       }}
     >
       <HomeButton onHome={onHome} color="var(--ex-rest-fg)" />

@@ -25,7 +25,7 @@ export function SettingsScreen({
       className="fixed inset-0 z-50 overflow-y-auto"
       style={{ background: 'var(--ex-bg-intro)', color: 'var(--ex-fg)' }}
     >
-      <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-4 py-6 sm:px-8 sm:py-10">
+      <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-4 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top,0px))] sm:px-8 sm:pb-10 sm:pt-[calc(2.5rem+env(safe-area-inset-top,0px))]">
         <header className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
           <div>
             <p
