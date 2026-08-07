@@ -10,10 +10,10 @@ export function UpdateBanner({ isApplying, onApply, onDismiss }: UpdateBannerPro
       <p>Está disponível uma nova versão da aplicação.</p>
       <div className="pwa-update-banner__actions">
         <button type="button" onClick={onApply} disabled={isApplying}>
-          {isApplying ? 'Updating…' : 'Update now'}
+          {isApplying ? 'A atualizar…' : 'Atualizar agora'}
         </button>
         <button type="button" onClick={onDismiss} disabled={isApplying}>
-          Later
+          Mais tarde
         </button>
       </div>
     </aside>

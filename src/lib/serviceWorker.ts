@@ -67,6 +67,27 @@ export function watchServiceWorkerUpdates(
     installingWorker.addEventListener('statechange', onStateChange);
   };
 
+  // Safari often skips background update discovery. Re-check when the app
+  // returns to the foreground — but only via updatefound for a *new* worker.
+  // Never call showIfWaiting(registration.waiting) on resume: dismiss is
+  // UI-only and must keep the same waiting worker hidden until a newer build.
+  const checkForUpdate = () => {
+    if (disposed || !registration) return;
+    void registration.update().catch(() => {
+      // Update discovery is best-effort; failures must not affect the workout.
+    });
+  };
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      checkForUpdate();
+    }
+  };
+
+  const onFocus = () => {
+    checkForUpdate();
+  };
+
   void (async () => {
     try {
       registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL);
@@ -74,6 +95,8 @@ export function watchServiceWorkerUpdates(
 
       showIfWaiting(registration.waiting);
       registration.addEventListener('updatefound', onUpdateFound);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      window.addEventListener('focus', onFocus);
     } catch {
       // A missing or unavailable service worker must not affect the workout.
     }
@@ -82,6 +105,8 @@ export function watchServiceWorkerUpdates(
   return () => {
     disposed = true;
     registration?.removeEventListener('updatefound', onUpdateFound);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    window.removeEventListener('focus', onFocus);
     workerListeners.forEach((listener, worker) => {
       worker.removeEventListener('statechange', listener);
     });

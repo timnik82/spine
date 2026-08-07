@@ -11,6 +11,12 @@ class FakeWorker extends EventTarget {
 class FakeRegistration extends EventTarget {
   waiting: FakeWorker | null = null;
   installing: FakeWorker | null = null;
+  update = vi.fn().mockResolvedValue(undefined);
+
+  emitUpdateFound(installing: FakeWorker) {
+    this.installing = installing;
+    this.dispatchEvent(new Event('updatefound'));
+  }
 }
 
 class FakeServiceWorkerContainer extends EventTarget {
@@ -50,6 +56,11 @@ function TestHarness() {
   );
 }
 
+async function flushRegistration() {
+  await act(async () => {});
+  await act(async () => {});
+}
+
 describe('usePwaUpdate', () => {
   const originalServiceWorker = navigator.serviceWorker;
 
@@ -59,6 +70,10 @@ describe('usePwaUpdate', () => {
     Object.defineProperty(navigator, 'serviceWorker', {
       configurable: true,
       value: originalServiceWorker,
+    });
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'visible',
     });
   });
 
@@ -73,7 +88,7 @@ describe('usePwaUpdate', () => {
     });
 
     render(<TestHarness />);
-    await act(async () => {});
+    await flushRegistration();
 
     expect(screen.getByText('available').textContent).toBe('available');
     await act(async () => {
@@ -93,7 +108,7 @@ describe('usePwaUpdate', () => {
     });
 
     render(<TestHarness />);
-    await act(async () => {});
+    await flushRegistration();
     expect(waitingWorker.postMessage).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -125,7 +140,7 @@ describe('usePwaUpdate', () => {
     }
 
     render(<FallbackHarness />);
-    await act(async () => {});
+    await flushRegistration();
     await act(async () => {
       screen.getByRole('button', { name: 'Update now' }).click();
     });
@@ -158,7 +173,7 @@ describe('usePwaUpdate', () => {
     }
 
     const { unmount } = render(<CleanupHarness />);
-    await act(async () => {});
+    await flushRegistration();
     await act(async () => {
       screen.getByRole('button', { name: 'Update now' }).click();
     });
@@ -169,5 +184,76 @@ describe('usePwaUpdate', () => {
       vi.advanceTimersByTime(UPDATE_RELOAD_FALLBACK_MS);
     });
     expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('checks for updates on resume and shows the banner for a newly waiting worker', async () => {
+    const registration = new FakeRegistration();
+    const serviceWorker = new FakeServiceWorkerContainer(registration);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: serviceWorker,
+    });
+
+    render(<TestHarness />);
+    await flushRegistration();
+    expect(screen.getByText('hidden').textContent).toBe('hidden');
+
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(registration.update).toHaveBeenCalled();
+
+    const installingWorker = new FakeWorker();
+    installingWorker.state = 'installing';
+    await act(async () => {
+      registration.emitUpdateFound(installingWorker);
+      installingWorker.state = 'installed';
+      installingWorker.dispatchEvent(new Event('statechange'));
+    });
+
+    expect(screen.getByText('available').textContent).toBe('available');
+  });
+
+  it('does not re-show a dismissed waiting worker on resume alone', async () => {
+    const registration = new FakeRegistration();
+    const waitingWorker = new FakeWorker();
+    registration.waiting = waitingWorker;
+    const serviceWorker = new FakeServiceWorkerContainer(registration);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: serviceWorker,
+    });
+
+    render(<TestHarness />);
+    await flushRegistration();
+    expect(screen.getByText('available').textContent).toBe('available');
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Later' }).click();
+    });
+    expect(screen.getByText('hidden').textContent).toBe('hidden');
+
+    registration.update.mockClear();
+    await act(async () => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    expect(registration.update).toHaveBeenCalled();
+    expect(screen.getByText('hidden').textContent).toBe('hidden');
+
+    const newerWorker = new FakeWorker();
+    newerWorker.state = 'installing';
+    await act(async () => {
+      registration.emitUpdateFound(newerWorker);
+      newerWorker.state = 'installed';
+      newerWorker.dispatchEvent(new Event('statechange'));
+    });
+
+    expect(screen.getByText('available').textContent).toBe('available');
   });
 });
