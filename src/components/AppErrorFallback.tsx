@@ -1,14 +1,14 @@
 import { PrimaryButton } from '@/components/PrimaryButton';
 
-interface AppErrorFallbackProps {
-  resetError: () => void;
-}
-
 /**
  * Full-screen recovery UI shown by Sentry's ErrorBoundary when a render
  * error escapes the session state machine.
+ *
+ * Reload is the recovery path: session state is in-memory only, so a full
+ * page load returns to the intro screen (see AGENTS.md). Calling
+ * `resetError()` before reload would be a no-op — reload tears down the root.
  */
-export function AppErrorFallback({ resetError }: AppErrorFallbackProps) {
+export function AppErrorFallback() {
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center gap-6"
@@ -41,7 +41,6 @@ export function AppErrorFallback({ resetError }: AppErrorFallbackProps) {
       <PrimaryButton
         type="button"
         onClick={() => {
-          resetError();
           window.location.reload();
         }}
       >

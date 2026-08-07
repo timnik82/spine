@@ -10,18 +10,15 @@ import App from "./App.tsx"
 import { AppErrorFallback } from "./components/AppErrorFallback.tsx"
 
 createRoot(document.getElementById("root")!, {
-  // React 19 root error hooks — global safety net for reporting
-  // (https://docs.sentry.io/platforms/javascript/guides/react/).
+  // React 19 root hooks report errors the ErrorBoundary does not catch.
+  // Skip onCaughtError: Sentry.ErrorBoundary already captures those, and
+  // wiring both produces duplicate Issues
+  // (https://docs.sentry.io/platforms/javascript/guides/react/features/error-boundary/).
   onUncaughtError: Sentry.reactErrorHandler(),
-  onCaughtError: Sentry.reactErrorHandler(),
   onRecoverableError: Sentry.reactErrorHandler(),
 }).render(
   <StrictMode>
-    <Sentry.ErrorBoundary
-      fallback={({ resetError }) => (
-        <AppErrorFallback resetError={resetError} />
-      )}
-    >
+    <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
       <App />
     </Sentry.ErrorBoundary>
   </StrictMode>
