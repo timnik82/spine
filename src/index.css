@@ -154,6 +154,21 @@
     height: 100%;
     width: 100%;
   }
+
+  /*
+   * black-translucent draws white status glyphs over the page. Paint the
+   * safe-area band with the theme color so time/battery stay readable on the
+   * cream app chrome (viewport-fit=cover required for a non-zero inset).
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    z-index: 100;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    background: #2a9364;
+    pointer-events: none;
+  }
 }
 
 .pwa-update-banner {

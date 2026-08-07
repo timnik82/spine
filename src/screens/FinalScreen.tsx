@@ -22,6 +22,8 @@ export function FinalScreen({ rating, onRate, onRestart }: FinalScreenProps) {
       style={{
         background: 'var(--ex-done-bg)',
         padding: 'var(--ex-page-padding)',
+        paddingTop:
+          'calc(var(--ex-page-padding) + env(safe-area-inset-top, 0px))',
       }}
     >
       <HomeButton onHome={onRestart} color="var(--ex-done-fg)" />

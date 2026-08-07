@@ -37,7 +37,8 @@ export function HomeButton({
       size="icon"
       className={cn(
         'z-10 cursor-pointer rounded-full',
-        !inFlow && 'absolute left-4 top-4'
+        !inFlow &&
+          'absolute left-4 top-[calc(1rem+env(safe-area-inset-top,0px))]'
       )}
       style={style}
       aria-label="Voltar ao início"

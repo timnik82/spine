@@ -50,8 +50,11 @@ export function ExerciseOverview({
 
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-end overflow-hidden pt-16"
-      style={{ background: 'var(--ex-bg-intro)' }}
+      className="fixed inset-0 flex flex-col items-center justify-end overflow-hidden"
+      style={{
+        background: 'var(--ex-bg-intro)',
+        paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
+      }}
     >
       {active && onHome && (
         <HomeButton onHome={onHome} color="var(--ex-fg)" />
