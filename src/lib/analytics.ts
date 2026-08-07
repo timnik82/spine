@@ -204,16 +204,17 @@ export function sessionEventsForAction(
   }
 }
 
+export function isPostHogConfigured(): boolean {
+  return Boolean(import.meta.env.VITE_POSTHOG_PROJECT_TOKEN);
+}
+
 /** Fire mapped session events. No-ops when PostHog was never initialised. */
 export function captureSessionAction(
   state: SessionState,
   action: SessionAction
 ): void {
+  if (!isPostHogConfigured()) return;
   for (const event of sessionEventsForAction(state, action)) {
     posthog.capture(event.name, event.properties);
   }
-}
-
-export function isPostHogConfigured(): boolean {
-  return Boolean(import.meta.env.VITE_POSTHOG_PROJECT_TOKEN);
 }
