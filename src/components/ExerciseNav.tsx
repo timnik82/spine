@@ -22,7 +22,7 @@ export function ExerciseNav({
       // Exercise names run long, so the bar is held inside the viewport and the
       // name gives way first: the two controls must stay reachable at any width.
       className="fixed left-1/2 z-40 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-black/10 bg-white/85 px-3 py-1.5 text-xs shadow-md backdrop-blur-md transition-all sm:gap-2"
-      style={{ top: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
+      style={{ top: 'calc(0.5rem + env(safe-area-inset-top, 0px))' }}
     >
       <button
         type="button"
