@@ -22,7 +22,7 @@ export interface SessionState {
   rating: Rating | null;
 }
 
-type Action =
+export type SessionAction =
   | { type: 'START' }
   | { type: 'TICK' }
   | { type: 'SKIP_REST' }
@@ -63,7 +63,7 @@ function enterPrepare(
   };
 }
 
-function reducer(state: SessionState, action: Action): SessionState {
+function reducer(state: SessionState, action: SessionAction): SessionState {
   const exercise = programme[state.exerciseIndex];
 
   switch (action.type) {

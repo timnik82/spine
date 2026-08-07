@@ -3,24 +3,13 @@ import {
   hasNextExercise,
   legsPerSet,
   programme,
-  type Rating,
 } from '@/data/programme';
-import type { SessionState } from '@/hooks/useSessionReducer';
+import type {
+  SessionAction,
+  SessionState,
+} from '@/hooks/useSessionReducer';
 
-/** Actions the session reducer accepts — kept local so analytics stays decoupled. */
-export type SessionAction =
-  | { type: 'START' }
-  | { type: 'TICK' }
-  | { type: 'SKIP_REST' }
-  | { type: 'ADVANCE_SET'; restSeconds: number }
-  | { type: 'COMPLETE_EXERCISE' }
-  | { type: 'NEXT_EXERCISE' }
-  | { type: 'RATE'; rating: Rating }
-  | { type: 'RESET' }
-  | { type: 'OPEN_INSTRUCTIONS' }
-  | { type: 'CLOSE_INSTRUCTIONS' }
-  | { type: 'PREV_EXERCISE' }
-  | { type: 'SELECT_EXERCISE'; index: number };
+export type { SessionAction };
 
 export type AnalyticsEventName =
   | 'session_started'
@@ -199,8 +188,11 @@ export function sessionEventsForAction(
     case 'TICK':
       return [];
 
-    default:
-      return [];
+    default: {
+      // New reducer actions must get an explicit analytics case (or []).
+      const _exhaustive: never = action;
+      return _exhaustive;
+    }
   }
 }
 
