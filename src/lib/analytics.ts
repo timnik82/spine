@@ -9,8 +9,6 @@ import type {
   SessionState,
 } from '@/hooks/useSessionReducer';
 
-export type { SessionAction };
-
 export type AnalyticsEventName =
   | 'session_started'
   | 'exercise_started'
