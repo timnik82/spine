@@ -130,11 +130,14 @@ async function main() {
   const template = await readFile(TEMPLATE, "utf8");
   // JSON goes inside a <script> block, so no "</script>" may survive in it.
   const payload = JSON.stringify(tracks).replaceAll("</", "<\\/");
+  // Replacement *strings* interpret "$&", "$`" and friends, which would corrupt
+  // any title or file name containing them — a function replacer never does.
+  const literal = (value) => () => value;
   const html = template
-    .replaceAll("__EYEBROW__", escapeHtml(eyebrow))
-    .replaceAll("__HEADING__", escapeHtml(heading))
-    .replaceAll("__SUBTITLE__", escapeHtml(sub))
-    .replace("__TRACKS__", payload);
+    .replaceAll("__EYEBROW__", literal(escapeHtml(eyebrow)))
+    .replaceAll("__HEADING__", literal(escapeHtml(heading)))
+    .replaceAll("__SUBTITLE__", literal(escapeHtml(sub)))
+    .replace("__TRACKS__", literal(payload));
 
   await mkdir(dirname(out), { recursive: true });
   await writeFile(out, html);
