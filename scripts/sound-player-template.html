@@ -1,0 +1,210 @@
+<title>__HEADING__</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#E9EDEC; --surface:#FCFDFD; --surface-2:#DFE5E4;
+  --ink:#111F1E; --muted:#5A6D6B; --line:#C7D1CF;
+  --accent:#A8480F; --teal:#12605B;
+  --wave:#9FB0AD; --wave-on:#A8480F;
+  --shadow:0 1px 2px rgba(17,31,30,.08), 0 8px 24px -16px rgba(17,31,30,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0B1514; --surface:#121F1E; --surface-2:#1A2827;
+    --ink:#E4EDEB; --muted:#8CA09D; --line:#263634;
+    --accent:#EE8B4E; --teal:#5EC2B6;
+    --wave:#3C4F4D; --wave-on:#EE8B4E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1514; --surface:#121F1E; --surface-2:#1A2827;
+  --ink:#E4EDEB; --muted:#8CA09D; --line:#263634;
+  --accent:#EE8B4E; --teal:#5EC2B6;
+  --wave:#3C4F4D; --wave-on:#EE8B4E;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  line-height:1.55; padding:32px 20px 44px;
+}
+.wrap{max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:22px}
+header{display:flex; flex-direction:column; gap:10px}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); display:flex; gap:10px; align-items:center;
+}
+.eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+h1{
+  font-family:"Newsreader",Georgia,serif; font-weight:600; font-size:clamp(28px,5vw,38px);
+  line-height:1.12; margin:0; text-wrap:balance; letter-spacing:-.01em;
+}
+.sub{margin:0; color:var(--muted); font-size:15px; max-width:56ch}
+
+.rack{display:flex; flex-direction:column; gap:10px}
+.track{
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:14px 16px; display:flex; align-items:center; gap:14px;
+  box-shadow:var(--shadow);
+}
+.track[data-playing="true"]{border-color:var(--accent)}
+button.play{
+  flex:none; width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--accent); color:#FFF7F1; display:grid; place-items:center;
+  transition:transform .12s ease, filter .12s ease;
+}
+button.play:hover{filter:brightness(1.08)}
+button.play:active{transform:scale(.94)}
+button.play:focus-visible{outline:3px solid var(--teal); outline-offset:3px}
+button.play svg{width:17px; height:17px; display:block}
+.body{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
+.name{
+  font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:500;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+canvas{width:100%; height:38px; display:block; cursor:pointer; border-radius:4px}
+.stats{
+  flex:none; text-align:right; font-family:"IBM Plex Mono",monospace; font-size:11.5px;
+  color:var(--muted); font-variant-numeric:tabular-nums; display:flex;
+  flex-direction:column; gap:2px;
+}
+.stats .t{color:var(--ink); font-size:13px}
+@media (max-width:520px){
+  .track{flex-wrap:wrap}
+  .body{flex-basis:100%; order:3}
+  .stats{margin-left:auto}
+}
+.note{font-size:13px; color:var(--muted); margin:0; border-top:1px solid var(--line); padding-top:14px}
+.note code{
+  font-family:"IBM Plex Mono",monospace; font-size:12px;
+  background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--ink);
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">__EYEBROW__</div>
+    <h1>__HEADING__</h1>
+    <p class="sub">__SUBTITLE__</p>
+  </header>
+  <div class="rack" id="rack"></div>
+  <p class="note">Аудио вшито в страницу целиком — сеть не нужна. Клик по форме волны перематывает, <code>Space</code> ставит на паузу выбранный трек.</p>
+</div>
+
+<script id="tracks" type="application/json">__TRACKS__</script>
+<script>
+const TRACKS = JSON.parse(document.getElementById("tracks").textContent);
+const rack = document.getElementById("rack");
+const PLAY_D = "M8 5.2v13.6c0 .9 1 1.4 1.7.9l10.2-6.8c.6-.4.6-1.4 0-1.8L9.7 4.3C9 3.8 8 4.3 8 5.2z";
+const PAUSE_D = "M7 4.5h3.2v15H7zM13.8 4.5H17v15h-3.2z";
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = t => isFinite(t) ? Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0") + "." + Math.floor((t*10)%10) : "–:––";
+let current = null;
+const views = [];
+
+function decodeBase64(b64){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function makeTrack(track){
+  const el = document.createElement("div");
+  el.className = "track";
+  el.innerHTML =
+    '<button class="play" aria-label="Воспроизвести ' + track.name + '">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="' + PLAY_D + '"></path></svg>' +
+    '</button>' +
+    '<div class="body"><span class="name"></span><canvas></canvas></div>' +
+    '<div class="stats"><span class="t">0:00.0</span><span class="s"></span></div>';
+  el.querySelector(".name").textContent = track.name;
+  const sizeEl = el.querySelector(".s");
+  sizeEl.textContent = track.size;
+  rack.appendChild(el);
+
+  const btn = el.querySelector("button");
+  const path = el.querySelector("path");
+  const cv = el.querySelector("canvas");
+  const c = cv.getContext("2d");
+  const timeEl = el.querySelector(".t");
+  const audio = new Audio("data:" + track.mime + ";base64," + track.data);
+  audio.preload = "metadata";
+  let peaks = null;
+
+  function draw(){
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if(!w) return;
+    cv.width = w*dpr; cv.height = h*dpr;
+    c.setTransform(dpr,0,0,dpr,0,0);
+    c.clearRect(0,0,w,h);
+    const off = css("--wave"), on = css("--wave-on");
+    const prog = audio.duration ? audio.currentTime/audio.duration : 0;
+    const barW = 3, gap = 2, n = Math.max(1, Math.floor(w/(barW+gap))), mid = h/2;
+    for(let i=0;i<n;i++){
+      const v = peaks ? peaks[Math.floor(i*peaks.length/n)] : 0.14;
+      const bh = Math.max(2, v*(h-4));
+      c.fillStyle = (i/n) <= prog && prog > 0 ? on : off;
+      c.beginPath();
+      c.roundRect(i*(barW+gap), mid-bh/2, barW, bh, barW/2);
+      c.fill();
+    }
+  }
+
+  new (window.AudioContext || window.webkitAudioContext)()
+    .decodeAudioData(decodeBase64(track.data).buffer, buf => {
+      const ch = buf.getChannelData(0);
+      const N = 160, block = Math.max(1, Math.floor(ch.length/N));
+      const p = new Float32Array(N);
+      let max = 0;
+      for(let i=0;i<N;i++){
+        let s = 0;
+        for(let j=0;j<block;j++){ const x = ch[i*block+j] || 0; s += x*x; }
+        p[i] = Math.sqrt(s/block);
+        if(p[i] > max) max = p[i];
+      }
+      if(max > 0) for(let i=0;i<N;i++) p[i] = Math.min(1, p[i]/max);
+      peaks = p;
+      draw();
+    }, () => {});
+
+  btn.addEventListener("click", () => {
+    if(audio.paused){
+      if(current && current !== audio){ current.pause(); current.currentTime = 0; }
+      current = audio;
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  });
+  audio.addEventListener("play", () => { path.setAttribute("d", PAUSE_D); el.dataset.playing = "true"; });
+  audio.addEventListener("pause", () => { path.setAttribute("d", PLAY_D); el.dataset.playing = "false"; });
+  audio.addEventListener("ended", () => { audio.currentTime = 0; timeEl.textContent = fmt(0); draw(); });
+  audio.addEventListener("timeupdate", () => { timeEl.textContent = fmt(audio.currentTime); draw(); });
+  audio.addEventListener("loadedmetadata", () => {
+    timeEl.textContent = fmt(0);
+    if(isFinite(audio.duration)) sizeEl.textContent = audio.duration.toFixed(1) + " s · " + track.size;
+    draw();
+  });
+  cv.addEventListener("click", e => {
+    const r = cv.getBoundingClientRect();
+    if(audio.duration){ audio.currentTime = audio.duration * ((e.clientX - r.left)/r.width); draw(); }
+  });
+  views.push(draw);
+  draw();
+}
+
+TRACKS.forEach(makeTrack);
+window.addEventListener("resize", () => views.forEach(f => f()));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => views.forEach(f => f()));
+document.addEventListener("keydown", e => {
+  if(e.code === "Space" && current && e.target.tagName !== "BUTTON"){
+    e.preventDefault();
+    current.paused ? current.play() : current.pause();
+  }
+});
+</script>

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sfx": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/generate-sfx.mjs"
+    "sfx": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/generate-sfx.mjs",
+    "sfx:player": "node scripts/build-sound-player.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
