@@ -43,7 +43,7 @@ Test the failure modes directly: release arriving on `window` instead of the ele
 
 iOS blocks audio until a user gesture and adds audible latency to `HTMLAudioElement`. Decode short interface sounds into Web Audio buffers ahead of the interaction and play them as one-shot sources. Expect the first sound of a session to be the weakest — that one cannot be fixed, only moved earlier.
 
-Shipped interface sounds live in `public/sounds/` and are decoded by `src/lib/sounds.ts`. To generate a new short SFX (local or Cloud Agent), run `npm run sfx -- "soft wooden click"` or `node scripts/generate-sfx.mjs "…" --out public/sounds/name.mp3 --duration 1.2`. It calls ElevenLabs `POST /v1/sound-generation` and needs `ELEVENLABS_API_KEY` in the environment (Cloud Agent secret / local `.env`), never in the repo and never as a `VITE_` variable.
+Shipped interface sounds live in `public/sounds/` and are decoded by `src/lib/sounds.ts`. To generate a new short SFX (local or Cloud Agent), run `npm run sfx -- "soft wooden click"` or `node scripts/generate-sfx.mjs "…" --out public/sounds/name.mp3 --duration 1.2`. Duration defaults to 2 seconds; if the user or the task names a length, pass `--duration` (0.5–30). `npm run sfx` loads `.env` then `.env.local` if they exist; an already-set `ELEVENLABS_API_KEY` wins. It calls ElevenLabs `POST /v1/sound-generation` and needs that key in the environment (Cloud Agent secret / local `.env`), never in the repo and never as a `VITE_` variable.
 
 ## Learned User Preferences
 

@@ -35,7 +35,11 @@ function parseArgs(argv) {
       continue;
     }
     if (arg === "--out" || arg === "--duration") {
-      flags[arg.slice(2)] = argv[i + 1];
+      const value = argv[i + 1];
+      if (value === undefined || value.startsWith("--")) {
+        throw new Error(`${arg} requires a value`);
+      }
+      flags[arg.slice(2)] = value;
       i += 1;
       continue;
     }
@@ -72,6 +76,7 @@ async function main() {
 
   const response = await fetch(API_URL, {
     method: "POST",
+    redirect: "error",
     headers: {
       "xi-api-key": apiKey,
       "Content-Type": "application/json",
