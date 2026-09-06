@@ -42,3 +42,15 @@ Test the failure modes directly: release arriving on `window` instead of the ele
 ## Audio
 
 iOS blocks audio until a user gesture and adds audible latency to `HTMLAudioElement`. Decode short interface sounds into Web Audio buffers ahead of the interaction and play them as one-shot sources. Expect the first sound of a session to be the weakest — that one cannot be fixed, only moved earlier.
+
+Shipped interface sounds live in `public/sounds/` and are decoded by `src/lib/sounds.ts`. To generate a new short SFX (local or Cloud Agent), run `npm run sfx -- "soft wooden click"` or `node scripts/generate-sfx.mjs "…" --out public/sounds/name.mp3 --duration 1.2`. It calls ElevenLabs `POST /v1/sound-generation` and needs `ELEVENLABS_API_KEY` in the environment (Cloud Agent secret / local `.env`), never in the repo and never as a `VITE_` variable.
+
+## Learned User Preferences
+
+- Small ignore-only housekeeping can go straight on `main` when asked; dependency and security lockfile updates go on a branch with a PR.
+
+## Learned Workspace Facts
+
+- Git `origin` is `timnik82/spine`, a public fork of `labramik/spine`. There is no local `upstream` remote.
+- Vercel project `spine` is linked to `timnik82/spine` and must build with Vite (`npm install`, `npm run build`, `dist`), not a custom `build.mjs`.
+- `.zcode/` and `.cursor/hooks/` are gitignored local agent/hook state; keep `.cursor/environment.json` tracked as Cloud Agent config.

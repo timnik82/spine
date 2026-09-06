@@ -9,7 +9,8 @@
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sfx": "node scripts/generate-sfx.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
