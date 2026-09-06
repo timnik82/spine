@@ -132,8 +132,11 @@ async function main() {
     `Локальные звуковые файлы из ${inputs.join(", ")}. Нажмите play — воспроизведение идёт прямо на странице.`;
 
   const template = await readFile(TEMPLATE, "utf8");
-  // JSON goes inside a <script> block, so no "</script>" may survive in it.
-  const payload = JSON.stringify(tracks).replaceAll("</", "<\\/");
+  // The JSON sits inside a <script> block, where the HTML tokenizer reacts to
+  // "</script>" but also to "<!--" and "<script" — a name carrying both swallows
+  // the rest of the document and renders a blank page. Escaping every "<" as the
+  // JSON escape \u003c covers all three; JSON.parse restores the character.
+  const payload = JSON.stringify(tracks).replaceAll("<", "\\u003c");
   // Replacement *strings* interpret "$&", "$`" and friends, which would corrupt
   // any title or file name containing them — a function replacer never does.
   const literal = (value) => () => value;

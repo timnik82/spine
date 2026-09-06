@@ -104,6 +104,7 @@ const PAUSE_D = "M7 4.5h3.2v15H7zM13.8 4.5H17v15h-3.2z";
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = t => isFinite(t) ? Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0") + "." + Math.floor((t*10)%10) : "–:––";
 let current = null;
+let currentToggle = null;
 const views = [];
 
 // Waveform decoding runs once per track at load. Browsers cap the number of
@@ -201,16 +202,22 @@ function makeTrack(track){
     }, decodeDone);
   }
 
-  btn.addEventListener("click", () => {
+  // Both the button and the page-wide Space shortcut go through this, so a
+  // refused play() reports on the row either way instead of vanishing into an
+  // unhandled rejection.
+  function toggle(){
     if(audio.paused){
       if(current && current !== audio){ current.pause(); current.currentTime = 0; }
       current = audio;
+      currentToggle = toggle;
       const started = audio.play();
       if(started) started.catch(() => { sizeEl.textContent = "не воспроизводится · " + track.size; });
     } else {
       audio.pause();
     }
-  });
+  }
+
+  btn.addEventListener("click", toggle);
   audio.addEventListener("play", () => { path.setAttribute("d", PAUSE_D); el.dataset.playing = "true"; });
   audio.addEventListener("pause", () => { path.setAttribute("d", PLAY_D); el.dataset.playing = "false"; });
   audio.addEventListener("ended", () => { audio.currentTime = 0; timeEl.textContent = fmt(0); draw(); });
@@ -232,9 +239,9 @@ TRACKS.forEach(makeTrack);
 window.addEventListener("resize", () => views.forEach(f => f()));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => views.forEach(f => f()));
 document.addEventListener("keydown", e => {
-  if(e.code === "Space" && current && e.target.tagName !== "BUTTON"){
+  if(e.code === "Space" && currentToggle && e.target.tagName !== "BUTTON"){
     e.preventDefault();
-    current.paused ? current.play() : current.pause();
+    currentToggle();
   }
 });
 </script>
