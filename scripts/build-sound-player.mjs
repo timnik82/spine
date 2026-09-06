@@ -28,8 +28,12 @@ const MIME = {
   ".flac": "audio/flac",
   ".webm": "audio/webm",
 };
-// Artifacts cap the rendered page at 16 MB and base64 costs ~33% on top of the
-// raw bytes, so refuse to build a page that would be rejected on publish.
+// Artifacts cap the rendered page at 16 MB, and base64 costs ~33% on top of the
+// raw bytes. MAX_ENCODED_BYTES only stops a hopeless batch early, while reading
+// files; the page that actually gets published is measured against
+// MAX_PAGE_BYTES once it is built, since the markup, the file names and the
+// data URI prefixes all count towards the limit too.
+const MAX_PAGE_BYTES = 16 * 1024 * 1024;
 const MAX_ENCODED_BYTES = 15 * 1024 * 1024;
 
 function parseArgs(argv) {
@@ -139,9 +143,16 @@ async function main() {
     .replaceAll("__SUBTITLE__", literal(escapeHtml(sub)))
     .replace("__TRACKS__", literal(payload));
 
+  const pageBytes = Buffer.byteLength(html);
+  if (pageBytes > MAX_PAGE_BYTES) {
+    throw new Error(
+      `Player page is ${formatSize(pageBytes)}, over the ${formatSize(MAX_PAGE_BYTES)} limit — split the batch into several pages`,
+    );
+  }
+
   await mkdir(dirname(out), { recursive: true });
   await writeFile(out, html);
-  process.stdout.write(`${out} (${tracks.length} tracks, ${formatSize(Buffer.byteLength(html))})\n`);
+  process.stdout.write(`${out} (${tracks.length} tracks, ${formatSize(pageBytes)})\n`);
 }
 
 main().catch((error) => {
