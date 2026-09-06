@@ -115,13 +115,16 @@ function decodeBase64(b64){
 function makeTrack(track){
   const el = document.createElement("div");
   el.className = "track";
+  // The markup below is a fixed string: file names reach the DOM only through
+  // textContent / setAttribute, never through innerHTML.
   el.innerHTML =
-    '<button class="play" aria-label="Воспроизвести ' + track.name + '">' +
+    '<button class="play">' +
       '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="' + PLAY_D + '"></path></svg>' +
     '</button>' +
     '<div class="body"><span class="name"></span><canvas></canvas></div>' +
     '<div class="stats"><span class="t">0:00.0</span><span class="s"></span></div>';
   el.querySelector(".name").textContent = track.name;
+  el.querySelector("button").setAttribute("aria-label", "Воспроизвести " + track.name);
   const sizeEl = el.querySelector(".s");
   sizeEl.textContent = track.size;
   rack.appendChild(el);
