@@ -29,6 +29,8 @@ dist-ssr
 .playwright-mcp/
 
 .claude/launch.json
+.zcode/
+.cursor/hooks/
 
 # Design samples / generated media drafts
 exercise-samples/*
