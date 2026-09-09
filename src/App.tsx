@@ -8,6 +8,7 @@ import {
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTrackedSessionDispatch } from '@/hooks/useTrackedSessionDispatch';
 import { useTimer } from '@/hooks/useTimer';
+import { useCountdownCue } from '@/hooks/useCountdownCue';
 import { useExerciseTimer } from '@/hooks/useExerciseTimer';
 import { useElapsedTimer } from '@/hooks/useElapsedTimer';
 import { ActiveScreen } from '@/screens/ActiveScreen';
@@ -84,6 +85,13 @@ export function App() {
     exerciseSeconds,
     `${state.screen}:${state.exerciseIndex}:${state.currentSet}:${state.sideIndex}`,
     stopwatchSweepRef
+  );
+
+  // Tick through the last three seconds and ring the bell at zero. The
+  // instructions overlay pauses the run, so it must silence the cue too.
+  useCountdownCue(
+    timer.secondsRemaining,
+    state.screen === 'active' && exercise.mode === 'timer' && !state.instructionsOpen
   );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);

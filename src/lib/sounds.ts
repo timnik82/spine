@@ -5,13 +5,34 @@
 
 type AudioContextConstructor = typeof AudioContext;
 
-const PRESS_VOLUME = 0.7;
-const RELEASE_VOLUME = 0.55;
+/** Every clip the stopwatch can play, and the file each one decodes from. */
+const SOUND_FILES = {
+  press: 'stopwatch-press.mp3',
+  release: 'stopwatch-release.mp3',
+  tick: 'stopwatch-last-seconds.mp3',
+  end: 'stopwatch-end-bell.mp3',
+} as const;
+
+type SoundName = keyof typeof SOUND_FILES;
+
+const VOLUMES: Record<SoundName, number> = {
+  press: 0.7,
+  release: 0.55,
+  // The countdown cue plays over an exercise, not over a silent room: loud
+  // enough to carry, quieter than the crown the child pressed themselves.
+  tick: 0.6,
+  end: 0.75,
+};
 
 let audioContext: AudioContext | null = null;
-let pressBuffer: AudioBuffer | null = null;
-let releaseBuffer: AudioBuffer | null = null;
+const buffers: Partial<Record<SoundName, AudioBuffer>> = {};
 let loadPromise: Promise<void> | null = null;
+
+function clearBuffers() {
+  for (const name of Object.keys(SOUND_FILES) as SoundName[]) {
+    delete buffers[name];
+  }
+}
 
 function getAudioContextConstructor(): AudioContextConstructor | null {
   if (typeof window === 'undefined') return null;
@@ -29,8 +50,7 @@ function getContext(): AudioContext | null {
   // A closed context can never play again, and its buffers go with it.
   if (audioContext?.state === 'closed') {
     audioContext = null;
-    pressBuffer = null;
-    releaseBuffer = null;
+    clearBuffers();
     loadPromise = null;
   }
 
@@ -63,17 +83,19 @@ async function decodeSound(ctx: AudioContext, fileName: string): Promise<AudioBu
 
 function ensureLoaded(ctx: AudioContext) {
   loadPromise ??= (async () => {
-    const [press, release] = await Promise.all([
-      decodeSound(ctx, 'stopwatch-press.mp3'),
-      decodeSound(ctx, 'stopwatch-release.mp3'),
-    ]);
-    if (!press || !release) {
-      // Transient fetch/decode failure — allow a later gesture to retry.
+    const names = Object.keys(SOUND_FILES) as SoundName[];
+    const decoded = await Promise.all(
+      names.map((name) => decodeSound(ctx, SOUND_FILES[name]))
+    );
+    names.forEach((name, index) => {
+      const buffer = decoded[index];
+      if (buffer) buffers[name] = buffer;
+    });
+    if (decoded.some((buffer) => !buffer)) {
+      // Transient fetch/decode failure — allow a later gesture to retry the
+      // clips that did not make it. The ones that decoded stay usable.
       loadPromise = null;
-      return;
     }
-    pressBuffer = press;
-    releaseBuffer = release;
   })().catch(() => {
     // Decode failures stay silent — a missing click is not worth surfacing.
     loadPromise = null;
@@ -108,16 +130,16 @@ export function unlockStopwatchSounds() {
   void ensureLoaded(ctx);
 }
 
-function play(kind: 'press' | 'release') {
+function play(name: SoundName) {
   unlockStopwatchSounds();
-  const buffer = kind === 'press' ? pressBuffer : releaseBuffer;
-  const volume = kind === 'press' ? PRESS_VOLUME : RELEASE_VOLUME;
+  const buffer = buffers[name];
 
   if (buffer) {
-    playBuffer(buffer, volume);
+    playBuffer(buffer, VOLUMES[name]);
   }
   // Buffer not ready yet — preload has started via unlock. Do not queue a
-  // deferred play: a fast press+release would both fire late and together.
+  // deferred play: a fast press+release would both fire late and together,
+  // and a countdown cue is worthless once its second has passed.
 }
 
 /** Crown button travelling down — the deeper of the two clicks. */
@@ -128,4 +150,14 @@ export function playStopwatchPress() {
 /** Crown button springing back up — lighter, closes the pair. */
 export function playStopwatchRelease() {
   play('release');
+}
+
+/** One of the last three seconds of a run just started. */
+export function playStopwatchTick() {
+  play('tick');
+}
+
+/** The run reached its target — the bell that closes the countdown. */
+export function playStopwatchEnd() {
+  play('end');
 }
