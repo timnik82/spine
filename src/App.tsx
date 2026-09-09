@@ -174,7 +174,15 @@ export function App() {
             targetSummary={exercise.summary}
             media={exercise.media}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
-            onPrimaryAction={() => dispatch({ type: 'START' })}
+            onPrimaryAction={() => {
+              // The one gesture every session passes through. A timed
+              // exercise starts itself after the prepare countdown, so
+              // without this the countdown cue would be the first sound of
+              // the run — and iOS only resumes a suspended context from
+              // inside a user gesture, never from the effect that plays it.
+              unlockStopwatchSounds();
+              dispatch({ type: 'START' });
+            }}
           />
           <InstructionsOverlay
             exercise={exercise}
