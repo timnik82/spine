@@ -52,6 +52,7 @@ To listen to sounds from inside an agent session, build a self-contained player 
 ## Learned User Preferences
 
 - Small ignore-only housekeeping can go straight on `main` when asked; dependency and security lockfile updates go on a branch with a PR.
+- **Never schedule recurring self check-ins** (hourly `send_later`/cron wake-ups to re-poll a PR, CI or a deploy). Each firing costs the owner's usage quota, and they have asked for none. Subscribe to PR webhook events if useful, act on what arrives, then end the turn — do not add a timer on top. If a PR genuinely needs re-checking later, say so and let the owner ask.
 
 ## Learned Workspace Facts
 
