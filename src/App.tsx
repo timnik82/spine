@@ -8,6 +8,7 @@ import {
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTrackedSessionDispatch } from '@/hooks/useTrackedSessionDispatch';
 import { useTimer } from '@/hooks/useTimer';
+import { useCountdownCue } from '@/hooks/useCountdownCue';
 import { useExerciseTimer } from '@/hooks/useExerciseTimer';
 import { useElapsedTimer } from '@/hooks/useElapsedTimer';
 import { ActiveScreen } from '@/screens/ActiveScreen';
@@ -84,6 +85,13 @@ export function App() {
     exerciseSeconds,
     `${state.screen}:${state.exerciseIndex}:${state.currentSet}:${state.sideIndex}`,
     stopwatchSweepRef
+  );
+
+  // Tick through the last three seconds and ring the bell at zero. The
+  // instructions overlay pauses the run, so it must silence the cue too.
+  useCountdownCue(
+    timer.secondsRemaining,
+    state.screen === 'active' && exercise.mode === 'timer' && !state.instructionsOpen
   );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
@@ -166,7 +174,15 @@ export function App() {
             targetSummary={exercise.summary}
             media={exercise.media}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
-            onPrimaryAction={() => dispatch({ type: 'START' })}
+            onPrimaryAction={() => {
+              // The one gesture every session passes through. A timed
+              // exercise starts itself after the prepare countdown, so
+              // without this the countdown cue would be the first sound of
+              // the run — and iOS only resumes a suspended context from
+              // inside a user gesture, never from the effect that plays it.
+              unlockStopwatchSounds();
+              dispatch({ type: 'START' });
+            }}
           />
           <InstructionsOverlay
             exercise={exercise}
