@@ -8,6 +8,7 @@ import {
 import { useSessionReducer } from '@/hooks/useSessionReducer';
 import { useTrackedSessionDispatch } from '@/hooks/useTrackedSessionDispatch';
 import { useTimer } from '@/hooks/useTimer';
+import { useCountdownCue } from '@/hooks/useCountdownCue';
 import { useExerciseTimer } from '@/hooks/useExerciseTimer';
 import { useElapsedTimer } from '@/hooks/useElapsedTimer';
 import { ActiveScreen } from '@/screens/ActiveScreen';
@@ -57,9 +58,9 @@ export function App() {
     />
   ) : null;
 
-  // Decode the stopwatch clicks at startup. The crown only appears after the
-  // intro screen, so this buys the fetch and decode seconds rather than the
-  // milliseconds a mount-time preload would have left them.
+  // Decode the stopwatch clicks at startup. This does not unlock iOS audio —
+  // creating a context outside a gesture leaves it suspended. Começar / Iniciar
+  // / the crown call unlockStopwatchSounds() from the tap itself.
   useEffect(() => {
     unlockStopwatchSounds();
   }, []);
@@ -87,6 +88,20 @@ export function App() {
   );
 
   useTimer(state.screen, state.instructionsOpen, dispatch);
+
+  // Exactly four beeps at 4, 3, 2, 1 remaining. Prepare is only three seconds,
+  // so it stays silent — a 3-beep countdown would break the four-beep pattern.
+  const cueRemaining =
+    state.screen === 'rest'
+      ? state.countdownSecondsRemaining
+      : timer.secondsRemaining;
+  const cueActive =
+    (state.screen === 'active' &&
+      exercise.mode === 'timer' &&
+      !state.instructionsOpen) ||
+    state.screen === 'rest';
+  useCountdownCue(cueRemaining, cueActive);
+
   const repetitionElapsedSeconds = useElapsedTimer(
     state.screen === 'active' && exercise.mode === 'repetitions',
     state.instructionsOpen,
@@ -166,12 +181,22 @@ export function App() {
             targetSummary={exercise.summary}
             media={exercise.media}
             onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
-            onPrimaryAction={() => dispatch({ type: 'START' })}
+            onPrimaryAction={() => {
+              // The one gesture every session passes through. Timed exercises
+              // auto-start after prepare, so without this the first beep would
+              // be the first sound of the run — and iOS only resumes a
+              // suspended context from inside a user gesture.
+              unlockStopwatchSounds();
+              dispatch({ type: 'START' });
+            }}
           />
           <InstructionsOverlay
             exercise={exercise}
             open={state.instructionsOpen}
-            onClose={() => dispatch({ type: 'CLOSE_INSTRUCTIONS' })}
+            onClose={() => {
+              unlockStopwatchSounds();
+              dispatch({ type: 'CLOSE_INSTRUCTIONS' });
+            }}
           />
           <SettingsButton onClick={() => setSettingsOpen(true)} />
         </>
@@ -191,7 +216,10 @@ export function App() {
               isRunning={timer.isRunning}
               currentSet={state.currentSet}
               totalSets={exercise.sets}
-              onToggle={timer.toggle}
+              onToggle={() => {
+                unlockStopwatchSounds();
+                timer.toggle();
+              }}
               onReset={timer.restart}
               onInstructions={() => dispatch({ type: 'OPEN_INSTRUCTIONS' })}
               onHome={() => dispatch({ type: 'RESET' })}
@@ -216,7 +244,10 @@ export function App() {
           <InstructionsOverlay
             exercise={exercise}
             open={state.instructionsOpen}
-            onClose={() => dispatch({ type: 'CLOSE_INSTRUCTIONS' })}
+            onClose={() => {
+              unlockStopwatchSounds();
+              dispatch({ type: 'CLOSE_INSTRUCTIONS' });
+            }}
           />
         </>
       );
@@ -237,7 +268,10 @@ export function App() {
         <RestScreen
           secondsRemaining={state.countdownSecondsRemaining}
           totalSeconds={restSeconds}
-          onSkip={() => dispatch({ type: 'SKIP_REST' })}
+          onSkip={() => {
+            unlockStopwatchSounds();
+            dispatch({ type: 'SKIP_REST' });
+          }}
           onHome={() => dispatch({ type: 'RESET' })}
         />
       );
