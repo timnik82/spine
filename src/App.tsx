@@ -22,6 +22,7 @@ import { PerfBadge } from '@/components/PerfBadge';
 import { SettingsButton } from '@/components/SettingsButton';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import {
+  holdStopwatchKeepAlive,
   releaseStopwatchKeepAlive,
   unlockStopwatchSounds,
 } from '@/lib/sounds';
@@ -113,7 +114,8 @@ export function App() {
     state.screen === 'rest' ||
     (state.screen === 'active' && exercise.mode === 'timer');
   useEffect(() => {
-    if (!needsKeepAlive) releaseStopwatchKeepAlive();
+    if (needsKeepAlive) holdStopwatchKeepAlive();
+    else releaseStopwatchKeepAlive();
   }, [needsKeepAlive]);
 
   const repetitionElapsedSeconds = useElapsedTimer(
