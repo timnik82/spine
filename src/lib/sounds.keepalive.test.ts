@@ -35,7 +35,7 @@ class MockAudioContext {
       sampleRate,
       numberOfChannels: 1,
       getChannelData: () => data,
-    } as AudioBuffer;
+    } as unknown as AudioBuffer;
   }
 
   createGain() {
