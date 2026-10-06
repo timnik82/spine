@@ -262,7 +262,9 @@ function bindInterruptionHandlers() {
 export function unlockStopwatchSounds() {
   const ctx = getContext();
   if (!ctx) return;
-  keepAliveWanted = true;
+  // Do not set keepAliveWanted here. Idle taps (overlay close on intro or
+  // repetitions) must still unlock; only holdStopwatchKeepAlive / beeps
+  // request the silent loop.
   applyPlaybackAudioSession();
   bindInterruptionHandlers();
   primeContextFromGesture(ctx);

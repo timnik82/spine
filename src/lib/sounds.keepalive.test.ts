@@ -93,15 +93,26 @@ async function wakeViaVisibilityAndFocus() {
 
 describe('keep-alive across a visibility/focus wake', () => {
   beforeEach(() => {
-    sources.length = 0;
     vi.stubGlobal('AudioContext', MockAudioContext);
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({ ok: false }) as unknown as Response)
     );
+    releaseStopwatchKeepAlive();
+    sources.length = 0;
+  });
+
+  it('does not start the silent loop when unlock runs on an idle screen, including after a wake', async () => {
+    unlockStopwatchSounds();
+    await Promise.resolve();
+    expect(loopingStartCount()).toBe(0);
+
+    await wakeViaVisibilityAndFocus();
+    expect(loopingStartCount()).toBe(0);
   });
 
   it('does not restart the silent loop on an idle screen, and does restart it on a timed screen', async () => {
+    holdStopwatchKeepAlive();
     unlockStopwatchSounds();
     await Promise.resolve();
     expect(loopingStartCount()).toBeGreaterThan(0);
