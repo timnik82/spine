@@ -21,6 +21,7 @@ let lowBeepBuffer: AudioBuffer | null = null;
 let highBeepBuffer: AudioBuffer | null = null;
 let loadPromise: Promise<void> | null = null;
 let keepAliveSource: AudioBufferSourceNode | null = null;
+let keepAliveWanted = false;
 let interruptionBound = false;
 
 function getAudioContextConstructor(): AudioContextConstructor | null {
@@ -142,7 +143,7 @@ function playBuffer(buffer: AudioBuffer | null, volume: number) {
  * and the hold until the last-four-second beeps.
  */
 function startKeepAlive(ctx: AudioContext) {
-  if (keepAliveSource) return;
+  if (!keepAliveWanted || keepAliveSource) return;
   try {
     const silent = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate / 10)), ctx.sampleRate);
     const gain = ctx.createGain();
@@ -175,11 +176,24 @@ function stopKeepAlive() {
 }
 
 /**
+ * Mark the silent keep-alive as wanted and start it if the context is already
+ * running. Timed screens (prepare / hold / rest) call this so a foreground
+ * wake can restart the loop; idle screens call `releaseStopwatchKeepAlive`.
+ */
+export function holdStopwatchKeepAlive() {
+  keepAliveWanted = true;
+  if (audioContext && contextState(audioContext) === 'running') {
+    startKeepAlive(audioContext);
+  }
+}
+
+/**
  * Drop the silent keep-alive once no timed countdown needs the context held
  * open (intro, final, repetition screens). The next Começar / Iniciar tap
  * unlocks again from a gesture.
  */
 export function releaseStopwatchKeepAlive() {
+  keepAliveWanted = false;
   stopKeepAlive();
 }
 
@@ -225,6 +239,9 @@ function bindInterruptionHandlers() {
   const onForeground = () => {
     if (!audioContext) return;
     void resumeContext(audioContext).then(() => {
+      // Resume the context so a later tap is not stuck suspended, but do
+      // not restart the silent loop on intro/final/repetition.
+      if (!keepAliveWanted) return;
       if (audioContext && contextState(audioContext) === 'running') {
         startKeepAlive(audioContext);
       }
@@ -245,6 +262,9 @@ function bindInterruptionHandlers() {
 export function unlockStopwatchSounds() {
   const ctx = getContext();
   if (!ctx) return;
+  // Do not set keepAliveWanted here. Idle taps (overlay close on intro or
+  // repetitions) must still unlock; only holdStopwatchKeepAlive / beeps
+  // request the silent loop.
   applyPlaybackAudioSession();
   bindInterruptionHandlers();
   primeContextFromGesture(ctx);
@@ -288,6 +308,7 @@ export function playCountdownBeep(kind: CountdownBeepKind) {
   const ctx = getContext();
   if (!ctx) return;
   ensureBeepBuffers(ctx);
+  keepAliveWanted = true;
 
   const start = () => {
     if (contextState(ctx) !== 'running') return;

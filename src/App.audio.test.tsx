@@ -2,18 +2,24 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TARGET_REACHED_HOLD_MS } from './App';
 
-const { unlockStopwatchSounds, playCountdownBeep, releaseStopwatchKeepAlive } =
-  vi.hoisted(() => ({
-    unlockStopwatchSounds: vi.fn(),
-    playCountdownBeep: vi.fn(),
-    releaseStopwatchKeepAlive: vi.fn(),
-  }));
+const {
+  unlockStopwatchSounds,
+  playCountdownBeep,
+  holdStopwatchKeepAlive,
+  releaseStopwatchKeepAlive,
+} = vi.hoisted(() => ({
+  unlockStopwatchSounds: vi.fn(),
+  playCountdownBeep: vi.fn(),
+  holdStopwatchKeepAlive: vi.fn(),
+  releaseStopwatchKeepAlive: vi.fn(),
+}));
 
 vi.mock('@/lib/sounds', () => ({
   unlockStopwatchSounds,
   playStopwatchPress: vi.fn(),
   playStopwatchRelease: vi.fn(),
   playCountdownBeep,
+  holdStopwatchKeepAlive,
   releaseStopwatchKeepAlive,
 }));
 
@@ -52,6 +58,7 @@ describe('session audio unlock', () => {
   beforeEach(() => {
     unlockStopwatchSounds.mockClear();
     playCountdownBeep.mockClear();
+    holdStopwatchKeepAlive.mockClear();
     releaseStopwatchKeepAlive.mockClear();
     window.localStorage.clear();
   });
@@ -86,6 +93,7 @@ describe('session audio unlock during a timed run', () => {
   beforeEach(() => {
     unlockStopwatchSounds.mockClear();
     playCountdownBeep.mockClear();
+    holdStopwatchKeepAlive.mockClear();
     releaseStopwatchKeepAlive.mockClear();
     window.localStorage.clear();
     vi.useFakeTimers({

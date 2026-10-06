@@ -22,6 +22,7 @@ import { PerfBadge } from '@/components/PerfBadge';
 import { SettingsButton } from '@/components/SettingsButton';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import {
+  holdStopwatchKeepAlive,
   releaseStopwatchKeepAlive,
   unlockStopwatchSounds,
 } from '@/lib/sounds';
@@ -113,7 +114,8 @@ export function App() {
     state.screen === 'rest' ||
     (state.screen === 'active' && exercise.mode === 'timer');
   useEffect(() => {
-    if (!needsKeepAlive) releaseStopwatchKeepAlive();
+    if (needsKeepAlive) holdStopwatchKeepAlive();
+    else releaseStopwatchKeepAlive();
   }, [needsKeepAlive]);
 
   const repetitionElapsedSeconds = useElapsedTimer(
@@ -199,7 +201,10 @@ export function App() {
               // The one gesture every session passes through. Timed exercises
               // auto-start after prepare, so without this the first beep would
               // be the first sound of the run — and iOS only resumes a
-              // suspended context from inside a user gesture.
+              // suspended context from inside a user gesture. Request
+              // keep-alive before unlock so the silent loop starts in this
+              // same tap; overlay close on intro/repetitions does not.
+              if (exercise.mode === 'timer') holdStopwatchKeepAlive();
               unlockStopwatchSounds();
               dispatch({ type: 'START' });
             }}
