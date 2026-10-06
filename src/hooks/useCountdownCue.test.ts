@@ -45,9 +45,9 @@ describe('useCountdownCue', () => {
     ).toEqual(['low', 'low', 'low', 'high']);
   });
 
-  it('cues each second once however often the countdown re-renders', () => {
+  it('cues each second once even when fractional remaining re-renders the same step', () => {
     expect(
-      playThrough([5, 4, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0])
+      playThrough([5, 3.9, 3.4, 3.1, 2.9, 2.2, 1.8, 1.1, 0.9, 0])
     ).toEqual(['low', 'low', 'low', 'high']);
   });
 

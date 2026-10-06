@@ -21,7 +21,10 @@ import { ExerciseNav } from '@/components/ExerciseNav';
 import { PerfBadge } from '@/components/PerfBadge';
 import { SettingsButton } from '@/components/SettingsButton';
 import { SettingsScreen } from '@/screens/SettingsScreen';
-import { unlockStopwatchSounds } from '@/lib/sounds';
+import {
+  releaseStopwatchKeepAlive,
+  unlockStopwatchSounds,
+} from '@/lib/sounds';
 import { renderProbe } from '@/lib/renderProbe';
 import { useRestSettings } from '@/hooks/useRestSettings';
 import { usePwaUpdate } from '@/hooks/usePwaUpdate';
@@ -101,6 +104,17 @@ export function App() {
       !state.instructionsOpen) ||
     state.screen === 'rest';
   useCountdownCue(cueRemaining, cueActive);
+
+  // Hold the audio session open through prepare, the timed hold, and rest.
+  // Everywhere else, stop the silent loop so idle/final screens do not keep
+  // Web Audio rendering.
+  const needsKeepAlive =
+    state.screen === 'prepare' ||
+    state.screen === 'rest' ||
+    (state.screen === 'active' && exercise.mode === 'timer');
+  useEffect(() => {
+    if (!needsKeepAlive) releaseStopwatchKeepAlive();
+  }, [needsKeepAlive]);
 
   const repetitionElapsedSeconds = useElapsedTimer(
     state.screen === 'active' && exercise.mode === 'repetitions',

@@ -118,8 +118,11 @@ function ensureLoaded(ctx: AudioContext) {
 function playBuffer(buffer: AudioBuffer | null, volume: number) {
   const ctx = getContext();
   if (!ctx || !buffer) return;
-  if (contextState(ctx) !== 'running') return;
 
+  // Do not require `running` here. Crown clicks are started in the same
+  // user-gesture turn as resume(); a suspended-context start is what WebKit
+  // queues as part of that gesture. Gating on `running` dropped the click
+  // that did the unlocking. Countdown beeps wait for `running` themselves.
   try {
     const source = ctx.createBufferSource();
     const gain = ctx.createGain();
@@ -157,6 +160,27 @@ function startKeepAlive(ctx: AudioContext) {
   } catch {
     keepAliveSource = null;
   }
+}
+
+function stopKeepAlive() {
+  const source = keepAliveSource;
+  keepAliveSource = null;
+  if (!source) return;
+  try {
+    source.stop();
+    source.disconnect();
+  } catch {
+    // Already stopped or disconnected.
+  }
+}
+
+/**
+ * Drop the silent keep-alive once no timed countdown needs the context held
+ * open (intro, final, repetition screens). The next Começar / Iniciar tap
+ * unlocks again from a gesture.
+ */
+export function releaseStopwatchKeepAlive() {
+  stopKeepAlive();
 }
 
 function primeContextFromGesture(ctx: AudioContext) {
@@ -271,6 +295,7 @@ export function playCountdownBeep(kind: CountdownBeepKind) {
   };
 
   if (contextState(ctx) === 'running') {
+    startKeepAlive(ctx);
     start();
     return;
   }

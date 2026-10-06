@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  COUNTDOWN_BEEP_HIGH_DURATION_SEC,
-  COUNTDOWN_BEEP_HIGH_HZ,
   COUNTDOWN_BEEP_LOW_DURATION_SEC,
-  COUNTDOWN_BEEP_LOW_HZ,
   COUNTDOWN_BEEP_PEAK_GAIN,
   COUNTDOWN_BEEP_RELEASE_SEC,
   countdownBeepKindForStep,
@@ -65,43 +62,45 @@ describe('renderCountdownBeep', () => {
   const high = renderCountdownBeep('high', SAMPLE_RATE);
 
   it('lasts 120 ms for the low beeps and 350 ms for the final beep', () => {
-    expect(low.length / SAMPLE_RATE).toBeCloseTo(COUNTDOWN_BEEP_LOW_DURATION_SEC, 5);
-    expect(high.length / SAMPLE_RATE).toBeCloseTo(
-      COUNTDOWN_BEEP_HIGH_DURATION_SEC,
-      5
-    );
+    expect(low.length / SAMPLE_RATE).toBeCloseTo(0.12, 5);
+    expect(high.length / SAMPLE_RATE).toBeCloseTo(0.35, 5);
   });
 
-  it('peaks near 0.6 after the 1.0 + 0.15 mix is normalized', () => {
+  it('peaks near 0.543 with the 0.15 second harmonic in the mix', () => {
     const peak = Math.max(...low.map(Math.abs));
     // sin + 0.15 sin(2x) does not peak at 1.15, so 0.6 / 1.15 * ~1.041 ≈ 0.543.
-    expect(peak).toBeGreaterThan(0.52);
+    // Dropping the harmonic (peak 0.522) or the 1.15 normalize (peak 0.6) fails this.
+    expect(peak).toBeGreaterThan(0.53);
+    expect(peak).toBeLessThan(0.56);
     expect(peak).toBeLessThanOrEqual(COUNTDOWN_BEEP_PEAK_GAIN);
   });
 
   it('attacks over 5 ms and releases over 30 ms', () => {
     const sustainPeak = peakInWindow(low, SAMPLE_RATE, 0.02, 0.08);
     expect(Math.abs(low[0])).toBeLessThan(0.02);
+    // Mid-attack (~2.5 ms) must still be well below sustain, so a 0 ms attack fails.
+    expect(
+      peakInWindow(low, SAMPLE_RATE, 0.002, 0.003) / sustainPeak
+    ).toBeLessThan(0.75);
     expect(
       peakInWindow(low, SAMPLE_RATE, 0.004, 0.006) / sustainPeak
     ).toBeGreaterThan(0.85);
-    expect(
+    const releaseMidpoint =
+      COUNTDOWN_BEEP_LOW_DURATION_SEC - COUNTDOWN_BEEP_RELEASE_SEC / 2;
+    const releaseMid =
       peakInWindow(
         low,
         SAMPLE_RATE,
-        COUNTDOWN_BEEP_LOW_DURATION_SEC - COUNTDOWN_BEEP_RELEASE_SEC,
-        COUNTDOWN_BEEP_LOW_DURATION_SEC - COUNTDOWN_BEEP_RELEASE_SEC + 0.002
-      ) / sustainPeak
-    ).toBeGreaterThan(0.85);
+        releaseMidpoint - 0.001,
+        releaseMidpoint + 0.001
+      ) / sustainPeak;
+    expect(releaseMid).toBeGreaterThan(0.35);
+    expect(releaseMid).toBeLessThan(0.65);
     expect(Math.abs(low[low.length - 1])).toBeLessThan(0.05);
   });
 
   it('uses 660 Hz for the first three beeps and 1320 Hz for the last', () => {
-    expect(
-      estimatedHz(low, SAMPLE_RATE, 0.02, 0.08)
-    ).toBeCloseTo(COUNTDOWN_BEEP_LOW_HZ, 0);
-    expect(
-      estimatedHz(high, SAMPLE_RATE, 0.05, 0.25)
-    ).toBeCloseTo(COUNTDOWN_BEEP_HIGH_HZ, 0);
+    expect(estimatedHz(low, SAMPLE_RATE, 0.02, 0.08)).toBeCloseTo(660, 0);
+    expect(estimatedHz(high, SAMPLE_RATE, 0.05, 0.25)).toBeCloseTo(1320, 0);
   });
 });
